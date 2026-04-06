@@ -43,6 +43,7 @@ venv/
 Thumbs.db
 
 # Logs
+logs/
 *.log
 wandb/
 runs/
