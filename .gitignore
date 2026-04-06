@@ -1,0 +1,51 @@
+# Data and outputs (large files)
+data/
+outputs/
+results/
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.pt
+*.bin
+*.safetensors
+
+# Model cache
+model_cache/
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# Environment
+.env
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+wandb/
+runs/
+
+# HuggingFace
+hf_cache/

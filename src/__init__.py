@@ -1,0 +1,1 @@
+# Emotion-CoT Faithfulness Study
