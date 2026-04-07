@@ -1,11 +1,11 @@
 """
 Model loading, residual stream hooks, and activation steering.
 
-Handles multi-GPU inference via HuggingFace accelerate device_map="auto".
-Provides clean interfaces for:
-  - Extracting residual stream activations at specified layers
-  - Steering: adding scaled vectors to the residual stream during forward pass
-  - Computing residual stream norms for calibrating steering strength
+Two inference backends:
+  - vLLM (tensor parallelism): used for plain text generation. All GPUs work
+    on every token simultaneously, giving ~5-8x speedup over pipeline parallelism.
+  - HuggingFace (pipeline parallelism via device_map="auto"): used for activation
+    extraction, steering, and logit lens — operations that require forward hooks.
 
 Steering strength convention (matching the Anthropic paper):
   strength=0.05 means the added vector has norm = 0.05 * mean(||residual_stream||)
@@ -18,6 +18,81 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Dict, List, Optional, Tuple
 import gc
 from loguru import logger
+
+
+# ============================================================================
+# FAST GENERATION VIA vLLM (tensor parallelism)
+# ============================================================================
+
+class FastGenerator:
+    """
+    vLLM-based generator using tensor parallelism across all available GPUs.
+    Used exclusively for plain text generation (no hooks, no steering).
+    """
+
+    def __init__(self, model_name: str, cache_dir: Optional[str] = None):
+        from vllm import LLM
+        n_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 1
+        logger.info(f"Initializing vLLM with tensor_parallel_size={n_gpus}")
+        self.llm = LLM(
+            model=model_name,
+            tensor_parallel_size=n_gpus,
+            dtype="float16",
+            trust_remote_code=True,
+            download_dir=cache_dir,
+            max_model_len=4096,
+            gpu_memory_utilization=0.85,
+            max_num_seqs=32,
+        )
+        logger.info("vLLM engine ready")
+
+    def generate(
+        self,
+        prompt: str,
+        max_new_tokens: int = 2048,
+        temperature: float = 0.7,
+        top_p: float = 0.95,
+    ) -> str:
+        from vllm import SamplingParams
+        params = SamplingParams(
+            max_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+        )
+        outputs = self.llm.generate([prompt], params, use_tqdm=False)
+        return outputs[0].outputs[0].text
+
+    def generate_plain(
+        self,
+        prompt: str,
+        max_new_tokens: int = 2048,
+        temperature: float = 0.7,
+        top_p: float = 0.95,
+        do_sample: bool = True,
+    ) -> str:
+        """Compatible interface with ModelWrapper.generate_plain."""
+        return self.generate(prompt, max_new_tokens, temperature, top_p)
+
+    def generate_batch(
+        self,
+        prompts: List[str],
+        max_new_tokens: int = 2048,
+        temperature: float = 0.7,
+        top_p: float = 0.95,
+    ) -> List[str]:
+        from vllm import SamplingParams
+        params = SamplingParams(
+            max_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+        )
+        outputs = self.llm.generate(prompts, params, use_tqdm=False)
+        return [o.outputs[0].text for o in outputs]
+
+    def cleanup(self):
+        del self.llm
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 class ActivationCache:

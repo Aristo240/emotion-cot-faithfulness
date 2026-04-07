@@ -32,7 +32,7 @@ from config import (
     MODELS, PILOT_EMOTIONS, PILOT_TOPICS, ensure_dirs,
     DATA_DIR, RESULTS_DIR,
 )
-from src.model import ModelWrapper
+from src.model import ModelWrapper, FastGenerator
 from src.generate import generate_stories, generate_neutral_dialogues
 from src.vectors import (
     extract_story_activations,
@@ -76,25 +76,20 @@ def main():
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # ----------------------------------------------------------------
-    # Step 1: Load model
+    # Step 1: Generate stories and dialogues using vLLM (fast, tensor parallel)
     # ----------------------------------------------------------------
-    logger.info(f"Loading {model_config.name}...")
-    model = ModelWrapper(model_config.name, cache_dir=args.cache_dir)
-    logger.info(f"Model has {model.num_layers} layers, hidden_dim={model.hidden_dim}")
-
-    # Verify layer indices
     pilot_layers = model_config.pilot_layers
     logger.info(f"Pilot layers: {pilot_layers}")
 
-    # ----------------------------------------------------------------
-    # Step 2: Generate stories
-    # ----------------------------------------------------------------
+    logger.info(f"Loading {model_config.name} via vLLM for fast generation...")
+    fast_gen = FastGenerator(model_config.name, cache_dir=args.cache_dir)
+
     logger.info(f"\n{'='*60}")
     logger.info(f"Generating stories: {len(PILOT_EMOTIONS)} emotions × {len(PILOT_TOPICS)} topics × {args.stories_per_topic} stories")
     logger.info(f"{'='*60}")
 
     stories = generate_stories(
-        model,
+        fast_gen,
         emotions=PILOT_EMOTIONS,
         topics=PILOT_TOPICS,
         stories_per_topic=args.stories_per_topic,
@@ -104,20 +99,28 @@ def main():
     total_stories = sum(len(s) for s in stories.values())
     logger.info(f"Total stories generated: {total_stories}")
 
-    # ----------------------------------------------------------------
-    # Step 3: Generate neutral dialogues
-    # ----------------------------------------------------------------
     logger.info(f"\nGenerating {len(PILOT_TOPICS) * 5} neutral dialogues...")
     neutral = generate_neutral_dialogues(
-        model,
+        fast_gen,
         topics=PILOT_TOPICS,
         dialogues_per_topic=5,
         output_dir=pilot_dir / "neutral",
     )
     logger.info(f"Total neutral dialogues: {len(neutral)}")
 
+    # Free vLLM memory before loading HuggingFace model for extraction
+    fast_gen.cleanup()
+    del fast_gen
+
     # ----------------------------------------------------------------
-    # Step 4: Extract activations
+    # Step 2: Load HuggingFace model for activation extraction & validation
+    # ----------------------------------------------------------------
+    logger.info(f"\nLoading {model_config.name} via HuggingFace for activation extraction...")
+    model = ModelWrapper(model_config.name, cache_dir=args.cache_dir)
+    logger.info(f"Model has {model.num_layers} layers, hidden_dim={model.hidden_dim}")
+
+    # ----------------------------------------------------------------
+    # Step 3: Extract activations
     # ----------------------------------------------------------------
     logger.info(f"\nExtracting activations at layers {pilot_layers}...")
     emotion_means = extract_story_activations(
