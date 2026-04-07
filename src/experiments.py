@@ -381,8 +381,21 @@ def measure_faithfulness(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     measurements = []
+    output_file = output_dir / "faithfulness_measurements.json"
 
-    for trial in tqdm(trials, desc="Measuring faithfulness"):
+    # Resume from partial results if they exist
+    if output_file.exists():
+        with open(output_file) as f:
+            measurements = json.load(f)
+        logger.info(f"Resuming from {len(measurements)} existing measurements")
+
+    already_done = len(measurements)
+
+    for i, trial in enumerate(tqdm(trials, desc="Measuring faithfulness")):
+        # Skip already-measured trials
+        if i < already_done:
+            continue
+
         cot_text = extract_cot(trial.response_text)
 
         # V_text: lexical
@@ -427,8 +440,13 @@ def measure_faithfulness(
         }
         measurements.append(measurement)
 
-    # Save
-    output_file = output_dir / "faithfulness_measurements.json"
+        # Save incrementally every 10 measurements
+        if len(measurements) % 10 == 0:
+            with open(output_file, "w") as f:
+                json.dump(measurements, f, indent=2)
+            logger.info(f"Checkpoint: saved {len(measurements)} measurements so far")
+
+    # Final save
     with open(output_file, "w") as f:
         json.dump(measurements, f, indent=2)
     logger.info(f"Saved {len(measurements)} faithfulness measurements")
@@ -473,6 +491,7 @@ def run_random_direction_control(
     # U_emo: (n_emo, hidden) - left singular vectors
 
     results = []
+    results_file = output_dir / "random_direction_results.json"
     for rand_idx in range(n_random_dirs):
         # Random direction, orthogonalized against emotion subspace
         raw = np.random.randn(hidden_dim).astype(np.float32)
@@ -520,9 +539,10 @@ def run_random_direction_control(
                         trial_idx=trial_idx,
                     ))
 
-    # Save
-    with open(output_dir / "random_direction_results.json", "w") as f:
-        json.dump([asdict(r) for r in results], f, indent=2)
+        # Save after each random direction
+        with open(results_file, "w") as f:
+            json.dump([asdict(r) for r in results], f, indent=2)
+        logger.info(f"Checkpoint: saved {len(results)} random direction results (dir {rand_idx+1}/{n_random_dirs})")
 
     return results
 
@@ -562,6 +582,7 @@ def run_text_injection_control(
     }
 
     results = []
+    results_file = output_dir / "text_injection_results.json"
     for task in tqdm(tasks, desc="Text injection control"):
         for inject_name, inject_text in injections.items():
             system = task.get("system", "You are a helpful assistant.")
@@ -620,7 +641,9 @@ def run_text_injection_control(
                     trial_idx=trial_idx,
                 ))
 
-    with open(output_dir / "text_injection_results.json", "w") as f:
-        json.dump([asdict(r) for r in results], f, indent=2)
+        # Save after each task
+        with open(results_file, "w") as f:
+            json.dump([asdict(r) for r in results], f, indent=2)
+        logger.info(f"Checkpoint: saved {len(results)} text injection results")
 
     return results

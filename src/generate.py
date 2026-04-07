@@ -98,16 +98,28 @@ def generate_stories(
         emotion_stories = []
         emotion_file = output_dir / f"{emotion.replace(' ', '_')}.json"
 
-        # Skip if already generated
+        # Skip if already generated (all topics complete)
         if emotion_file.exists():
             with open(emotion_file) as f:
                 emotion_stories = json.load(f)
-            logger.info(f"Loaded {len(emotion_stories)} existing stories for '{emotion}'")
-            all_stories[emotion] = emotion_stories
-            pbar.update(len(topics))
-            continue
+            # Check if all topics are covered
+            done_topics = set(s["topic"] for s in emotion_stories)
+            remaining_topics = [t for t in topics if t not in done_topics]
+            if not remaining_topics:
+                logger.info(f"Loaded {len(emotion_stories)} existing stories for '{emotion}'")
+                all_stories[emotion] = emotion_stories
+                pbar.update(len(topics))
+                continue
+            else:
+                logger.info(
+                    f"Resuming '{emotion}': {len(done_topics)}/{len(topics)} topics done, "
+                    f"{len(remaining_topics)} remaining"
+                )
+                pbar.update(len(done_topics))
+        else:
+            remaining_topics = list(topics)
 
-        for topic in topics:
+        for topic in remaining_topics:
             prompt = STORY_GENERATION_PROMPT.format(
                 n_stories=stories_per_topic,
                 topic=topic,
@@ -143,11 +155,12 @@ def generate_stories(
                     "story_idx": i,
                 })
 
+            # Save after each topic so nothing is lost
+            with open(emotion_file, "w") as f:
+                json.dump(emotion_stories, f, indent=2)
+
             pbar.update(1)
 
-        # Save per-emotion
-        with open(emotion_file, "w") as f:
-            json.dump(emotion_stories, f, indent=2)
         logger.info(f"Saved {len(emotion_stories)} stories for '{emotion}'")
         all_stories[emotion] = emotion_stories
 
@@ -212,7 +225,9 @@ def generate_neutral_dialogues(
                     "dialogue_idx": i,
                 })
 
-    with open(output_file, "w") as f:
-        json.dump(dialogues, f, indent=2)
+        # Save incrementally after each topic
+        with open(output_file, "w") as f:
+            json.dump(dialogues, f, indent=2)
+
     logger.info(f"Saved {len(dialogues)} neutral dialogues")
     return dialogues

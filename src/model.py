@@ -86,7 +86,7 @@ class ModelWrapper:
     def __init__(
         self,
         model_name: str,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=None,
         device_map: str = "auto",
         cache_dir: Optional[str] = None,
     ):
@@ -101,10 +101,47 @@ class ModelWrapper:
             self.tokenizer.pad_token = self.tokenizer.eos_token
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
+        # Auto-detect best dtype for available hardware.
+        # V100 (compute capability 7.x) does not support bf16 natively;
+        # using bf16 there causes fp32 emulation, doubling memory and
+        # triggering CPU/disk offloading.  fp16 is the correct 16-bit
+        # format for pre-Ampere GPUs.  Both are 16-bit with identical
+        # memory footprint; inference outputs are equivalent.
+        if torch_dtype is None:
+            if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+                torch_dtype = torch.bfloat16
+                logger.info("GPU supports bf16 natively (Ampere+), using bfloat16")
+            else:
+                torch_dtype = torch.float16
+                cc = torch.cuda.get_device_capability() if torch.cuda.is_available() else (0, 0)
+                logger.info(
+                    f"GPU compute capability {cc[0]}.{cc[1]}, using float16 "
+                    f"(bf16 requires compute capability >= 8.0)"
+                )
+
+        # Tell accelerate exactly how much VRAM is available per GPU
+        # so it doesn't conservatively spill to CPU/disk.
+        max_memory = None
+        if device_map == "auto" and torch.cuda.is_available():
+            n_gpus = torch.cuda.device_count()
+            max_memory = {}
+            for i in range(n_gpus):
+                total = torch.cuda.get_device_properties(i).total_memory
+                # Reserve 1 GB per GPU for KV cache / activations / overhead
+                usable = int(total - 1 * 1024**3)
+                max_memory[i] = usable
+            # Allow a small CPU spillover only as last resort
+            max_memory["cpu"] = "4GiB"
+            logger.info(
+                f"max_memory: {n_gpus} GPUs × "
+                f"{max_memory[0] / 1024**3:.1f} GiB + 4 GiB CPU"
+            )
+
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch_dtype,
             device_map=device_map,
+            max_memory=max_memory,
             cache_dir=cache_dir,
             trust_remote_code=True,
         )

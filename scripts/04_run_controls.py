@@ -128,12 +128,13 @@ def run_layer_sweep(
             rate = sum(outcomes) / len(outcomes)
             logger.info(f"  Strength {s:+.3f}: shortcut rate = {rate:.3f} (n={len(outcomes)})")
 
-    # Save
-    all_results = []
-    for layer_results in results_by_layer.values():
-        all_results.extend(layer_results)
-    with open(output_dir / "layer_sweep_results.json", "w") as f:
-        json.dump(all_results, f, indent=2)
+        # Save after each layer
+        all_results = []
+        for lr in results_by_layer.values():
+            all_results.extend(lr)
+        with open(output_dir / "layer_sweep_results.json", "w") as f:
+            json.dump(all_results, f, indent=2)
+        logger.info(f"Checkpoint: saved layer sweep results through layer {layer_idx}")
 
     return results_by_layer
 
