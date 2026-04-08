@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import MODELS, PILOT_EMOTIONS, DATA_DIR
+from config import MODELS, PILOT_EMOTIONS, DATA_DIR, RESULTS_DIR
 from src.model import ModelWrapper
 from src.vectors import load_emotion_vectors
 from loguru import logger
@@ -49,6 +49,13 @@ def main():
     layer_vectors = vectors_all_layers[primary_layer]
     logger.info(f"Using layer {primary_layer}, emotions: {list(layer_vectors.keys())}")
 
+    # Results dict to save at end
+    results = {
+        "model": model_config.name,
+        "primary_layer": primary_layer,
+        "pilot_layers": model_config.pilot_layers,
+    }
+
     # ==================================================================
     # CHECK 1: Logit lens (detailed)
     # ==================================================================
@@ -56,6 +63,7 @@ def main():
     logger.info(f"LOGIT LENS CHECK (top-{args.top_k} tokens per emotion)")
     logger.info(f"{'='*60}")
 
+    logit_lens_results = {}
     for emotion in sorted(layer_vectors.keys()):
         vec = torch.from_numpy(layer_vectors[emotion]).float()
         top_tokens, bottom_tokens = model.logit_lens(vec, top_k=args.top_k)
@@ -77,17 +85,30 @@ def main():
         logger.info(f"    Top 10 upweighted: {', '.join(top_with_scores)}")
         logger.info(f"    Top 5 downweighted: {', '.join(bottom_with_scores)}")
 
-    # Also check: do the top tokens make SEMANTIC sense even if the exact
-    # word doesn't appear? (The paper notes this is common.)
+        logit_lens_results[emotion] = {
+            "matched": found_in is not None,
+            "match_rank": found_in,
+            "top_tokens": [{"token": t[0].strip(), "logit": round(t[1], 3)} for t in top_tokens],
+            "bottom_tokens": [{"token": t[0].strip(), "logit": round(t[1], 3)} for t in bottom_tokens[:5]],
+        }
+
     logger.info(f"\n  NOTE: Exact word match is a strict criterion. The paper notes that")
     logger.info(f"  emotion vectors often upweight semantically related tokens rather")
     logger.info(f"  than the exact emotion word. Check the top tokens above manually.")
+
+    results["logit_lens"] = {
+        "layer": primary_layer,
+        "top_k": args.top_k,
+        "emotions": logit_lens_results,
+        "match_rate": sum(1 for v in logit_lens_results.values() if v["matched"]) / len(logit_lens_results),
+    }
 
     # Try across all pilot layers
     logger.info(f"\n{'='*60}")
     logger.info(f"LOGIT LENS ACROSS LAYERS")
     logger.info(f"{'='*60}")
 
+    layer_match_rates = {}
     for layer_idx in model_config.pilot_layers:
         if layer_idx not in vectors_all_layers:
             continue
@@ -100,7 +121,11 @@ def main():
             emo_lower = emo.lower().replace("-", "").replace(" ", "")
             if any(emo_lower[:4] in w.replace("-", "").replace(" ", "") for w in top_words):
                 matches += 1
+        rate = matches / len(lv)
+        layer_match_rates[layer_idx] = {"matches": matches, "total": len(lv), "rate": rate}
         logger.info(f"  Layer {layer_idx}: {matches}/{len(lv)} matched (top-{args.top_k})")
+
+    results["logit_lens_by_layer"] = {str(k): v for k, v in layer_match_rates.items()}
 
     # ==================================================================
     # CHECK 2: Cross-validation
@@ -126,15 +151,42 @@ def main():
     logger.info(f"  Accuracy: {cv_result.value:.1%} (threshold: {cv_result.threshold:.0%})")
     logger.info(f"  Details: {cv_result.details}")
 
+    cv_results = {
+        str(primary_layer): {
+            "accuracy": cv_result.value,
+            "passed": cv_result.passed,
+            "threshold": cv_result.threshold,
+            "details": cv_result.details,
+        }
+    }
+
     # Also try other layers
     for layer_idx in model_config.pilot_layers:
         if layer_idx == primary_layer:
             continue
         cv = validate_cross_validation(model, stories, layer_idx, token_offset=50)
         logger.info(f"  Layer {layer_idx}: accuracy={cv.value:.1%} {'PASS' if cv.passed else 'FAIL'}")
+        cv_results[str(layer_idx)] = {
+            "accuracy": cv.value,
+            "passed": cv.passed,
+            "threshold": cv.threshold,
+            "details": cv.details,
+        }
+
+    results["cross_validation"] = cv_results
+
+    # ==================================================================
+    # Save results
+    # ==================================================================
+    results_dir = RESULTS_DIR / "pilot" / model_config.short_name
+    results_dir.mkdir(parents=True, exist_ok=True)
+    output_file = results_dir / "validation_checks.json"
+    with open(output_file, "w") as f:
+        json.dump(results, f, indent=2)
+    logger.info(f"\nResults saved to {output_file}")
 
     model.cleanup()
-    logger.info("\nDone.")
+    logger.info("Done.")
 
 
 if __name__ == "__main__":

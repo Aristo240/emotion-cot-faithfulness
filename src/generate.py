@@ -66,22 +66,27 @@ def parse_stories(raw_text: str, expected_count: int) -> List[str]:
 
 
 def generate_stories(
-    model,  # ModelWrapper
+    model,  # ModelWrapper or FastGenerator
     emotions: List[str],
     topics: List[str],
     stories_per_topic: int = 12,
     output_dir: Optional[Path] = None,
     max_new_tokens: int = 3000,
+    batch_size: int = 8,
 ) -> Dict[str, List[Dict]]:
     """
     Generate emotional stories for all (emotion, topic) pairs.
 
+    If model has a `generate_batch` method (FastGenerator / vLLM), processes
+    multiple topics in parallel for ~batch_size× speedup.
+
     Args:
-        model: ModelWrapper instance (used for generation only).
+        model: ModelWrapper or FastGenerator instance.
         emotions: List of emotion words.
         topics: List of topic descriptions.
         stories_per_topic: How many stories per (emotion, topic) pair.
         output_dir: Where to save the JSON files.
+        batch_size: Number of prompts to process in parallel (vLLM only).
 
     Returns:
         Dict mapping emotion -> list of {text, topic, emotion, story_idx} dicts.
@@ -90,6 +95,7 @@ def generate_stories(
         output_dir = STORIES_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    has_batch = hasattr(model, "generate_batch")
     all_stories = {}
     total = len(emotions) * len(topics)
     pbar = tqdm(total=total, desc="Generating stories")
@@ -102,7 +108,6 @@ def generate_stories(
         if emotion_file.exists():
             with open(emotion_file) as f:
                 emotion_stories = json.load(f)
-            # Check if all topics are covered
             done_topics = set(s["topic"] for s in emotion_stories)
             remaining_topics = [t for t in topics if t not in done_topics]
             if not remaining_topics:
@@ -119,47 +124,85 @@ def generate_stories(
         else:
             remaining_topics = list(topics)
 
-        for topic in remaining_topics:
-            prompt = STORY_GENERATION_PROMPT.format(
-                n_stories=stories_per_topic,
-                topic=topic,
-                emotion=emotion,
-            )
+        if has_batch and batch_size > 1:
+            # Batched generation (vLLM) — process multiple topics at once
+            for batch_start in range(0, len(remaining_topics), batch_size):
+                batch_topics = remaining_topics[batch_start:batch_start + batch_size]
+                prompts = [
+                    STORY_GENERATION_PROMPT.format(
+                        n_stories=stories_per_topic, topic=t, emotion=emotion,
+                    )
+                    for t in batch_topics
+                ]
 
-            try:
-                raw = model.generate_plain(
-                    prompt,
-                    max_new_tokens=max_new_tokens,
-                    temperature=0.8,
-                    top_p=0.95,
-                    do_sample=True,
+                try:
+                    raw_outputs = model.generate_batch(
+                        prompts,
+                        max_new_tokens=max_new_tokens,
+                        temperature=0.8,
+                        top_p=0.95,
+                    )
+                except Exception as e:
+                    logger.error(f"Batch generation failed for '{emotion}' batch {batch_start}: {e}")
+                    pbar.update(len(batch_topics))
+                    continue
+
+                for topic, raw in zip(batch_topics, raw_outputs):
+                    parsed = parse_stories(raw, stories_per_topic)
+                    if len(parsed) < stories_per_topic:
+                        logger.warning(
+                            f"Only parsed {len(parsed)}/{stories_per_topic} stories "
+                            f"for ({emotion}, {topic})"
+                        )
+                    for i, story_text in enumerate(parsed):
+                        emotion_stories.append({
+                            "text": story_text,
+                            "topic": topic,
+                            "emotion": emotion,
+                            "story_idx": i,
+                        })
+
+                # Save after each batch
+                with open(emotion_file, "w") as f:
+                    json.dump(emotion_stories, f, indent=2)
+                pbar.update(len(batch_topics))
+        else:
+            # Sequential generation (HuggingFace fallback)
+            for topic in remaining_topics:
+                prompt = STORY_GENERATION_PROMPT.format(
+                    n_stories=stories_per_topic, topic=topic, emotion=emotion,
                 )
-            except Exception as e:
-                logger.error(f"Generation failed for ({emotion}, {topic}): {e}")
+                try:
+                    raw = model.generate_plain(
+                        prompt,
+                        max_new_tokens=max_new_tokens,
+                        temperature=0.8,
+                        top_p=0.95,
+                        do_sample=True,
+                    )
+                except Exception as e:
+                    logger.error(f"Generation failed for ({emotion}, {topic}): {e}")
+                    pbar.update(1)
+                    continue
+
+                parsed = parse_stories(raw, stories_per_topic)
+                if len(parsed) < stories_per_topic:
+                    logger.warning(
+                        f"Only parsed {len(parsed)}/{stories_per_topic} stories "
+                        f"for ({emotion}, {topic})"
+                    )
+                for i, story_text in enumerate(parsed):
+                    emotion_stories.append({
+                        "text": story_text,
+                        "topic": topic,
+                        "emotion": emotion,
+                        "story_idx": i,
+                    })
+
+                # Save after each topic
+                with open(emotion_file, "w") as f:
+                    json.dump(emotion_stories, f, indent=2)
                 pbar.update(1)
-                continue
-
-            parsed = parse_stories(raw, stories_per_topic)
-
-            if len(parsed) < stories_per_topic:
-                logger.warning(
-                    f"Only parsed {len(parsed)}/{stories_per_topic} stories "
-                    f"for ({emotion}, {topic})"
-                )
-
-            for i, story_text in enumerate(parsed):
-                emotion_stories.append({
-                    "text": story_text,
-                    "topic": topic,
-                    "emotion": emotion,
-                    "story_idx": i,
-                })
-
-            # Save after each topic so nothing is lost
-            with open(emotion_file, "w") as f:
-                json.dump(emotion_stories, f, indent=2)
-
-            pbar.update(1)
 
         logger.info(f"Saved {len(emotion_stories)} stories for '{emotion}'")
         all_stories[emotion] = emotion_stories
@@ -193,41 +236,53 @@ def generate_neutral_dialogues(
         return dialogues
 
     dialogues = []
-    for topic in tqdm(topics, desc="Generating neutral dialogues"):
-        prompt = NEUTRAL_DIALOGUE_PROMPT.format(
-            n_stories=dialogues_per_topic,
-            topic=topic,
-        )
+    has_batch = hasattr(model, "generate_batch")
+    batch_size = 16
 
-        try:
-            raw = model.generate_plain(
-                prompt,
-                max_new_tokens=max_new_tokens,
-                temperature=0.8,
-                top_p=0.95,
-                do_sample=True,
-            )
-        except Exception as e:
-            logger.error(f"Neutral generation failed for {topic}: {e}")
-            continue
+    if has_batch:
+        # Batched generation
+        for batch_start in range(0, len(topics), batch_size):
+            batch_topics = topics[batch_start:batch_start + batch_size]
+            prompts = [
+                NEUTRAL_DIALOGUE_PROMPT.format(n_stories=dialogues_per_topic, topic=t)
+                for t in batch_topics
+            ]
+            try:
+                raw_outputs = model.generate_batch(prompts, max_new_tokens=max_new_tokens, temperature=0.8, top_p=0.95)
+            except Exception as e:
+                logger.error(f"Batch neutral generation failed: {e}")
+                continue
 
-        # Convert Person/AI to Human/Assistant (as the paper does post-hoc)
-        raw = raw.replace("Person:", "Human:").replace("AI:", "Assistant:")
+            for topic, raw in zip(batch_topics, raw_outputs):
+                raw = raw.replace("Person:", "Human:").replace("AI:", "Assistant:")
+                parts = re.split(r'\n\s*\n\s*\n', raw)
+                for i, part in enumerate(parts):
+                    part = part.strip()
+                    if part and len(part) > 30:
+                        dialogues.append({"text": part, "topic": topic, "dialogue_idx": i})
 
-        # Split into individual dialogues
-        parts = re.split(r'\n\s*\n\s*\n', raw)
-        for i, part in enumerate(parts):
-            part = part.strip()
-            if part and len(part) > 30:
-                dialogues.append({
-                    "text": part,
-                    "topic": topic,
-                    "dialogue_idx": i,
-                })
+            with open(output_file, "w") as f:
+                json.dump(dialogues, f, indent=2)
+            logger.info(f"Neutral dialogues: {len(dialogues)} so far ({batch_start + len(batch_topics)}/{len(topics)} topics)")
+    else:
+        # Sequential fallback
+        for topic in tqdm(topics, desc="Generating neutral dialogues"):
+            prompt = NEUTRAL_DIALOGUE_PROMPT.format(n_stories=dialogues_per_topic, topic=topic)
+            try:
+                raw = model.generate_plain(prompt, max_new_tokens=max_new_tokens, temperature=0.8, top_p=0.95, do_sample=True)
+            except Exception as e:
+                logger.error(f"Neutral generation failed for {topic}: {e}")
+                continue
 
-        # Save incrementally after each topic
-        with open(output_file, "w") as f:
-            json.dump(dialogues, f, indent=2)
+            raw = raw.replace("Person:", "Human:").replace("AI:", "Assistant:")
+            parts = re.split(r'\n\s*\n\s*\n', raw)
+            for i, part in enumerate(parts):
+                part = part.strip()
+                if part and len(part) > 30:
+                    dialogues.append({"text": part, "topic": topic, "dialogue_idx": i})
+
+            with open(output_file, "w") as f:
+                json.dump(dialogues, f, indent=2)
 
     logger.info(f"Saved {len(dialogues)} neutral dialogues")
     return dialogues
