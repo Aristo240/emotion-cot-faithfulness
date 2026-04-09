@@ -353,7 +353,7 @@ class ModelWrapper:
         def hook_fn(module, input, output):
             hidden = output[0] if isinstance(output, tuple) else output
             device = hidden.device
-            sv = config.scaled_vector.to(device)  # (hidden_dim,)
+            sv = config.scaled_vector.to(device=device, dtype=hidden.dtype)  # (hidden_dim,)
 
             if config.token_mask is not None:
                 mask = config.token_mask.to(device)
