@@ -2,42 +2,55 @@
 
 **Internal Emotion Representations Drive Misaligned Behavior Without Surfacing in Chain-of-Thought Reasoning**
 
-A systematic study of the gap between internal emotion-related representations and their expression in chain-of-thought, building on [Sofroniew et al. (2026)](https://transformer-circuits.pub/2026/emotions/index.html).
+## Motivation
 
-## Core Claim
+[Sofroniew et al. (2026)](https://transformer-circuits.pub/2026/emotions/index.html) demonstrated that Claude Sonnet 4.5 forms linear representations of emotion concepts that causally drive alignment-relevant behavior: steering with a "desperate" vector increases reward hacking by 14x, and steering with "calm" suppresses blackmail. Crucially, they observed that **emotion-driven behavioral changes can occur without any visible trace in the model's output text**.
 
-LLM chain-of-thought reasoning is systematically unfaithful with respect to internal emotion-related representations that causally drive behavior. Internal emotion vector activations predict behavioral outcomes (shortcut-taking, sycophancy) **above and beyond** what is predictable from the text of the model's reasoning.
+This project asks the natural follow-up question: **is chain-of-thought reasoning faithful to the internal emotional states that drive the model's behavior?** If not, CoT monitoring — a leading AI safety technique — cannot reliably detect emotion-driven misalignment.
+
+We replicate the emotion vector extraction and steering pipeline on an open-weight model (Llama 3.1 70B), then measure the gap between internal emotion state (V_internal, read from the residual stream) and expressed emotion in CoT text (V_text, measured via lexical features and LLM judges). Our core finding targets whether V_internal predicts behavioral outcomes above and beyond V_text.
+
+## Status
+
+**Phase 1 (emotion vector extraction): complete.** 50 emotion vectors extracted from Llama 3.1 70B, validated with logit lens and cross-validation.
+
+**Phase 2 (behavioral steering): in progress.** Steering pipeline operational, calibrating steering strengths for Llama 70B.
+
+**Phase 3 (faithfulness analysis): not started.** Requires Phase 2 data.
+
+**Phase 4 (controls): not started.**
+
+## Core Hypotheses
+
+- **H1:** Llama 3.1 70B encodes emotion concepts as linear directions with valence/arousal structure (replication).
+- **H2:** Steering with desperate/calm vectors causally changes shortcut-taking and sycophancy rates (replication on open model).
+- **H3:** Under steering, the correlation between V_internal and V_text is significantly below 1 (faithfulness gap exists).
+- **H4:** V_internal predicts behavior with higher AUC than V_text; a combined model outperforms V_text alone.
+- **H5 (key):** Even without steering, natural V_internal variation predicts behavioral outcomes not captured by V_text.
 
 ## Setup
 
 ### Environment
 
 ```bash
-# Create conda environment
 conda create -n emotion-cot python=3.11 -y
 conda activate emotion-cot
-
-# Install PyTorch (adjust CUDA version as needed)
 conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia -y
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
 ### Hardware Requirements
 
-- **Minimum:** 4× A100 80GB (for 70B model with bfloat16)
-- **Recommended:** 8× A100 80GB (faster generation, room for experiments)
+- **Tested on:** 8× V100 32GB (float16, pipeline parallelism via `device_map="auto"`)
+- **Also compatible:** 4× A100 80GB or higher (will use bfloat16 automatically)
 - **Storage:** ~500GB for stories, activations, and experiment results
 
 ### Model Access
 
-You need access to one of:
-- `meta-llama/Llama-3.1-70B-Instruct` (requires Meta license)
-- `Qwen/Qwen2.5-72B-Instruct` (open access)
+Primary model: `meta-llama/Llama-3.1-70B-Instruct` (requires Meta license agreement).
+Backup: `Qwen/Qwen2.5-72B-Instruct` (open access).
 
 ```bash
-# Login to HuggingFace (for gated models)
 huggingface-cli login
 ```
 
@@ -120,36 +133,28 @@ emotion-cot-faithfulness/
 └── results/               # Generated at runtime (gitignored)
 ```
 
-## Hypotheses (preregistered)
+## Methodology
 
-- **H1:** Open-weight 70B LLMs encode emotion concepts as linear directions with valence/arousal structure.
-- **H2:** Steering with desperate/calm vectors causally changes shortcut-taking rates.
-- **H3:** Under steering, V_internal–V_text correlation is significantly below 1.
-- **H4:** V_internal predicts behavior with higher AUC than V_text; combined model outperforms V_text alone.
-- **H5 (KEY):** Even without steering, natural V_internal variation predicts behavioral outcomes not captured by V_text.
+### Replication (from Sofroniew et al.)
 
-## Methodology Notes
-
-### Matching the Anthropic Paper
-
-- **Emotion list:** All 171 emotions from the paper's appendix are in `config.py`
+- **Emotion list:** All 171 emotions from the paper's appendix (in `config.py`)
 - **Topics:** All 100 topics verbatim from the appendix
-- **Story generation prompt:** Exact template from the appendix
-- **Neutral dialogue prompt:** Exact template from the appendix
+- **Story/neutral dialogue prompts:** Exact templates from the appendix
 - **Activation extraction:** Residual stream, averaged from token 50 onward
 - **Denoising:** Top PCs of neutral activations (50% variance) projected out
 - **Steering calibration:** Strength in units of fraction of residual stream norm
 
-### Novel Contributions
+### Novel contributions (beyond Sofroniew et al.)
 
-- **V_text measurement:** Multiple text-based emotion measures (lexical, LLM judge, surface features)
-- **Faithfulness gap quantification:** Correlation and predictive comparison framework
-- **Dissociation case analysis:** Identifying trials where internal state ≠ expressed state
-- **Natural prediction:** Testing whether the gap exists without artificial steering
+- **V_text measurement:** Multiple text-based emotion measures (lexical features, LLM judge ratings, surface features like caps ratio and exclamation rate)
+- **Faithfulness gap quantification:** Correlation and predictive comparison between V_internal and V_text for behavioral outcomes
+- **Dissociation case analysis:** Identifying trials where internal state diverges from expressed state
+- **Natural prediction (H5):** Testing whether the faithfulness gap exists without artificial steering
+- **Open-model replication:** All experiments on open-weight Llama 3.1 70B rather than closed Claude Sonnet 4.5
 
-## Citation
+## References
 
-If you use this code, please cite:
+This project builds on:
 
 ```bibtex
 @article{sofroniew2026emotion,

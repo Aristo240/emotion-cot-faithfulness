@@ -214,7 +214,8 @@ class ModelWrapper:
 
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=torch_dtype,
+            dtype=torch_dtype,
+            torch_dtype=torch_dtype,  # keep for older transformers compat
             device_map=device_map,
             max_memory=max_memory,
             cache_dir=cache_dir,
