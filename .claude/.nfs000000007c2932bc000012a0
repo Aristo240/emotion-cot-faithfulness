@@ -16,7 +16,9 @@
       "Bash(xargs kill:*)",
       "Bash(find /specific/scratches/scratch/naamarozen/emotion-cot-faithfulness/data/phase1/llama70b -type f -exec ls -lh {} \\\\;)",
       "Bash(ls -la /specific/scratches/scratch/naamarozen/emotion-cot-faithfulness/logs/overnight*)",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(nohup python:*)",
+      "Bash(echo \"PID: $!\")"
     ]
   }
 }
