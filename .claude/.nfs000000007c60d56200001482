@@ -18,7 +18,15 @@
       "Bash(ls -la /specific/scratches/scratch/naamarozen/emotion-cot-faithfulness/logs/overnight*)",
       "Bash(python3 -c ':*)",
       "Bash(nohup python:*)",
-      "Bash(echo \"PID: $!\")"
+      "Bash(echo \"PID: $!\")",
+      "Bash(du -sh /specific/scratches/scratch/naamarozen/emotion-cot-faithfulness/results/*)",
+      "Bash(ls:*)",
+      "Bash(python:*)",
+      "Bash(python3 -c \"import json,sys; e=json.loads\\(sys.stdin.read\\(\\)\\); print\\(f'Last entry: {e[\\\\\"key\\\\\"]} at {e[\\\\\"timestamp\\\\\"]}'\\)\")",
+      "Bash(ps:*)",
+      "Bash(chmod +x /specific/scratches/scratch/naamarozen/emotion-cot-faithfulness/scripts/watch_and_judge.sh)",
+      "Bash(nohup bash:*)",
+      "Bash(echo \"Watcher PID: $!\")"
     ]
   }
 }

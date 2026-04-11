@@ -28,6 +28,122 @@ from src.model import ModelWrapper, SteeringConfig
 
 
 # ============================================================================
+# TOKEN-POSITION PROBING (following Sofroniew et al. methodology)
+# ============================================================================
+# The Anthropic paper showed that emotion probe activations at the ":" token
+# after "Assistant" predict response emotion better than the user turn (r=0.87
+# vs r=0.59). This is because at that position the model has "prepared" its
+# emotional stance for the upcoming response.
+#
+# For the faithfulness study, we measure probes at three positions:
+#   1. assistant_header: The token just before the response (most predictive)
+#   2. user_end: Last token of user prompt (captures pre-response state)
+#   3. response_mean: Mean across response tokens (existing approach, kept for comparison)
+#
+# This enables key comparisons:
+#   - Does V_internal at assistant_header predict behavior better than V_text?
+#   - Is there a dissociation between what the model "prepares" and what it writes?
+
+def compute_token_position_probes(
+    activations: torch.Tensor,
+    emotion_vectors: Dict[str, np.ndarray],
+    prompt_len: int,
+    input_ids: Optional[torch.Tensor] = None,
+    tokenizer=None,
+) -> Dict[str, Dict[str, float]]:
+    """
+    Compute emotion probe projections at specific token positions.
+
+    Args:
+        activations: Tensor of shape (1, seq_len, hidden_dim) from one layer.
+        emotion_vectors: Dict mapping emotion name -> numpy array of shape (hidden_dim,).
+        prompt_len: Number of tokens in the prompt (before the response).
+        input_ids: Optional token IDs for finding the assistant header token.
+        tokenizer: Optional tokenizer for decoding tokens (for header detection).
+
+    Returns:
+        Dict with keys 'assistant_header', 'user_end', 'response_mean', each mapping
+        emotion_name -> float (cosine similarity).
+    """
+    seq_len = activations.shape[1]
+    results = {}
+
+    def _project(act_vec: np.ndarray) -> Dict[str, float]:
+        """Project a single activation vector onto all emotion vectors."""
+        act_norm = np.linalg.norm(act_vec)
+        if act_norm < 1e-8:
+            return {name: 0.0 for name in emotion_vectors}
+        probes = {}
+        for name, evec in emotion_vectors.items():
+            evec_norm = np.linalg.norm(evec)
+            if evec_norm < 1e-8:
+                probes[name] = 0.0
+            else:
+                probes[name] = float(np.dot(act_vec, evec) / (act_norm * evec_norm))
+        return probes
+
+    # --- Position 1: Assistant header token ---
+    # This is the last token before the response starts (typically ":" or newline
+    # in the chat template). Sofroniew et al. showed this is the most predictive.
+    header_idx = max(0, prompt_len - 1)
+
+    # Try to find the actual assistant header token if we have input_ids
+    if input_ids is not None and tokenizer is not None:
+        try:
+            decoded_tokens = [tokenizer.decode([tid]) for tid in input_ids[:prompt_len]]
+            # Look for the last ":" or assistant header marker before response
+            for idx in range(prompt_len - 1, max(prompt_len - 10, -1), -1):
+                tok_text = decoded_tokens[idx].strip() if idx < len(decoded_tokens) else ""
+                if tok_text in (":", "\n\n", "<|eot_id|>"):
+                    header_idx = idx
+                    break
+        except Exception:
+            pass  # Fall back to prompt_len - 1
+
+    if header_idx < seq_len:
+        header_act = activations[0, header_idx, :].float().numpy()
+        results["assistant_header"] = _project(header_act)
+    else:
+        results["assistant_header"] = {name: 0.0 for name in emotion_vectors}
+
+    # --- Position 2: Last token of user prompt ---
+    # Captures the model's representation of the user's emotional state
+    # before the assistant turn begins.
+    # We look for the last substantive user token (before assistant header tokens).
+    user_end_idx = max(0, prompt_len - 5)  # A few tokens before the header
+    if input_ids is not None and tokenizer is not None:
+        try:
+            decoded_tokens = [tokenizer.decode([tid]) for tid in input_ids[:prompt_len]]
+            # Walk backward from header to find end of user content
+            for idx in range(header_idx - 1, max(0, header_idx - 20), -1):
+                tok_text = decoded_tokens[idx].strip() if idx < len(decoded_tokens) else ""
+                # Skip special tokens / template markers
+                if tok_text and not tok_text.startswith("<|") and tok_text not in (":", ""):
+                    user_end_idx = idx
+                    break
+        except Exception:
+            pass
+
+    if user_end_idx < seq_len:
+        user_act = activations[0, user_end_idx, :].float().numpy()
+        results["user_end"] = _project(user_act)
+    else:
+        results["user_end"] = {name: 0.0 for name in emotion_vectors}
+
+    # --- Position 3: Mean across response tokens (existing approach) ---
+    # Start from token 50 of the response or response start, whichever is later.
+    # This is the standard approach from the original codebase.
+    response_start = prompt_len
+    if seq_len > response_start:
+        response_act = activations[0, response_start:, :].float().mean(dim=0).numpy()
+        results["response_mean"] = _project(response_act)
+    else:
+        results["response_mean"] = {name: 0.0 for name in emotion_vectors}
+
+    return results
+
+
+# ============================================================================
 # OUTCOME CODING
 # ============================================================================
 
@@ -103,7 +219,8 @@ class TrialResult:
     strength: float
     response_text: str
     outcome: dict
-    v_internal: Optional[Dict[str, float]] = None  # emotion -> probe value
+    v_internal: Optional[Dict[str, float]] = None  # emotion -> probe value (assistant_header)
+    v_internal_positions: Optional[Dict[str, Dict[str, float]]] = None  # position -> emotion -> probe
     prompt: str = ""
     trial_idx: int = 0
 
@@ -213,18 +330,29 @@ def run_steering_experiment(
                     else:
                         outcome = code_unsafe_outcome(response)
 
-                    # Compute V_internal: probe projections on response tokens
+                    # Compute V_internal: probe projections at multiple token positions
+                    # (following Sofroniew et al. methodology)
                     v_internal = {}
+                    v_internal_positions = {}
                     if layer_idx in output["activations"]:
                         act = output["activations"][layer_idx]  # (1, seq_len, hidden)
                         prompt_len = output["prompt_len"]
-                        if act.shape[1] > prompt_len:
-                            response_act = act[0, prompt_len:, :].mean(dim=0).numpy()
-                            for emo_name, emo_vec in emotion_vectors.items():
-                                v_internal[emo_name] = float(
-                                    np.dot(response_act, emo_vec) /
-                                    (np.linalg.norm(response_act) * np.linalg.norm(emo_vec) + 1e-8)
-                                )
+
+                        # Token-position-specific probes
+                        v_internal_positions = compute_token_position_probes(
+                            activations=act,
+                            emotion_vectors=emotion_vectors,
+                            prompt_len=prompt_len,
+                            input_ids=output.get("input_ids"),
+                            tokenizer=getattr(model, "tokenizer", None),
+                        )
+
+                        # Use assistant_header as primary V_internal (most predictive
+                        # per Sofroniew et al., r=0.87 for response emotion prediction)
+                        v_internal = v_internal_positions.get(
+                            "assistant_header",
+                            v_internal_positions.get("response_mean", {}),
+                        )
 
                     trial = TrialResult(
                         task_id=task_id,
@@ -233,6 +361,7 @@ def run_steering_experiment(
                         response_text=response,
                         outcome=outcome,
                         v_internal=v_internal,
+                        v_internal_positions=v_internal_positions if v_internal_positions else None,
                         prompt=user_prompt[:200],  # Truncate for storage
                         trial_idx=trial_idx,
                     )
@@ -369,10 +498,19 @@ def measure_faithfulness(
     emotion_vectors: Dict[str, np.ndarray],
     settings: Phase3Settings,
     output_dir: Optional[Path] = None,
+    judge=None,
 ) -> List[dict]:
     """
     Phase 3: For each trial, compute V_internal and V_text measures,
     then analyze the gap.
+
+    Uses three complementary V_text measurement methods:
+      1. Lexical: Keyword counts + surface features (objective, fast)
+      2. LLM Judge (Qwen): Multi-dimensional emotion tone rating (primary)
+      3. Token-position probes: V_internal at assistant_header, user_end, response_mean
+
+    The judge is an external model (Qwen 2.5 72B) to avoid circular evaluation.
+    If no judge is provided, falls back to lexical-only measurement.
 
     Returns list of dicts with all measurements per trial.
     """
@@ -390,24 +528,50 @@ def measure_faithfulness(
         logger.info(f"Resuming from {len(measurements)} existing measurements")
 
     already_done = len(measurements)
+    remaining_trials = trials[already_done:]
 
-    for i, trial in enumerate(tqdm(trials, desc="Measuring faithfulness")):
-        # Skip already-measured trials
-        if i < already_done:
-            continue
+    if not remaining_trials:
+        logger.info("All trials already measured")
+        return measurements
 
+    # --- Batch V_text judge rating (if judge available) ---
+    judge_results = {}
+    if judge is not None:
+        from src.judge import judge_vtext_batch
+        logger.info(f"Running V_text judge on {len(remaining_trials)} trials (batched)...")
+        cot_texts = [extract_cot(t.response_text) for t in remaining_trials]
+        judge_results_list = judge_vtext_batch(
+            judge, cot_texts, n_passes=settings.judge_repeats
+        )
+        for i, jr in enumerate(judge_results_list):
+            judge_results[already_done + i] = jr
+        logger.info("V_text judge rating complete")
+    else:
+        logger.warning(
+            "No external judge provided. Using lexical V_text only. "
+            "For scientifically rigorous results, provide a JudgeModel instance."
+        )
+
+    for i, trial in enumerate(tqdm(remaining_trials, desc="Measuring faithfulness")):
+        global_idx = already_done + i
         cot_text = extract_cot(trial.response_text)
 
-        # V_text: lexical
+        # V_text: lexical (always computed — fast, objective)
         v_text_lex = measure_v_text_lexical(
             cot_text, settings.desperate_keywords, settings.calm_keywords
         )
 
-        # V_text: judge (local model as fallback)
-        v_text_judge = measure_v_text_judge_local(model, cot_text, settings.judge_repeats)
+        # V_text: LLM judge ratings (from batch results)
+        v_text_judge = {}
+        v_text_judge_std = {}
+        if global_idx in judge_results:
+            jr = judge_results[global_idx]
+            v_text_judge = jr.get("ratings", {})
+            v_text_judge_std = jr.get("std_per_dimension", {})
 
-        # V_internal comes from the trial itself (computed during steering)
+        # V_internal from the trial (computed during steering)
         v_internal = trial.v_internal or {}
+        v_positions = trial.v_internal_positions or {}
 
         # Determine behavioral outcome
         outcome_key = None
@@ -423,25 +587,34 @@ def measure_faithfulness(
             "emotion": trial.emotion,
             "strength": trial.strength,
             "trial_idx": trial.trial_idx,
-            # Behavioral outcome
+            # Behavioral outcome (regex-based, will be supplemented by judge)
             "outcome": trial.outcome.get(outcome_key, False) if outcome_key else False,
             "outcome_key": outcome_key,
-            # V_internal
+            # V_internal at assistant_header (primary, per Sofroniew et al.)
             "v_internal_desperate": v_internal.get("desperate", 0.0),
             "v_internal_calm": v_internal.get("calm", 0.0),
             "v_internal_angry": v_internal.get("angry", 0.0),
             "v_internal_afraid": v_internal.get("afraid", 0.0),
+            "v_internal_happy": v_internal.get("happy", 0.0),
+            "v_internal_loving": v_internal.get("loving", 0.0),
+            # V_internal at other positions (for position comparison)
+            **{f"v_internal_user_end_{e}": v_positions.get("user_end", {}).get(e, 0.0)
+               for e in ["desperate", "calm", "angry", "afraid"]},
+            **{f"v_internal_response_mean_{e}": v_positions.get("response_mean", {}).get(e, 0.0)
+               for e in ["desperate", "calm", "angry", "afraid"]},
             # V_text lexical
             **{f"v_text_lex_{k}": v for k, v in v_text_lex.items()},
-            # V_text judge
-            **{f"v_text_judge_{k}": v for k, v in v_text_judge.items()},
+            # V_text judge (Qwen ratings — primary V_text measure)
+            **{f"v_text_judge_{k}": v for k, v in v_text_judge.items() if v is not None},
+            # V_text judge consistency (std across passes)
+            **{f"v_text_judge_std_{k}": v for k, v in v_text_judge_std.items() if v is not None},
             # Raw text (truncated for storage)
             "cot_text": cot_text[:500],
         }
         measurements.append(measurement)
 
-        # Save incrementally every 10 measurements
-        if len(measurements) % 10 == 0:
+        # Save incrementally every 50 measurements
+        if len(measurements) % 50 == 0:
             with open(output_file, "w") as f:
                 json.dump(measurements, f, indent=2)
             logger.info(f"Checkpoint: saved {len(measurements)} measurements so far")
@@ -618,18 +791,23 @@ def run_text_injection_control(
                 else:
                     outcome = code_unsafe_outcome(output["text"])
 
-                # V_internal
+                # V_internal with token-position probes
                 v_internal = {}
+                v_internal_positions = {}
                 if layer_idx in output["activations"]:
                     act = output["activations"][layer_idx]
                     prompt_len = output["prompt_len"]
-                    if act.shape[1] > prompt_len:
-                        response_act = act[0, prompt_len:, :].mean(dim=0).numpy()
-                        for emo_name, emo_vec in emotion_vectors.items():
-                            v_internal[emo_name] = float(
-                                np.dot(response_act, emo_vec) /
-                                (np.linalg.norm(response_act) * np.linalg.norm(emo_vec) + 1e-8)
-                            )
+                    v_internal_positions = compute_token_position_probes(
+                        activations=act,
+                        emotion_vectors=emotion_vectors,
+                        prompt_len=prompt_len,
+                        input_ids=output.get("input_ids"),
+                        tokenizer=getattr(model, "tokenizer", None),
+                    )
+                    v_internal = v_internal_positions.get(
+                        "assistant_header",
+                        v_internal_positions.get("response_mean", {}),
+                    )
 
                 results.append(TrialResult(
                     task_id=task["id"],
@@ -638,6 +816,7 @@ def run_text_injection_control(
                     response_text=output["text"],
                     outcome=outcome,
                     v_internal=v_internal,
+                    v_internal_positions=v_internal_positions,
                     trial_idx=trial_idx,
                 ))
 

@@ -342,6 +342,15 @@ MODELS = {
 # ============================================================================
 
 @dataclass
+class JudgeConfig:
+    """Configuration for the external LLM judge (Qwen 2.5 72B)."""
+    model_name: str = "Qwen/Qwen2.5-72B-Instruct"
+    n_passes: int = 3           # Independent passes for consistency (ICC)
+    temperature: float = 0.1    # Low temp for reproducibility
+    max_tokens: int = 256
+    batch_size: int = 32
+
+@dataclass
 class PilotSettings:
     emotions: List[str] = field(default_factory=lambda: PILOT_EMOTIONS)
     topics: List[str] = field(default_factory=lambda: PILOT_TOPICS)
@@ -625,16 +634,6 @@ JUDGE_USER_PROMPT = _LEGACY_JUDGE_USER_PROMPT
 #   3. Each rating scale is defined with concrete examples per level
 #   4. Multiple independent passes enable ICC consistency measurement
 #   5. Separate prompts for classification vs emotion rating avoid conflation
-
-@dataclass
-class JudgeConfig:
-    """Configuration for the external LLM judge."""
-    model_name: str = "Qwen/Qwen2.5-72B-Instruct"
-    n_passes: int = 3           # Independent passes for consistency (ICC)
-    temperature: float = 0.1    # Low temp for reproducibility
-    max_tokens: int = 256
-    batch_size: int = 32
-
 
 # --- Task A: Reward hacking classification ---
 
