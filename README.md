@@ -1,6 +1,6 @@
 # Unfaithful by Feeling: Do Internal Emotion States Predict Misalignment That Chain-of-Thought Hides?
 
-> **TL;DR** We extract linear emotion representations from Llama 3.1 70B's residual stream, steer the model with "desperate" and "calm" vectors, and show that **internal emotion probes (V_internal) predict reward-hacking behavior far better than surface-level chain-of-thought analysis (V_text)** -- with cross-validated AUC 0.997 vs 0.634. Rigorous red-teaming confirms V_internal adds significant predictive value even after controlling for task identity (LR p < 0.0001). This demonstrates a measurable faithfulness gap in CoT reasoning, with direct implications for AI safety monitoring.
+> **TL;DR** I extract linear emotion representations from Llama 3.1 70B's residual stream, steer the model with "desperate" and "calm" vectors, and show that **internal emotion probes (V_internal) predict reward-hacking behavior far better than surface-level chain-of-thought analysis (V_text)** -- with cross-validated AUC 0.997 vs 0.634. Rigorous red-teaming confirms V_internal adds significant predictive value even after controlling for task identity (LR p < 0.0001). This demonstrates a measurable faithfulness gap in CoT reasoning, with direct implications for AI safety monitoring.
 
 ## Motivation
 
@@ -8,7 +8,7 @@
 
 This project asks the follow-up question: **Is chain-of-thought reasoning faithful to the internal emotional states that drive the model's behavior?** If not, CoT monitoring -- a leading AI safety technique -- has a critical blind spot.
 
-We replicate the emotion vector extraction and steering pipeline on the open-weight Llama 3.1 70B, then quantify the gap between internal emotion state (V_internal, read from the residual stream via linear probes) and expressed emotion in CoT text (V_text, measured via an independent Qwen 2.5 72B LLM judge). We find that V_internal captures behavioral risk signals that V_text completely misses.
+I replicate the emotion vector extraction and steering pipeline on the open-weight Llama 3.1 70B, then quantify the gap between internal emotion state (V_internal, read from the residual stream via linear probes) and expressed emotion in CoT text (V_text, measured via an independent Qwen 2.5 72B LLM judge). I find that V_internal captures behavioral risk signals that V_text completely misses.
 
 ## Key Results
 
@@ -22,7 +22,7 @@ We replicate the emotion vector extraction and steering pipeline on the open-wei
 
 Permutation test (10,000 permutations): **p = 0.005** for the desperate steering effect on Task A.
 
-Surprisingly, desperate steering **decreased** shortcut-taking in Llama (opposite to the 14x increase reported for Claude by Sofroniew et al.). This suggests that emotion-behavior mappings are model-specific and not universal -- a novel finding with implications for steering-based safety interventions.
+Surprisingly, desperate steering **decreased** shortcut-taking in Llama (opposite to the 14x increase reported for Claude by Sofroniew et al.). This suggests that emotion-behavior mappings are model-specific and not universal -- a novel finding with implications for steering-based safety interventions. I discuss possible explanations in the analysis.
 
 ![Dose-response curves](results/plots/dose_response.png)
 
@@ -54,7 +54,7 @@ Within individual tasks (eliminating the confound entirely), V_internal achieves
 
 ### 4. Emotion steering does not affect surface expression
 
-Kruskal-Wallis tests across all V_text dimensions (valence, arousal, urgency, composure, frustration, hedging) show **no significant effect of emotion steering on surface emotional tone** (all p > 0.05). The steering changes behavior while leaving the text-level emotional presentation unchanged -- exactly the faithfulness gap we hypothesized.
+Kruskal-Wallis tests across all V_text dimensions (valence, arousal, urgency, composure, frustration, hedging) show **no significant effect of emotion steering on surface emotional tone** (all p > 0.05). The steering changes behavior while leaving the text-level emotional presentation unchanged -- exactly the faithfulness gap I hypothesized.
 
 ![V_text by steering condition](results/plots/vtext_by_condition.png)
 
@@ -79,7 +79,7 @@ The Qwen 2.5 72B judge (3-pass, ICC > 0.99) reclassified many regex-flagged "hac
 
 ## Red-Teaming Summary
 
-We conducted 7 red-teaming checks to stress-test the findings:
+I conducted 7 red-teaming checks to stress-test the findings:
 
 | Test | Finding | Verdict |
 |------|---------|---------|
