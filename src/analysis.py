@@ -245,8 +245,14 @@ def analysis_4_natural_prediction(
     settings: StatisticalSettings,
 ) -> dict:
     """
-    Analysis 4 (THE KEY RESULT): In UNSTEERED trials only, does natural
-    V_internal variation predict behavioral outcomes?
+    Analysis 4 (H5): In UNSTEERED trials only, does natural V_internal
+    variation predict behavioral outcomes?
+
+    Stratifies by outcome_key (task type) because pooling across Task A
+    (shortcut) and Task B (sycophantic) where Task B has ~zero variance
+    inflates AUC via task-id separability rather than behavioral prediction.
+    Reports per-task-type AUC plus a univariate V_internal_desperate AUC
+    (more stable than multivariate LOO at n~40, 7 events).
     """
     # Filter to unsteered trials
     unsteered = df[df["strength"].abs() < 1e-6].copy()
@@ -260,6 +266,32 @@ def analysis_4_natural_prediction(
     if unsteered["outcome_binary"].nunique() < 2:
         logger.warning("No outcome variance in unsteered trials")
         return {"error": "No variance", "n": len(unsteered)}
+
+    # Per-task-type breakdown — added after red-team found pooled AUC
+    # is inflated by task-id separability (Task B all-zero outcomes).
+    per_task_type = {}
+    for ok in sorted(unsteered["outcome_key"].dropna().unique()):
+        sub = unsteered[unsteered["outcome_key"] == ok]
+        y_sub = sub["outcome_binary"].values
+        if y_sub.sum() == 0 or y_sub.sum() == len(y_sub):
+            per_task_type[ok] = {
+                "n": int(len(y_sub)), "n_events": int(y_sub.sum()),
+                "note": "no outcome variance — AUC undefined",
+            }
+            continue
+        # Univariate: V_internal_desperate signed AUC (diagnostic)
+        desp = pd.to_numeric(sub["v_internal_desperate"], errors="coerce").fillna(0).values
+        auc_desp = roc_auc_score(y_sub, desp)
+        per_task_type[ok] = {
+            "n": int(len(y_sub)),
+            "n_events": int(y_sub.sum()),
+            "univariate_v_internal_desperate_auc": float(auc_desp),
+            "note": "univariate — more stable than multivariate LOO at low n",
+        }
+        logger.info(
+            f"  [{ok}] n={len(y_sub)} events={int(y_sub.sum())} "
+            f"univariate V_int_desp AUC={auc_desp:.3f}"
+        )
 
     # V_internal prediction
     v_int_cols = [c for c in df.columns if c.startswith("v_internal_")]
@@ -302,6 +334,7 @@ def analysis_4_natural_prediction(
             logger.warning(f"Analysis 4 failed for {feature_set_name}: {e}")
             results[feature_set_name] = {"auc": 0.5, "error": str(e)}
 
+    results["per_task_type"] = per_task_type
     return results
 
 
