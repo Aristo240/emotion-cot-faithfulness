@@ -1,7 +1,59 @@
 # Project Continuation Notes
-**Last updated:** 2026-04-14
+**Last updated:** 2026-04-15
 **Project:** Unfaithful by Feeling (emotion-cot-faithfulness)
 **Target venue:** NeurIPS 2026 workshop (safety / interpretability)
+
+## 2026-04-15 Update — Red-team round 2 + fixes (CPU-only batch)
+
+CUDA env unblocked (downgraded torch 2.11+cu130 → 2.5.1+cu124); Phase 4
+blockers running on 8×V100s (PID 2202333, log
+`logs/blockers_20260415_085452.log`, ETA ~17h, finegrained.jsonl growing).
+
+### Red-team findings addressed (FATAL / MAJOR / MINOR)
+1. **F1 (Task A duplicates)** — config.py now contains `TASK_A_DIVERSE`
+   (5 mechanistically distinct shortcut variants: timing-budget,
+   hardcoded lookup, fake verifier, silent spec drop, misleading-by-
+   omission). Wired through `scripts/phase2_diverse.py` (resumable jsonl,
+   same grid as phase2_steering.py, separate output `task_a_diverse.jsonl`).
+   **Status:** code deployed, GPU run queued behind the blockers job.
+2. **F2 (in-sample H5)** — `scripts/h5_holdout.py` implements the
+   pre-registered evaluation: pooled, LOGO mean (only meaningful with
+   ≥3 tasks of variance), 10k permutation, stratified bootstrap, and a
+   binding decision rule. On current data the script honestly returns
+   **INSUFFICIENT-DATA** (only 2 of 4 task variants produced events) —
+   the prior 0.901 headline is reframed as exploratory baseline.
+3. **M3 (broken `1-std/mean` ICC)** — replaced with `per_trial_agreement`
+   (range/std). The headline ICC numbers in `judge_reliability.json`
+   already came from the *correct* `compute_vtext_icc` ANOVA
+   (`src/judge.py:457`); the broken code was a per-trial diagnostic only.
+4. **M4 (V_internal documentation)** — `docs/methods.md` written:
+   V_internal is a frozen, zero-shot Phase-1 cosine projection, never
+   refit on Phase 2/3 behavioural data. H5 is therefore a transfer claim,
+   not a within-dataset classification claim.
+5. **M5 (judge prompt audit)** — `docs/judge_prompts.md` reproduces the
+   prompts; `scripts/judge_symmetry_check.py` runs a confound-matrix
+   audit. Headline (urgency↔desperate vs urgency↔calm; composure↔calm
+   vs composure↔desperate) passes the preregistered ≥0.10 signed-
+   pattern threshold. Other dimensions (valence/frustration/arousal)
+   show |r|<0.10 — disclosed as power limitation, not bias.
+
+### Files added
+- `docs/preregistration.md` (locked H5 protocol, RNG seed 20260415)
+- `docs/methods.md`, `docs/judge_prompts.md`
+- `scripts/h5_holdout.py`, `scripts/judge_symmetry_check.py`,
+  `scripts/phase2_diverse.py`
+- `results/phase3/llama70b/h5_holdout_report.json`,
+  `results/phase3/llama70b/judge_symmetry.json`
+
+### Open after Phase 4 finishes
+- Re-run `scripts/run_judge_reclassification.py` on new jsonls
+- Re-run `scripts/03_run_phase3.py`, then `scripts/h5_holdout.py` —
+  this is the final confirmatory H5 verdict per `docs/preregistration.md`
+- Launch `scripts/phase2_diverse.py` for genuine cross-mechanism LOGO
+- Launch judge on diverse output, then re-run h5_holdout combining all
+- Behavioural-layer sweep (camera-ready extension, not workshop blocker)
+
+
 
 ## 2026-04-14 Update — Phase 3 ran, red-team done, blocker runs launched
 

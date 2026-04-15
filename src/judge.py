@@ -393,22 +393,24 @@ def judge_vtext_batch(
         r["ratings"] = mean_ratings
         r["std_per_dimension"] = std_ratings
 
-        # Compute ICC(2,1) per dimension if we have enough passes
+        # Per-trial cross-pass agreement: ICC requires multiple items, so
+        # for a single trial we can only report range/coefficient-of-variation.
+        # Headline reliability comes from compute_vtext_icc() (proper ICC(2,1)
+        # ANOVA across the full set of items), invoked downstream.
         if n_passes >= 2:
-            icc_vals = {}
+            agreement_vals = {}
             for dim in VTEXT_DIMENSIONS:
                 vals = [p.get(dim) for p in passes if dim in p]
-                if len(vals) >= 2 and np.std(vals) > 0:
-                    # Simple ICC(2,1) approximation for single target
-                    # ICC = (var_between - var_within) / (var_between + (k-1)*var_within)
-                    # For a single target with k raters, this simplifies
-                    grand_mean = np.mean(vals)
-                    var_total = np.var(vals)
-                    # With single item, report std/mean as consistency proxy
-                    icc_vals[dim] = 1.0 - (np.std(vals) / (grand_mean + 1e-8))
+                if len(vals) >= 2:
+                    rng = float(max(vals) - min(vals))
+                    agreement_vals[dim] = {
+                        "range": rng,
+                        "std": float(np.std(vals)),
+                        "max_disagreement_le_1": rng <= 1.0,
+                    }
                 else:
-                    icc_vals[dim] = None
-            r["consistency_per_dimension"] = icc_vals
+                    agreement_vals[dim] = None
+            r["per_trial_agreement"] = agreement_vals
 
     return results
 
