@@ -1,7 +1,11 @@
 # Data and outputs (large files)
 data/
 outputs/
-results/
+# results/ is excluded BUT plot PNGs are tracked so READMEs render on GitHub
+results/*
+!results/plots/
+results/plots/*
+!results/plots/*.png
 *.npy
 *.npz
 *.pkl
