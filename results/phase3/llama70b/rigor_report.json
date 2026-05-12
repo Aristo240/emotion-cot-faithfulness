@@ -1,0 +1,84 @@
+{
+  "n_total": 1170,
+  "tests": {
+    "delong_internal_vs_text_taskA": {
+      "auc_internal": 0.7986535523300229,
+      "auc_text": 0.5927234530175707,
+      "z": 3.6242631819651794,
+      "p": 0.0002897864061339739
+    },
+    "logo_internal_taskA": 0.3943372803666921,
+    "logo_text_taskA": 0.3359912146676853,
+    "within_task_cv": {
+      "v_internal": {
+        "fast_sum_v1": 0.7764778325123152,
+        "fast_sum_v3": 0.6316666666666667
+      },
+      "v_text": {
+        "fast_sum_v1": 0.3168103448275862,
+        "fast_sum_v3": 0.6316666666666666
+      }
+    },
+    "v_internal_desperate_auc_residualized": 0.6744174942704354,
+    "h5_taskA_unsteered_univariate": {
+      "auc": 0.9012563473710327,
+      "ci_low": 0.7851141237745098,
+      "ci_high": 0.9829330357142857,
+      "n": 40,
+      "events": 7
+    },
+    "mcc": {
+      "names": [
+        "delong_internal_vs_text_taskA",
+        "fisher_desp-0.50_vs_unsteered",
+        "fisher_desp-0.30_vs_unsteered",
+        "fisher_desp-0.20_vs_unsteered",
+        "fisher_desp+0.20_vs_unsteered",
+        "fisher_desp+0.30_vs_unsteered",
+        "fisher_desp+0.50_vs_unsteered",
+        "mannwhitney_vintdesp_unsteered"
+      ],
+      "raw": [
+        0.0002897864061339739,
+        0.3109267773039548,
+        0.517892232884039,
+        0.517892232884039,
+        0.1543042703784857,
+        0.0567586739599918,
+        0.0567586739599918,
+        0.00018328044643834118
+      ],
+      "bonferroni": [
+        0.002318291249071791,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.4540693916799344,
+        0.4540693916799344,
+        0.0014662435715067294
+      ],
+      "bh_fdr": [
+        0.0011591456245358955,
+        0.41456903640527304,
+        0.517892232884039,
+        0.517892232884039,
+        0.24688683260557714,
+        0.1135173479199836,
+        0.1135173479199836,
+        0.0011591456245358955
+      ]
+    }
+  },
+  "v_text_kept": [
+    "v_text_judge_valence",
+    "v_text_judge_arousal",
+    "v_text_judge_dominance",
+    "v_text_judge_urgency",
+    "v_text_judge_composure",
+    "v_text_judge_frustration",
+    "v_text_judge_hedging",
+    "v_text_judge_self_interruption"
+  ],
+  "v_text_dropped": []
+}

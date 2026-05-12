@@ -1,0 +1,249 @@
+{
+  "D1_phase4_extended": {
+    "name": "D1: Phase 4 extended_unsteered (the strongest H5 dataset)",
+    "n": 80,
+    "events": 7,
+    "aucs": {
+      "vint_desperate": 0.7632093933463797,
+      "vint_neg_calm": 0.8140900195694716,
+      "vtext_desperate": 0.6389432485322897
+    },
+    "correlation_pearson_vint_vtext": 0.23915200601052683,
+    "correlation_spearman_vint_vtext": 0.2622783513669044,
+    "quartile_hackrate": [
+      [
+        0.0,
+        NaN,
+        NaN,
+        0.0
+      ],
+      [
+        0.0,
+        NaN,
+        NaN,
+        0.0
+      ],
+      [
+        0.25,
+        NaN,
+        NaN,
+        0.1875
+      ],
+      [
+        0.0,
+        NaN,
+        NaN,
+        0.15789473684210525
+      ]
+    ],
+    "quartile_n": [
+      [
+        6,
+        0,
+        0,
+        14
+      ],
+      [
+        4,
+        0,
+        0,
+        16
+      ],
+      [
+        4,
+        0,
+        0,
+        16
+      ],
+      [
+        1,
+        0,
+        0,
+        19
+      ]
+    ],
+    "conditional": {
+      "vint_on_low_vtext": {
+        "n": 77,
+        "events": 5,
+        "auc": 0.8138888888888889,
+        "label": "V_internal AUC on trials where V_text \u2264 median"
+      },
+      "vtext_on_low_vint": null,
+      "vint_neg_calm_on_low_vtext": {
+        "n": 77,
+        "events": 5,
+        "auc": 0.8416666666666666,
+        "label": "V_internal[-calm] AUC on trials where V_text \u2264 median"
+      }
+    }
+  },
+  "D2_phase4_fg_plus_phase2": {
+    "name": "D2: Phase 4 finegrained + Phase 2 task_a (fast_sum family)",
+    "n": 992,
+    "events": 87,
+    "aucs": {
+      "vint_desperate": 0.8365783958849304,
+      "vint_neg_calm": 0.8300501682860228,
+      "vtext_desperate": 0.6465930018416206
+    },
+    "correlation_pearson_vint_vtext": 0.3620811248880215,
+    "correlation_spearman_vint_vtext": 0.3610701549868362,
+    "quartile_hackrate": [
+      [
+        0.0,
+        NaN,
+        NaN,
+        0.019867549668874173
+      ],
+      [
+        0.016129032258064516,
+        NaN,
+        NaN,
+        0.0
+      ],
+      [
+        0.05714285714285714,
+        NaN,
+        NaN,
+        0.0892018779342723
+      ],
+      [
+        0.1111111111111111,
+        NaN,
+        NaN,
+        0.2608695652173913
+      ]
+    ],
+    "quartile_n": [
+      [
+        97,
+        0,
+        0,
+        151
+      ],
+      [
+        62,
+        0,
+        0,
+        186
+      ],
+      [
+        35,
+        0,
+        0,
+        213
+      ],
+      [
+        18,
+        0,
+        0,
+        230
+      ]
+    ],
+    "conditional": {
+      "vint_on_low_vtext": {
+        "n": 946,
+        "events": 70,
+        "auc": 0.8319308545335943,
+        "label": "V_internal AUC on trials where V_text \u2264 median"
+      },
+      "vtext_on_low_vint": {
+        "n": 496,
+        "events": 4,
+        "auc": 0.5276930894308943,
+        "label": "V_text AUC on trials where V_internal \u2264 median"
+      },
+      "vint_neg_calm_on_low_vtext": {
+        "n": 946,
+        "events": 70,
+        "auc": 0.8346216568819309,
+        "label": "V_internal[-calm] AUC on trials where V_text \u2264 median"
+      }
+    }
+  },
+  "D3_diverse_claude": {
+    "name": "D3: phase2_diverse (4 event-positive variants, Claude-judged)",
+    "n": 481,
+    "events": 194,
+    "aucs": {
+      "vint_desperate": 0.40777326771794964,
+      "vint_neg_calm": 0.6745931965947053,
+      "vtext_desperate": 0.400176012069399
+    },
+    "correlation_pearson_vint_vtext": 0.1425314134220315,
+    "correlation_spearman_vint_vtext": 0.14936178268564088,
+    "quartile_hackrate": [
+      [
+        NaN,
+        0.6296296296296297,
+        0.5294117647058824,
+        0.3469387755102041
+      ],
+      [
+        NaN,
+        0.47058823529411764,
+        0.3684210526315789,
+        0.3333333333333333
+      ],
+      [
+        NaN,
+        0.4423076923076923,
+        0.5,
+        0.25
+      ],
+      [
+        NaN,
+        0.3111111111111111,
+        0.42857142857142855,
+        0.3064516129032258
+      ]
+    ],
+    "quartile_n": [
+      [
+        0,
+        54,
+        17,
+        49
+      ],
+      [
+        0,
+        68,
+        19,
+        33
+      ],
+      [
+        0,
+        52,
+        20,
+        48
+      ],
+      [
+        0,
+        45,
+        14,
+        62
+      ]
+    ],
+    "conditional": {
+      "vint_on_low_vtext": {
+        "n": 243,
+        "events": 110,
+        "auc": 0.3555707450444293,
+        "label": "V_internal AUC on trials where V_text \u2264 median"
+      },
+      "vtext_on_low_vint": {
+        "n": 241,
+        "events": 111,
+        "auc": 0.37241857241857235,
+        "label": "V_text AUC on trials where V_internal \u2264 median"
+      },
+      "vint_neg_calm_on_low_vtext": {
+        "n": 243,
+        "events": 110,
+        "auc": 0.5931647300068352,
+        "label": "V_internal[-calm] AUC on trials where V_text \u2264 median"
+      }
+    }
+  }
+}

@@ -1,0 +1,393 @@
+{
+  "model": "meta-llama/Llama-3.1-70B-Instruct",
+  "primary_layer": 64,
+  "pilot_layers": [
+    16,
+    40,
+    64
+  ],
+  "logit_lens": {
+    "layer": 64,
+    "top_k": 20,
+    "match_rate": 0.0,
+    "emotions": {
+      "angry": {
+        "matched": false,
+        "match_rank": null,
+        "top_tokens": [
+          {
+            "token": "righteous",
+            "logit": 0.3
+          },
+          {
+            "token": "\u6012",
+            "logit": 0.2
+          },
+          {
+            "token": "pent",
+            "logit": 0.2
+          },
+          {
+            "token": "\u0435\u0433\u043e\u0434",
+            "logit": 0.2
+          },
+          {
+            "token": "hotter",
+            "logit": 0.2
+          },
+          {
+            "token": "barg",
+            "logit": 0.2
+          },
+          {
+            "token": "sick",
+            "logit": 0.2
+          },
+          {
+            "token": "nostr",
+            "logit": 0.2
+          },
+          {
+            "token": "acid",
+            "logit": 0.2
+          },
+          {
+            "token": "stew",
+            "logit": 0.2
+          }
+        ],
+        "bottom_tokens": [
+          {
+            "token": "excited",
+            "logit": -0.2
+          },
+          {
+            "token": "dro",
+            "logit": -0.2
+          },
+          {
+            "token": "unp",
+            "logit": -0.2
+          },
+          {
+            "token": "Content",
+            "logit": -0.2
+          },
+          {
+            "token": "bash",
+            "logit": -0.2
+          }
+        ]
+      },
+      "calm": {
+        "matched": false,
+        "match_rank": null,
+        "top_tokens": [
+          {
+            "token": "content",
+            "logit": 0.3
+          },
+          {
+            "token": "Content",
+            "logit": 0.2
+          },
+          {
+            "token": "content",
+            "logit": 0.2
+          },
+          {
+            "token": "peace",
+            "logit": 0.2
+          },
+          {
+            "token": "companion",
+            "logit": 0.2
+          },
+          {
+            "token": "Content",
+            "logit": 0.2
+          },
+          {
+            "token": "strokes",
+            "logit": 0.2
+          },
+          {
+            "token": "interest",
+            "logit": 0.2
+          },
+          {
+            "token": "767",
+            "logit": 0.2
+          },
+          {
+            "token": "ser",
+            "logit": 0.2
+          }
+        ],
+        "bottom_tokens": [
+          {
+            "token": "pacing",
+            "logit": -0.2
+          },
+          {
+            "token": "raw",
+            "logit": -0.2
+          },
+          {
+            "token": "so\u011fuk",
+            "logit": -0.2
+          },
+          {
+            "token": "barg",
+            "logit": -0.2
+          },
+          {
+            "token": "weakness",
+            "logit": -0.2
+          }
+        ]
+      },
+      "desperate": {
+        "matched": false,
+        "match_rank": null,
+        "top_tokens": [
+          {
+            "token": "pacing",
+            "logit": 0.2
+          },
+          {
+            "token": "rehe",
+            "logit": 0.1
+          },
+          {
+            "token": "umbn",
+            "logit": 0.1
+          },
+          {
+            "token": "sympathetic",
+            "logit": 0.1
+          },
+          {
+            "token": "hope",
+            "logit": 0.1
+          },
+          {
+            "token": "Dise",
+            "logit": 0.1
+          },
+          {
+            "token": "pan",
+            "logit": 0.1
+          },
+          {
+            "token": "Attr",
+            "logit": 0.1
+          },
+          {
+            "token": "shimmer",
+            "logit": 0.1
+          },
+          {
+            "token": "dob",
+            "logit": 0.1
+          }
+        ],
+        "bottom_tokens": [
+          {
+            "token": "content",
+            "logit": -0.2
+          },
+          {
+            "token": "content",
+            "logit": -0.2
+          },
+          {
+            "token": "_content",
+            "logit": -0.2
+          },
+          {
+            "token": "-content",
+            "logit": -0.2
+          },
+          {
+            "token": "Content",
+            "logit": -0.2
+          }
+        ]
+      },
+      "happy": {
+        "matched": false,
+        "match_rank": null,
+        "top_tokens": [
+          {
+            "token": "beam",
+            "logit": 0.3
+          },
+          {
+            "token": "excit",
+            "logit": 0.3
+          },
+          {
+            "token": "exciting",
+            "logit": 0.3
+          },
+          {
+            "token": "beams",
+            "logit": 0.2
+          },
+          {
+            "token": "excited",
+            "logit": 0.2
+          },
+          {
+            "token": "excitement",
+            "logit": 0.2
+          },
+          {
+            "token": "content",
+            "logit": 0.2
+          },
+          {
+            "token": "unp",
+            "logit": 0.2
+          },
+          {
+            "token": "ext",
+            "logit": 0.2
+          },
+          {
+            "token": "-exc",
+            "logit": 0.2
+          }
+        ],
+        "bottom_tokens": [
+          {
+            "token": "retreat",
+            "logit": -0.2
+          },
+          {
+            "token": "empt",
+            "logit": -0.2
+          },
+          {
+            "token": "acidic",
+            "logit": -0.2
+          },
+          {
+            "token": "cheerful",
+            "logit": -0.2
+          },
+          {
+            "token": "charms",
+            "logit": -0.2
+          }
+        ]
+      },
+      "sad": {
+        "matched": false,
+        "match_rank": null,
+        "top_tokens": [
+          {
+            "token": "num",
+            "logit": 0.2
+          },
+          {
+            "token": "num",
+            "logit": 0.2
+          },
+          {
+            "token": "sob",
+            "logit": 0.2
+          },
+          {
+            "token": "hollow",
+            "logit": 0.2
+          },
+          {
+            "token": "intimacy",
+            "logit": 0.2
+          },
+          {
+            "token": "numb",
+            "logit": 0.2
+          },
+          {
+            "token": "suff",
+            "logit": 0.1
+          },
+          {
+            "token": "ickness",
+            "logit": 0.1
+          },
+          {
+            "token": "unwanted",
+            "logit": 0.1
+          },
+          {
+            "token": "intimate",
+            "logit": 0.1
+          }
+        ],
+        "bottom_tokens": [
+          {
+            "token": "ser",
+            "logit": -0.1
+          },
+          {
+            "token": "calm",
+            "logit": -0.1
+          },
+          {
+            "token": "Ah",
+            "logit": -0.1
+          },
+          {
+            "token": "Bond",
+            "logit": -0.1
+          },
+          {
+            "token": "bond",
+            "logit": -0.1
+          }
+        ]
+      }
+    }
+  },
+  "logit_lens_by_layer": {
+    "16": {
+      "matches": 0,
+      "total": 5,
+      "rate": 0.0
+    },
+    "40": {
+      "matches": 0,
+      "total": 5,
+      "rate": 0.0
+    },
+    "64": {
+      "matches": 0,
+      "total": 5,
+      "rate": 0.0
+    }
+  },
+  "cross_validation": {
+    "64": {
+      "accuracy": 0.36,
+      "passed": false,
+      "threshold": 0.7,
+      "details": "9/25 correct (chance=20.0%)"
+    },
+    "16": {
+      "accuracy": 0.24,
+      "passed": false,
+      "threshold": 0.7,
+      "details": "6/25 correct (chance=20.0%)"
+    },
+    "40": {
+      "accuracy": 0.32,
+      "passed": false,
+      "threshold": 0.7,
+      "details": "8/25 correct (chance=20.0%)"
+    }
+  }
+}

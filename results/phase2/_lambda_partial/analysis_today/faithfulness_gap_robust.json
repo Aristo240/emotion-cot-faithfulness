@@ -1,0 +1,156 @@
+{
+  "n": 992,
+  "events": 87,
+  "vtext_distribution": {
+    "low_third": 946,
+    "mid_third": 0,
+    "high_third": 46,
+    "unique_rounded_values": 14
+  },
+  "marginal_auc": {
+    "vint": {
+      "auc": 0.8363252716332754,
+      "ci95": [
+        0.7972213981630465,
+        0.8721202572765072
+      ],
+      "n": 992,
+      "events": 87,
+      "n_boot": 5000
+    },
+    "vtext": {
+      "auc": 0.6469488466960557,
+      "ci95": [
+        0.6029153878060814,
+        0.6904710586547785
+      ],
+      "n": 992,
+      "events": 87,
+      "n_boot": 5000
+    },
+    "diff_mean": 0.18937642493721973,
+    "diff_ci95": [
+      0.14136598967058753,
+      0.23889248798476337
+    ]
+  },
+  "conditional_auc": {
+    "q33": {
+      "vint_on_vtext_low": {
+        "auc": 0.8322612681720102,
+        "ci95": [
+          0.7859846369297662,
+          0.8734351786296114
+        ],
+        "n": 946,
+        "events": 70,
+        "n_boot": 5000,
+        "label": "V_int among V_text<=q33"
+      },
+      "vtext_on_vint_low": {
+        "auc": 0.6752058606808263,
+        "ci95": [
+          0.6490683229813665,
+          0.7003795721187025
+        ],
+        "n": 328,
+        "events": 3,
+        "n_boot": 4032,
+        "label": "V_text among V_int<=q33"
+      }
+    },
+    "q50": {
+      "vint_on_vtext_low": {
+        "auc": 0.8317699847106153,
+        "ci95": [
+          0.785791596237072,
+          0.8733193412775987
+        ],
+        "n": 946,
+        "events": 70,
+        "n_boot": 5000,
+        "label": "V_int among V_text<=q50"
+      },
+      "vtext_on_vint_low": {
+        "auc": 0.5259104161660758,
+        "ci95": [
+          0.2714684959349593,
+          0.6734279918864098
+        ],
+        "n": 496,
+        "events": 4,
+        "n_boot": 4531,
+        "label": "V_text among V_int<=q50"
+      }
+    },
+    "q66": {
+      "vint_on_vtext_low": {
+        "auc": 0.8324470555277025,
+        "ci95": [
+          0.7874707233065442,
+          0.8742763667076924
+        ],
+        "n": 946,
+        "events": 70,
+        "n_boot": 5000,
+        "label": "V_int among V_text<=q66"
+      },
+      "vtext_on_vint_low": {
+        "auc": 0.5411151206293318,
+        "ci95": [
+          0.38065570379248503,
+          0.6828544142315446
+        ],
+        "n": 655,
+        "events": 12,
+        "n_boot": 4998,
+        "label": "V_text among V_int<=q66"
+      }
+    }
+  },
+  "quadrants": {
+    "AGREE_LOW    (V_int LOW,  V_text LOW)": {
+      "n": 493,
+      "hacks": 4,
+      "rate": 0.008113590263691683
+    },
+    "PERFORMATIVE (V_int LOW,  V_text HIGH)": {
+      "n": 3,
+      "hacks": 0,
+      "rate": 0.0
+    },
+    "HIDDEN       (V_int HIGH, V_text LOW)": {
+      "n": 453,
+      "hacks": 66,
+      "rate": 0.1456953642384106
+    },
+    "AGREE_HIGH   (V_int HIGH, V_text HIGH)": {
+      "n": 43,
+      "hacks": 17,
+      "rate": 0.3953488372093023
+    }
+  },
+  "fisher_hidden_vs_perf": {
+    "table": [
+      [
+        66,
+        387
+      ],
+      [
+        0,
+        3
+      ]
+    ],
+    "odds_ratio": Infinity,
+    "p_one_sided": 0.6249047729455798
+  },
+  "perm_conditional_diff": {
+    "observed": 0.30205998653955723,
+    "null_mean": 0.00025667665262668697,
+    "null_ci95": [
+      -0.09388855196149558,
+      0.0971384730338787
+    ],
+    "p_one_sided": 0.0
+  }
+}

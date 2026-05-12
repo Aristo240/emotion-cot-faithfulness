@@ -1,0 +1,130 @@
+{
+  "n_rows_used": 1170,
+  "confound_matrix": {
+    "valence": {
+      "desperate": -0.16603863811722844,
+      "calm": 0.2047940795882397,
+      "angry": -0.11899249894843666,
+      "afraid": -0.09611898589860543,
+      "happy": 0.04494060998695499,
+      "loving": 0.15296046244338407
+    },
+    "arousal": {
+      "desperate": -0.008969073468085051,
+      "calm": 0.01854767537569881,
+      "angry": -0.06506645414459296,
+      "afraid": -0.0011966744284199725,
+      "happy": 0.010050203384511337,
+      "loving": 0.04667254414272263
+    },
+    "dominance": {
+      "desperate": 0.04814469925916759,
+      "calm": -0.11706470171675433,
+      "angry": 0.2140620855884023,
+      "afraid": 0.2585478731760467,
+      "happy": 0.0585843924667675,
+      "loving": -0.3181734687328121
+    },
+    "urgency": {
+      "desperate": 0.32588080960877713,
+      "calm": -0.319091943527823,
+      "angry": 0.2571511678157888,
+      "afraid": 0.33185551978564826,
+      "happy": -0.13937308951203395,
+      "loving": -0.34117168533277437
+    },
+    "composure": {
+      "desperate": -0.15134906323446537,
+      "calm": 0.10034923009967504,
+      "angry": -0.021430441981894942,
+      "afraid": -0.09222820988269022,
+      "happy": 0.05076716247226264,
+      "loving": 0.08850452137028292
+    },
+    "frustration": {
+      "desperate": 0.0694126081267837,
+      "calm": -0.08482055532189314,
+      "angry": 0.0623189459137555,
+      "afraid": -0.003580073872430767,
+      "happy": -0.010324266108636182,
+      "loving": -0.054059819893416516
+    },
+    "hedging": {
+      "desperate": 0.026115968291332323,
+      "calm": 0.029502496845283627,
+      "angry": -0.14106839467152651,
+      "afraid": -0.11848848681879189,
+      "happy": -0.02535134562610249,
+      "loving": 0.15686978452069963
+    },
+    "self_interruption": {
+      "desperate": 0.17405704193373545,
+      "calm": -0.17009052457052612,
+      "angry": 0.10110205235477845,
+      "afraid": 0.03390954841437457,
+      "happy": -0.10502433853809875,
+      "loving": -0.07046525771680794
+    }
+  },
+  "symmetry_audit": {
+    "per_dim": {
+      "urgency": {
+        "expected_emotion": "desperate",
+        "expected_sign": 1,
+        "corr_with_expected": 0.32588080960877713,
+        "opposite_emotion": "calm",
+        "corr_with_opposite": -0.319091943527823,
+        "expected_sign_correct": true,
+        "opposite_sign_correct": true,
+        "passes": true
+      },
+      "composure": {
+        "expected_emotion": "calm",
+        "expected_sign": 1,
+        "corr_with_expected": 0.10034923009967504,
+        "opposite_emotion": "desperate",
+        "corr_with_opposite": -0.15134906323446537,
+        "expected_sign_correct": true,
+        "opposite_sign_correct": true,
+        "passes": true
+      },
+      "valence": {
+        "expected_emotion": "happy",
+        "expected_sign": 1,
+        "corr_with_expected": 0.04494060998695499,
+        "opposite_emotion": "angry",
+        "corr_with_opposite": -0.11899249894843666,
+        "expected_sign_correct": false,
+        "opposite_sign_correct": true,
+        "passes": false
+      },
+      "frustration": {
+        "expected_emotion": "angry",
+        "expected_sign": 1,
+        "corr_with_expected": 0.0623189459137555,
+        "opposite_emotion": "happy",
+        "corr_with_opposite": -0.010324266108636182,
+        "expected_sign_correct": false,
+        "opposite_sign_correct": false,
+        "passes": false
+      },
+      "arousal": {
+        "expected_emotion": "afraid",
+        "expected_sign": 1,
+        "corr_with_expected": -0.0011966744284199725,
+        "opposite_emotion": "loving",
+        "corr_with_opposite": 0.04667254414272263,
+        "expected_sign_correct": false,
+        "opposite_sign_correct": false,
+        "passes": false
+      }
+    },
+    "headline": {
+      "urgency_desp_minus_calm": 0.6449727531366001,
+      "composure_calm_minus_desp": 0.2516982933341404,
+      "urgency_pass": true,
+      "composure_pass": true,
+      "overall_pass": true
+    }
+  }
+}

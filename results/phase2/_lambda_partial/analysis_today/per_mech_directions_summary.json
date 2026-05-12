@@ -1,0 +1,47 @@
+{
+  "per_mech_within_cv_auc": {
+    "hardcoded_lookup_v1": 0.7437893956247682,
+    "fake_verifier_v1": 0.804945054945055,
+    "silent_spec_drop_v1": 0.7157706093189964,
+    "misleading_impl_v1": 0.9721549636803875
+  },
+  "cosine_matrix": {
+    "hardcoded_lookup_v1": {
+      "hardcoded_lookup_v1": 1.0,
+      "fake_verifier_v1": -0.10771657367608851,
+      "silent_spec_drop_v1": 0.040257865867257235,
+      "misleading_impl_v1": -0.013670596264438502
+    },
+    "fake_verifier_v1": {
+      "hardcoded_lookup_v1": -0.10771657367608851,
+      "fake_verifier_v1": 1.0000000000000002,
+      "silent_spec_drop_v1": -0.19459244292058508,
+      "misleading_impl_v1": 0.17861957940026454
+    },
+    "silent_spec_drop_v1": {
+      "hardcoded_lookup_v1": 0.040257865867257235,
+      "fake_verifier_v1": -0.19459244292058508,
+      "silent_spec_drop_v1": 1.0,
+      "misleading_impl_v1": 0.12682310961242496
+    },
+    "misleading_impl_v1": {
+      "hardcoded_lookup_v1": -0.013670596264438502,
+      "fake_verifier_v1": 0.17861957940026454,
+      "silent_spec_drop_v1": 0.12682310961242496,
+      "misleading_impl_v1": 1.0
+    }
+  },
+  "mean_off_diag_cosine": 0.004953490336472441,
+  "phase2_transfer_aucs": {
+    "hardcoded_lookup_v1": 0.25472747497219134,
+    "fake_verifier_v1": 0.6730769230769231,
+    "silent_spec_drop_v1": 0.6756272401433692,
+    "misleading_impl_v1": 0.6707021791767553
+  },
+  "cosine_pool_vs_per_mech": {
+    "hardcoded_lookup_v1": 0.25792932931784396,
+    "fake_verifier_v1": 0.13451062648433817,
+    "silent_spec_drop_v1": 0.37920052129389475,
+    "misleading_impl_v1": 0.48408676613099844
+  }
+}

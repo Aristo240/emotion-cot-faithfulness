@@ -1,0 +1,103 @@
+{
+  "n_total": 481,
+  "n_events": 194,
+  "logo_aucs_per_variant": {
+    "hardcoded_lookup_v1": 0.4686688913607713,
+    "fake_verifier_v1": 0.5782967032967032,
+    "silent_spec_drop_v1": 0.5064516129032258,
+    "misleading_impl_v1": 0.5924939467312349
+  },
+  "logo_mean_auc": 0.5364777885729838,
+  "v_internal_desperate_logo_mean_baseline": 0.452,
+  "prereg_threshold": 0.65,
+  "within_variant_cv_aucs": {
+    "hardcoded_lookup_v1": 0.7437893956247682,
+    "fake_verifier_v1": 0.804945054945055,
+    "silent_spec_drop_v1": 0.7157706093189964,
+    "misleading_impl_v1": 0.9721549636803875
+  },
+  "within_variant_cv_mean": 0.8091650058923019,
+  "permutation_null_mean": 0.5007858828452051,
+  "permutation_null_ci95": [
+    0.40920596618673644,
+    0.5884176780165613
+  ],
+  "permutation_p_one_sided": 0.2335,
+  "top_features_by_mean_abs_weight": [
+    {
+      "emotion": "defiant",
+      "mean_weight": 1.394235639601967,
+      "abs_weight": 1.394235639601967
+    },
+    {
+      "emotion": "vulnerable",
+      "mean_weight": -1.3461061130024,
+      "abs_weight": 1.3461061130024
+    },
+    {
+      "emotion": "enthusiastic",
+      "mean_weight": -1.2460335593281324,
+      "abs_weight": 1.2460335593281324
+    },
+    {
+      "emotion": "desperate",
+      "mean_weight": -1.145805414870933,
+      "abs_weight": 1.145805414870933
+    },
+    {
+      "emotion": "calm",
+      "mean_weight": -1.1059335721461354,
+      "abs_weight": 1.1059335721461354
+    },
+    {
+      "emotion": "weary",
+      "mean_weight": -1.0903326606936214,
+      "abs_weight": 1.0903326606936214
+    },
+    {
+      "emotion": "surprised",
+      "mean_weight": -1.0013273424405864,
+      "abs_weight": 1.0013273424405864
+    },
+    {
+      "emotion": "guilty",
+      "mean_weight": 0.9498654168852987,
+      "abs_weight": 0.9498654168852987
+    },
+    {
+      "emotion": "furious",
+      "mean_weight": -0.9018932983145688,
+      "abs_weight": 0.9018932983145688
+    },
+    {
+      "emotion": "content",
+      "mean_weight": 0.8766138872182442,
+      "abs_weight": 0.8766138872182442
+    },
+    {
+      "emotion": "serene",
+      "mean_weight": 0.7880823849651725,
+      "abs_weight": 0.7880823849651725
+    },
+    {
+      "emotion": "compassionate",
+      "mean_weight": -0.7632029346492107,
+      "abs_weight": 0.7632029346492107
+    },
+    {
+      "emotion": "nostalgic",
+      "mean_weight": 0.7304878462747868,
+      "abs_weight": 0.7304878462747868
+    },
+    {
+      "emotion": "contemptuous",
+      "mean_weight": 0.43365259372006165,
+      "abs_weight": 0.719849284839922
+    },
+    {
+      "emotion": "brooding",
+      "mean_weight": 0.4249785467923085,
+      "abs_weight": 0.692137602654976
+    }
+  ]
+}

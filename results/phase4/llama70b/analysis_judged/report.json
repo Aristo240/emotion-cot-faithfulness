@@ -1,0 +1,377 @@
+{
+  "label_source": "judge_classification (Qwen 2.5 72B, 3-pass majority)",
+  "n_trials_judged": {
+    "fine": 480,
+    "ext": 80,
+    "rnd": 200,
+    "inj": 120
+  },
+  "baseline_unsteered": {
+    "hacks": 14,
+    "n": 120,
+    "rate": 0.11666666666666667
+  },
+  "dose_response": [
+    {
+      "emotion": "desperate",
+      "strength": -0.5,
+      "hacks": 3,
+      "n": 40,
+      "rate": 0.075,
+      "ci_low": 0.025836025774588198,
+      "ci_high": 0.19864233524310543,
+      "fisher_or": 0.6138996138996139,
+      "fisher_p": 0.5655197578468276
+    },
+    {
+      "emotion": "desperate",
+      "strength": -0.3,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": -0.2,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": -0.15,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": -0.1,
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05,
+      "ci_low": 0.013820667386148344,
+      "ci_high": 0.16503877369140962,
+      "fisher_or": 0.39849624060150374,
+      "fisher_p": 0.3614187787532724
+    },
+    {
+      "emotion": "desperate",
+      "strength": -0.05,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.05,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.1,
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05,
+      "ci_low": 0.013820667386148344,
+      "ci_high": 0.16503877369140962,
+      "fisher_or": 0.39849624060150374,
+      "fisher_p": 0.3614187787532724
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.15,
+      "hacks": 5,
+      "n": 40,
+      "rate": 0.125,
+      "ci_low": 0.05459500250945401,
+      "ci_high": 0.261121198388511,
+      "fisher_or": 1.0816326530612246,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.2,
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05,
+      "ci_low": 0.013820667386148344,
+      "ci_high": 0.16503877369140962,
+      "fisher_or": 0.39849624060150374,
+      "fisher_p": 0.3614187787532724
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.3,
+      "hacks": 1,
+      "n": 40,
+      "rate": 0.025,
+      "ci_low": 0.0044268315026814095,
+      "ci_high": 0.1288136896347409,
+      "fisher_or": 0.19413919413919414,
+      "fisher_p": 0.11814523484953082
+    },
+    {
+      "emotion": "desperate",
+      "strength": 0.5,
+      "hacks": 1,
+      "n": 40,
+      "rate": 0.025,
+      "ci_low": 0.0044268315026814095,
+      "ci_high": 0.1288136896347409,
+      "fisher_or": 0.19413919413919414,
+      "fisher_p": 0.11814523484953082
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.5,
+      "hacks": 1,
+      "n": 40,
+      "rate": 0.025,
+      "ci_low": 0.0044268315026814095,
+      "ci_high": 0.1288136896347409,
+      "fisher_or": 0.19413919413919414,
+      "fisher_p": 0.11814523484953082
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.3,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.2,
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05,
+      "ci_low": 0.013820667386148344,
+      "ci_high": 0.16503877369140962,
+      "fisher_or": 0.39849624060150374,
+      "fisher_p": 0.3614187787532724
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.15,
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05,
+      "ci_low": 0.013820667386148344,
+      "ci_high": 0.16503877369140962,
+      "fisher_or": 0.39849624060150374,
+      "fisher_p": 0.3614187787532724
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.1,
+      "hacks": 3,
+      "n": 40,
+      "rate": 0.075,
+      "ci_low": 0.025836025774588198,
+      "ci_high": 0.19864233524310543,
+      "fisher_or": 0.6138996138996139,
+      "fisher_p": 0.5655197578468276
+    },
+    {
+      "emotion": "calm",
+      "strength": -0.05,
+      "hacks": 3,
+      "n": 40,
+      "rate": 0.075,
+      "ci_low": 0.025836025774588198,
+      "ci_high": 0.19864233524310543,
+      "fisher_or": 0.6138996138996139,
+      "fisher_p": 0.5655197578468276
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.05,
+      "hacks": 4,
+      "n": 40,
+      "rate": 0.1,
+      "ci_low": 0.03957952868260638,
+      "ci_high": 0.23051775227522298,
+      "fisher_or": 0.8412698412698413,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.1,
+      "hacks": 5,
+      "n": 40,
+      "rate": 0.125,
+      "ci_low": 0.05459500250945401,
+      "ci_high": 0.261121198388511,
+      "fisher_or": 1.0816326530612246,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.15,
+      "hacks": 5,
+      "n": 40,
+      "rate": 0.125,
+      "ci_low": 0.05459500250945401,
+      "ci_high": 0.261121198388511,
+      "fisher_or": 1.0816326530612246,
+      "fisher_p": 1.0
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.2,
+      "hacks": 7,
+      "n": 40,
+      "rate": 0.175,
+      "ci_low": 0.0874541374603592,
+      "ci_high": 0.31949990331787714,
+      "fisher_or": 1.606060606060606,
+      "fisher_p": 0.4170894991021145
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.3,
+      "hacks": 3,
+      "n": 40,
+      "rate": 0.075,
+      "ci_low": 0.025836025774588198,
+      "ci_high": 0.19864233524310543,
+      "fisher_or": 0.6138996138996139,
+      "fisher_p": 0.5655197578468276
+    },
+    {
+      "emotion": "calm",
+      "strength": 0.5,
+      "hacks": 5,
+      "n": 40,
+      "rate": 0.125,
+      "ci_low": 0.05459500250945401,
+      "ci_high": 0.261121198388511,
+      "fisher_or": 1.0816326530612246,
+      "fisher_p": 1.0
+    }
+  ],
+  "trend_test": {
+    "desperate": {
+      "z": -1.4166674647714212,
+      "p": 0.15658017363781407,
+      "slope_sign": -1
+    },
+    "calm": {
+      "z": 2.044944518746007,
+      "p": 0.04086032821152874,
+      "slope_sign": 1
+    }
+  },
+  "random_null": {
+    "random": {
+      "hacks": 13,
+      "n": 200,
+      "rate": 0.065
+    },
+    "emotion_at_0_3": {
+      "hacks": 12,
+      "n": 160,
+      "rate": 0.075
+    },
+    "baseline": {
+      "hacks": 14,
+      "n": 120,
+      "rate": 0.11666666666666667
+    },
+    "fisher_emotion_vs_random_p": 0.8352595876392888,
+    "per_random_direction": {
+      "random_0": [
+        3,
+        40,
+        0.075
+      ],
+      "random_1": [
+        3,
+        40,
+        0.075
+      ],
+      "random_2": [
+        3,
+        40,
+        0.075
+      ],
+      "random_3": [
+        1,
+        40,
+        0.025
+      ],
+      "random_4": [
+        3,
+        40,
+        0.075
+      ]
+    }
+  },
+  "text_injection": {
+    "desperate_inject": {
+      "hacks": 7,
+      "n": 40,
+      "rate": 0.175
+    },
+    "calm_inject": {
+      "hacks": 5,
+      "n": 40,
+      "rate": 0.125
+    },
+    "activation_desperate_p_0_20": {
+      "hacks": 2,
+      "n": 40,
+      "rate": 0.05
+    },
+    "activation_calm_p_0_20": {
+      "hacks": 7,
+      "n": 40,
+      "rate": 0.175
+    },
+    "fisher_p": {
+      "des_inj_vs_base": 0.4170894991021145,
+      "des_inj_vs_act": 0.1543042703784857,
+      "cal_inj_vs_base": 1.0,
+      "cal_inj_vs_act": 0.7554525818977007
+    }
+  },
+  "h5_extended": {
+    "n": 120,
+    "events": 14,
+    "auc_desp": 0.832210242587601,
+    "auc_neg_calm": 0.8645552560646901,
+    "perm_p": 0.0,
+    "bootstrap_ci": [
+      0.741911357510414,
+      0.9086647727272726
+    ],
+    "mannwhitney_p": 2.8351812731462957e-05
+  }
+}

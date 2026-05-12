@@ -1,0 +1,18 @@
+[
+  {
+    "test": "cosine_similarity_opposites",
+    "passed": true,
+    "value": 1.0,
+    "threshold": 0.6,
+    "details": "5/5 expected opposite pairs have negative similarity"
+  },
+  {
+    "test": "kmeans_clustering",
+    "passed": true,
+    "value": 0.2486943006515503,
+    "threshold": 0.05,
+    "details": "Silhouette score: 0.249\n  Cluster 0: angry, contemptuous, defiant, enraged, frustrated, furious, hostile, jealous, resentful\n  Cluster 1: blissful, grateful, happy, hopeful, inspired, proud, satisfied\n  Cluster 2: afraid, anxious, desperate, embarrassed, guilty, nervous, panicked, surprised, suspicious, terrified, vulnerable\n  Cluster 3: calm, content, peaceful, relaxed, serene\n  Cluster 4: bored, brooding, depressed, gloomy, lonely, melancholy, sad, weary\n  Cluster 5: amused, ecstatic, elated, enthusiastic, excited, jubilant, thrilled\n  Cluster 6: nostalgic\n  Cluster 7: compassionate, loving"
+  },
+  {
+    "test": "pc_valence_correlation",
+    "passed": 

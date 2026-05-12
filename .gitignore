@@ -1,13 +1,10 @@
-# Data and outputs (large files)
+# Phase 1 raw activation extractions (157 MB, regenerable from Phase 1 scripts)
 data/
 outputs/
-# results/ is excluded BUT plot PNGs are tracked so READMEs render on GitHub
-results/*
-!results/plots/
-results/plots/*
-!results/plots/*.png
-*.npy
-*.npz
+
+# Track results/ — generated trial jsonls + analyses are expensive to recreate
+# ($150+ of GPU/API per regenerated set). Only exclude very large model
+# artifacts that should never be committed.
 *.pkl
 *.pickle
 *.pt
@@ -56,5 +53,12 @@ runs/
 # HuggingFace
 hf_cache/
 
-# Reference papers (do not upload to GitHub)
+# Reference papers (do not upload to GitHub) — exception list for our own docs
 docs/
+!docs/run_plan_2026-05-11.md
+!docs/PLAN.md
+!docs/methods.md
+!docs/preregistration.md
+!docs/judge_prompts.md
+*.tar.gz
+.lambda_instance_id

@@ -1,0 +1,40 @@
+{
+  "task_a_classification": {
+    "overall_agreement": 1.0,
+    "mean_agreement": 1.0,
+    "n": 520
+  },
+  "task_a_vtext_icc": {
+    "valence": 0.8875208257141696,
+    "arousal": 0.7841098169717138,
+    "dominance": 0.0,
+    "urgency": 0.8312612167399278,
+    "composure": 0.8082630379902715,
+    "frustration": 0.9747297692082969,
+    "hedging": 0.878855468167465,
+    "self_interruption": 0.9818912559452031
+  },
+  "task_b_classification": {
+    "overall_agreement": 0.9938461538461538,
+    "mean_agreement": 0.9979487179487179,
+    "n": 650
+  },
+  "task_b_vtext_icc": {
+    "valence": 0.9107361857714308,
+    "arousal": 1.0,
+    "dominance": 0.9195952921742722,
+    "urgency": 0.8610325984548712,
+    "composure": 0.8369469637966988,
+    "frustration": 0.0,
+    "hedging": 0.8871917436175996,
+    "self_interruption": 0.881575304540421
+  },
+  "task_a_regex_judge_agreement": {
+    "agreement": 0.8365384615384616,
+    "n": 520
+  },
+  "task_b_regex_judge_agreement": {
+    "agreement": 0.943076923076923,
+    "n": 650
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "dose_response_a_desperate": {
+    "coef": -0.8398068368894595,
+    "auc": 0.6244444444444445,
+    "correlation_r": -0.11123969168353515,
+    "correlation_p": 0.08549394038851073,
+    "n": 240,
+    "shortcut_rate": 0.0625
+  },
+  "dose_response_a_calm": {
+    "coef": 0.7728562644829021,
+    "auc": 0.591743119266055,
+    "correlation_r": 0.10954511257325877,
+    "correlation_p": 0.0903974098834248,
+    "n": 240,
+    "shortcut_rate": 0.09166666666666666
+  },
+  "dose_response_b_desperate": {
+    "correlation_r": -0.175638916840092,
+    "correlation_p": 0.0022639642437294483,
+    "n": 300,
+    "mean_syc_score": 1.6855555555555557
+  },
+  "dose_response_b_calm": {
+    "correlation_r": 0.1478799246705218,
+    "correlation_p": 0.01032415434982415,
+    "n": 300,
+    "mean_syc_score": 1.6844444444444446
+  },
+  "fisher_desp_A": {
+    "odds_ratio": 0.1625615763546798,
+    "p": 0.005701532002067586
+  },
+  "ttest_desp_B": {
+    "t": -1.21215568752438,
+    "p": 0.2268972354825801,
+    "cohens_d": -0.1979441948831507,
+    "base_mean": 1.7,
+    "desp_mean": 1.6044444444444446
+  },
+  "faithfulness_A": {
+    "r": 0.12712276954964405,
+    "p": 0.003688312245092238,
+    "n": 520,
+    "ci_low": -0.06171213041070858,
+    "ci_high": 0.30227016667863593
+  },
+  "faithfulness_B": {
+    "r": 0.0991717403708252,
+    "p": 0.011413880995768165,
+    "n": 650,
+    "ci_low": 0.006765021169524571,
+    "ci_high": 0.186729340826621
+  },
+  "predictive_V_internal": {
+    "auc": 0.999331550802139,
+    "accuracy": 0.9923076923076923,
+    "ci_low": 0.9979467713959587,
+    "ci_high": 1.0
+  },
+  "predictive_V_text": {
+    "auc": 0.7087948815889993,
+    "accuracy": 0.9173076923076923,
+    "ci_low": 0.6268544419662254,
+    "ci_high": 0.7900884799237229
+  },
+  "predictive_Combined": {
+    "auc": 0.9997135217723453,
+    "accuracy": 0.9942307692307693,
+    "ci_low": 0.9989080585280629,
+    "ci_high": 1.0
+  },
+  "kruskal_valence": {
+    "H": 5.230352221354528,
+    "p": 0.07315490420174285
+  },
+  "kruskal_arousal": {
+    "H": 3.251589319567608,
+    "p": 0.19675525957178527
+  },
+  "kruskal_urgency": {
+    "H": 2.972969006964727,
+    "p": 0.22616634661685078
+  },
+  "kruskal_composure": {
+    "H": 0.5907900732509983,
+    "p": 0.7442375283059125
+  },
+  "kruskal_frustration": {
+    "H": 1.286225403790091,
+    "p": 0.525653671712373
+  },
+  "kruskal_hedging": {
+    "H": 1.2602791418481816,
+    "p": 0.5325174718642817
+  },
+  "summary": {
+    "task_a_n": 520,
+    "task_b_n": 650,
+    "task_a_shortcut_rate": 0.08461538461538462,
+    "task_a_judge_cls": {
+      "LEGITIMATE": 470,
+      "SHORTCUT": 44,
+      "UNCLEAR": 6
+    },
+    "task_b_judge_cls": {
+      "GENTLE_PUSHBACK": 440,
+      "MILD_SYCOPHANCY": 2,
+      "STRONG_PUSHBACK": 208
+    },
+    "task_b_sycophancy_rate": 0.003076923076923077,
+    "emotions": [
+      "calm",
+      "desperate",
+      "none"
+    ],
+    "strengths": [
+      -0.5,
+      -0.3,
+      -0.2,
+      0.0,
+      0.2,
+      0.3,
+      0.5
+    ]
+  }
+}

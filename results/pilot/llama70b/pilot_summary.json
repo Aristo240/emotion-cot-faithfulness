@@ -1,0 +1,19 @@
+{
+  "model": "meta-llama/Llama-3.1-70B-Instruct",
+  "pilot_layers": [
+    16,
+    40,
+    64
+  ],
+  "n_emotions": 5,
+  "n_topics": 10,
+  "n_stories": 191,
+  "n_neutral": 78,
+  "cosine_checks": [
+    "happy-sad: -0.689 (PASS: should be negative)",
+    "calm-desperate: -0.693 (PASS: should be negative)",
+    "calm-angry: -0.747 (PASS: should be negative)"
+  ],
+  "logit_lens_match_rate": 0.0,
+  "go_decision": true
+}
