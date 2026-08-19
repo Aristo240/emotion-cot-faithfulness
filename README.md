@@ -77,15 +77,31 @@ exceeds the free-permutation p for 39/50 directions) and the result survives.
 
 17 of 50 survive at α=.05 — but **they are one axis detected many times, not 17
 findings**: mean |r| = 0.75, PC1 = **78.6%** of variance, participation ratio 1.59.
-Low-arousal negative affect at one pole, positive affect and `compassionate` at
-the other, with β signs reversing. That this axis is valence-aligned matches §1,
-where valence was the only dimension the probes recovered well.
 
-p = 0.0005 is the resolution floor at B = 2000. Residualized AUC is descriptive
-only; no p-value is derived from it. Ridge-penalized fits (intercept unpenalized)
-are primary; the unpenalized fit agrees in sign and significance, distributions
-overlap so there is no complete separation, and 0/2000 draws failed to converge in
-either null.
+**The axis is real; its composition is readout-dependent.** The released probe is a
+scalar projection (`np.dot(mean_act, vec)/||vec||`), so it scales with activation
+magnitude — *not* a cosine similarity, which is what `docs/preregistration.md` and
+earlier drafts called it. Repeating the sweep on a magnitude-removed readout (each
+trial's 50-vector normalized to unit length) still finds an association — 15 of 50
+significant, χ² up to 28.0, and `desperate` even more clearly null (χ² = 0.25,
+p = 1.000) — but only **8 of the 17 survivors recur**:
+
+| | directions |
+|---|---|
+| **Robust core (8)** | `bored`, `brooding`, `gloomy`, `grateful`, `lonely`, `melancholy`, `nostalgic`, `sad` |
+| Scalar readout only (9) | `anxious`, `compassionate`, `depressed`, `hopeful`, `jubilant`, `loving`, `proud`, `thrilled`, `weary` |
+| Direction-only readout (7) | `contemptuous`, `defiant`, `embarrassed`, `enraged`, `hostile`, `panicked`, `suspicious` |
+
+So whether the axis reads as *valence* (scalar) or *negative affect* (direction-only)
+depends on a measurement choice the preregistration mis-specified. Normalization does
+not remove the length dependence (ρ = 0.61 → 0.66 for `desperate`), so magnitude and
+length are separate nuisances. Exact cosine similarity is unrecoverable from the
+released data because ‖mean_act‖ was never stored.
+
+p = 0.0005 is the resolution floor at B = 2000. The generating model for the
+conditional null is fit by unpenalized MLE (slope 1.559); using the ridge-penalized
+slope, 1.388, would shrink it 11% and make the null less conditional than intended.
+Residualized AUC is descriptive only. 0/2000 draws failed to converge in either null.
 
 ## What fails
 

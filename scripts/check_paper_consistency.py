@@ -94,8 +94,8 @@ if J["directions"]["raw_auc_best"]["direction"] != "bored":
 for name, c2, beta, pc, pf in [
     ("bored", 38.7, 2.48, 0.0005, 0.0005), ("lonely", 29.6, 1.91, 0.0005, 0.0005),
     ("nostalgic", 27.5, 1.84, 0.0005, 0.0005), ("melancholy", 24.8, 1.63, 0.0005, 0.0005),
-    ("gloomy", 21.2, 1.46, 0.0005, 0.0005), ("compassionate", 19.7, -1.50, 0.0005, 0.0005),
-    ("sad", 18.6, 1.29, 0.0005, 0.0010), ("desperate", 3.3, 0.69, 0.4568, 0.4273),
+    ("gloomy", 21.2, 1.46, 0.0005, 0.0005), ("compassionate", 19.7, -1.50, 0.0010, 0.0005),
+    ("sad", 18.6, 1.29, 0.0010, 0.0010), ("desperate", 3.3, 0.69, 0.4693, 0.4273),
 ]:
     chk(f"{name} chi2", c2, C["chi2"][name], tol=5e-2)
     chk(f"{name} beta", beta, J["nested_lr"]["penalised"][name]["beta"], tol=6e-3)
@@ -104,7 +104,38 @@ for name, c2, beta, pc, pf in [
 chk("survivors conditional", 17, C["n_survivors_conditional"], tol=0)
 chk("B", 2000, C["B"], tol=0)
 chk("p resolution floor", 0.0005, C["p_resolution_floor"], tol=1e-6)
-chk("conditional stricter count", 39, C["n_conditional_ge_free"], tol=0)
+chk("conditional stricter count", 42, C["n_conditional_ge_free"], tol=0)
+# R1.1: the generating model must be the unpenalised MLE, not the shrunk fit
+gm = C["generating_model"]
+chk("generating slope (MLE)", 1.559, gm["slope_mle"], tol=5e-3)
+chk("ridge slope (not used)", 1.388, gm["slope_ridge"], tol=5e-3)
+chk("shrinkage avoided", 0.11, gm["shrinkage"], tol=5e-3)
+# R2.1: direction-only (magnitude-removed) readout
+do = C["direction_only"]
+chk("direction-only survivors", 15, do["n_survivors"], tol=0)
+chk("survivors kept", 8, do["n_original_survivors_kept"], tol=0)
+chk("overlap size", 8, len(do["overlap_with_scalar"]), tol=0)
+chk("scalar-only size", 9, len(do["scalar_only"]), tol=0)
+chk("direction-only-new size", 7, len(do["direction_only_new"]), tol=0)
+chk("desperate chi2 direction-only", 0.25, do["chi2"]["desperate"], tol=5e-3)
+chk("desperate p direction-only", 1.0000, do["p_conditional"]["desperate"], tol=5e-4)
+chk("rho desperate-length before", 0.606, do["desperate_rho_length_before"])
+chk("rho desperate-length after", 0.657, do["desperate_rho_length_after"])
+chk("max chi2 direction-only", 28.02, max(do["chi2"].values()), tol=5e-2)
+# the robust core named in the paper must actually be the overlap set
+_core = {"bored", "brooding", "gloomy", "grateful", "lonely", "melancholy", "nostalgic", "sad"}
+checks += 1
+if set(do["overlap_with_scalar"]) != _core:
+    fails.append(f"paper names core {sorted(_core)}; script overlap is {do['overlap_with_scalar']}")
+# the paper names these as added by each readout
+checks += 1
+for e in ("proud", "hopeful", "jubilant"):
+    if e not in do["scalar_only"]:
+        fails.append(f"paper says {e} is scalar-readout-only; script disagrees")
+checks += 1
+for e in ("hostile", "contemptuous", "enraged", "defiant"):
+    if e not in do["direction_only_new"]:
+        fails.append(f"paper says {e} is direction-only-new; script disagrees")
 chk("frozen fraction", 0.60, C["frozen_fraction"], tol=5e-3)
 chk("length AUC (in-text)", 0.888, J["association"]["auc_length"])
 st = C["survivor_structure"]
@@ -216,6 +247,8 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
 in_tex("a single axis detected many times")
+in_tex("its composition does not")
+in_tex("preregistration describes this quantity as a")
 in_tex("Four controls change the conclusion")
 
 # ---- §4.7 prereg

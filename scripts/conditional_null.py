@@ -25,6 +25,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import rankdata, spearmanr
 
 SEED = 20260819
 B = 2000
@@ -33,6 +34,13 @@ ROOT = Path(__file__).resolve().parent.parent
 P2 = ROOT / "results/phase2"
 P4 = ROOT / "results/phase4/llama70b"
 OUT = ROOT / "results/conditional_null.json"
+
+
+def auc(x, yy):
+    """Rank-based AUC; matches paper_numbers.py."""
+    r = rankdata(x)
+    n1 = int(yy.sum()); n0 = len(yy) - n1
+    return float((r[yy == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
 
 
 def load(p):
@@ -135,8 +143,12 @@ print("  -> stratified permutation would be near-degenerate; parametric bootstra
 
 # ------------------------------------------------------------------- nulls
 rng = np.random.default_rng(SEED)
-bhat, _, _ = fit_ll(X0, y)
-phat = np.clip(1.0 / (1.0 + np.exp(-X0 @ bhat)), 1e-12, 1 - 1e-12)
+bhat_mle, _, _ = fit_ll(X0, y, ridge=0.0)      # generating model: unpenalised MLE
+bhat_pen, _, _ = fit_ll(X0, y, ridge=RIDGE)
+phat = np.clip(1.0 / (1.0 + np.exp(-X0 @ bhat_mle)), 1e-12, 1 - 1e-12)
+print(f"\ngenerating model y~length: MLE slope {bhat_mle[1]:.3f} "
+      f"(ridge-{RIDGE} slope would be {bhat_pen[1]:.3f}, "
+      f"{100*(1-bhat_pen[1]/bhat_mle[1]):.0f}% shrunk -- MLE used)")
 
 maxA = np.empty(B)   # free permutation (marginal)
 maxB = np.empty(B)   # parametric bootstrap (conditional)
@@ -183,6 +195,61 @@ j = emos.index("desperate")
 print(f"{'desperate*':<16}{obs[j]:>8.2f}{pA['desperate']:>10.4f}{pB['desperate']:>10.4f}"
       f"   * PREREGISTERED")
 
+# ------------------------------- R2.1: direction-only (magnitude-removed) readout
+print("\n" + "=" * 76)
+print("R2.1  Direction-only readout: remove the shared per-trial magnitude factor")
+print("=" * 76)
+P = np.array([[float(t_["emotion_probes"][e]) for e in emos] for t_ in rows])
+nrm = np.linalg.norm(P, axis=1)
+print(f"  ||probe vector|| : min {nrm.min():.3f}, median {np.median(nrm):.3f}"
+      f"  (no near-zero rows: {bool(nrm.min() > 1e-6)})")
+print(f"    Spearman(||probe||, length)      = {spearmanr(nrm, length)[0]:+.3f}")
+print(f"    AUC of ||probe|| alone vs outcome = {auc(nrm, y):.3f}")
+Pu = P / nrm[:, None]
+X1u = [np.column_stack([X0, (Pu[:, j] - Pu[:, j].mean()) / Pu[:, j].std()])
+       for j in range(len(emos))]
+
+
+def lr_stats_u(yy):
+    _, l0, ok0 = fit_ll(X0, yy)
+    if not ok0:
+        return None, False
+    out = np.empty(len(emos)); ok = True
+    for j, Xj in enumerate(X1u):
+        _, l1, o = fit_ll(Xj, yy)
+        if not o:
+            ok = False; out[j] = 0.0
+        else:
+            out[j] = 2 * (l1 - l0)
+    return out, ok
+
+
+obs_u, ok_u = lr_stats_u(y)
+assert ok_u
+rng_u = np.random.default_rng(SEED)
+maxBu = np.empty(B)
+for bidx in range(B):
+    yb = (rng_u.random(n) < phat).astype(float)
+    su, _ = lr_stats_u(yb)
+    maxBu[bidx] = su.max() if su is not None else 0.0
+pBu = {e: float((np.sum(maxBu >= obs_u[j]) + 1) / (B + 1)) for j, e in enumerate(emos)}
+nu = sum(v < .05 for v in pBu.values())
+surv_scalar = [e for e in emos if pB[e] < .05]          # survivors, scalar-projection readout
+kept = [e for e in surv_scalar if pBu[e] < .05]          # of those, still significant here
+print(f"\n  survivors: scalar-projection readout {len(surv_scalar)}/50"
+      f"  ->  direction-only readout {nu}/50")
+print(f"  of the {len(surv_scalar)} original survivors, {len(kept)} remain significant")
+rho_u = spearmanr(Pu[:, emos.index("desperate")], length)[0]
+print(f"  Spearman(desperate, length): {spearmanr(P[:, emos.index('desperate')], length)[0]:+.3f}"
+      f"  ->  {rho_u:+.3f} after normalisation")
+ordu = sorted(emos, key=lambda e: (pBu[e], -obs_u[emos.index(e)]))
+print(f"\n  {'direction':<16}{'chi2':>8}{'cond. p':>10}   (direction-only)")
+for e in ordu[:8]:
+    print(f"  {e:<16}{obs_u[emos.index(e)]:>8.2f}{pBu[e]:>10.4f}"
+          f"{'   SURVIVES' if pBu[e] < .05 else ''}")
+j = emos.index("desperate")
+print(f"  {'desperate*':<16}{obs_u[j]:>8.2f}{pBu['desperate']:>10.4f}   * PREREGISTERED")
+
 # ------------------------------------------------- are the survivors independent?
 # 17 correlated directions are not 17 findings. Report the effective dimensionality
 # of the surviving set so the count cannot be read as 17 discoveries.
@@ -199,11 +266,29 @@ print(f"    PC1 explains {100*pc1:.1f}% of variance; participation ratio = {pr:.
 print("    -> essentially ONE axis detected many times, not independent findings")
 
 json.dump({
+    "direction_only": {
+        "probe_norm_vs_length_rho": float(spearmanr(nrm, length)[0]),
+        "probe_norm_auc": auc(nrm, y),
+        "desperate_rho_length_before": float(spearmanr(P[:, emos.index("desperate")], length)[0]),
+        "desperate_rho_length_after": float(rho_u),
+        "n_survivors": nu,
+        "n_original_survivors_kept": len(kept),
+        "survivors": sorted([e for e in emos if pBu[e] < .05],
+                            key=lambda e: pBu[e]),
+        "overlap_with_scalar": sorted(set(surv_scalar) & {e for e in emos if pBu[e] < .05}),
+        "scalar_only": sorted(set(surv_scalar) - {e for e in emos if pBu[e] < .05}),
+        "direction_only_new": sorted({e for e in emos if pBu[e] < .05} - set(surv_scalar)),
+        "chi2": {e: float(obs_u[j]) for j, e in enumerate(emos)},
+        "p_conditional": pBu,
+    },
     "survivor_structure": {"mean_abs_r": float(np.abs(offdiag).mean()),
                            "min_r": float(offdiag.min()), "max_r": float(offdiag.max()),
                            "pc1_var_explained": pc1, "participation_ratio": pr},
     "n": n, "events": ev, "n_directions": len(emos), "B": B, "ridge": RIDGE,
     "seed": SEED, "p_resolution_floor": 1 / (B + 1),
+    "generating_model": {"slope_mle": float(bhat_mle[1]),
+                         "slope_ridge": float(bhat_pen[1]),
+                         "shrinkage": float(1 - bhat_pen[1] / bhat_mle[1])},
     "quintile_counts": counts, "frozen_fraction": frozen / n,
     "chi2_max_disagreement_vs_paper_numbers": worst,
     "mean_sim_events": {"free": float(evA.mean()), "conditional": float(evB.mean())},

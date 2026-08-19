@@ -42,11 +42,12 @@ it rests on separately. Four controls change the conclusion.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ against
 reward hacking on unsteered trials, but correlates with response length at
 $\rho = 0.61$; residualized on length its AUC is $0.592$, and it does not add to a
-length-only model ($\chi^2(1) = 3.3$, family-wise $p = 0.46$).
+length-only model ($\chi^2(1) = 3.3$, family-wise $p = 0.47$).
 (ii)~\emph{Multiplicity.} Sweeping all 50 directions with a family-wise
 correction, 17 are significant. These are not 17 findings: the survivors form one
-valence-aligned axis (first principal component, $78.6\%$ of variance), and it is
-not the direction we registered.
+axis (first principal component, $78.6\%$ of variance), and it is not the direction
+we registered. Under a magnitude-removed readout an association remains but only 8
+of the 17 directions recur, so the axis is real and its composition is not.
 (iii)~\emph{Specificity.} Emotion steering is not distinguishable from
 matched-norm random directions ($7.5\%$ vs.\ $6.5\%$, Fisher $p = 0.84$), at power
 sufficient to detect a $2.42\times$ effect where the original reports
@@ -138,8 +139,13 @@ reported number.
 
 \paragraph{Probes.} 50 emotion vectors extracted from the Llama~3.1~70B residual
 stream with PCA denoising; pre-specified site layer 53 of 80. $V_{\text{int}}$ is
-the cosine similarity between a trial's mean residual-stream activation and a
-frozen vector. Probes are never refit on behavioral data.
+the projection of a trial's mean residual-stream activation onto a frozen
+unit-norm emotion direction. Probes are never refit on behavioral data.
+We note a discrepancy we found while preparing this paper: our preregistration
+describes this quantity as a \emph{cosine similarity}. It is not --- the released
+code normalizes by the emotion vector's norm but not the activation's, so the
+value is $\lVert \bar a \rVert \cos\theta$ and scales with activation magnitude.
+\S\ref{sec:dirs} tests what difference this makes.
 
 \paragraph{Measurement caveat (consequential).} Our implementation averages
 activations from token 50 to end-of-sequence, so the readout window
@@ -164,7 +170,7 @@ Judge validity established on one distribution does not transfer
 
 \paragraph{Reproducibility.} \texttt{scripts/paper\_numbers.py} regenerates every
 number here into \texttt{results/paper\_numbers.json}; a second script gates this
-manuscript against that file with 193 assertions.
+manuscript against that file with 211 assertions.
 
 \section{Results}
 
@@ -225,12 +231,15 @@ The choice of null matters here. A free label permutation tests the \emph{margin
 hypothesis $y \perp \text{direction}$, but length alone predicts the outcome at
 AUC $0.888$, so free permutation removes a dependence the statistic is designed to
 condition on. We therefore also build a \emph{conditional} null: fit
-$\text{logit}(p) = a + b\cdot\text{length}$, draw $y^* \sim \text{Bernoulli}(\hat p)$,
-and recompute all 50 statistics ($B = 2000$). This reproduces the outcome--length
+$\text{logit}(p) = a + b\cdot\text{length}$ by unpenalized maximum likelihood, draw
+$y^* \sim \text{Bernoulli}(\hat p)$, and recompute all 50 statistics ($B = 2000$).
+The generating model is deliberately unpenalized: ridge shrinkage there would make
+the simulated data less length-dependent than the observed data, weakening the very
+conditioning we want. This reproduces the outcome--length
 relationship exactly. (Stratified permutation, the other natural choice, is
 degenerate here: $60\%$ of trials fall in length quintiles containing either no
 events or only events.) The conditional null is indeed stricter --- its $p$ exceeds
-the free-permutation $p$ for 39 of 50 directions --- and the result survives it.
+the free-permutation $p$ for 42 of 50 directions --- and the result survives it.
 
 \begin{table}[t]
 \centering\small
@@ -243,10 +252,10 @@ Direction & $\chi^2(1)$ & $\beta$ & cond.\ max-$T$ $p$ & free max-$T$ $p$ & resi
 \texttt{nostalgic}     & 27.5 & $+1.84$ & 0.0005 & 0.0005 & 0.797 \\
 \texttt{melancholy}    & 24.8 & $+1.63$ & 0.0005 & 0.0005 & 0.765 \\
 \texttt{gloomy}        & 21.2 & $+1.46$ & 0.0005 & 0.0005 & 0.761 \\
-\texttt{compassionate} & 19.7 & $-1.50$ & 0.0005 & 0.0005 & 0.265 \\
-\texttt{sad}           & 18.6 & $+1.29$ & 0.0005 & 0.0010 & 0.734 \\
+\texttt{compassionate} & 19.7 & $-1.50$ & 0.0010 & 0.0005 & 0.265 \\
+\texttt{sad}           & 18.6 & $+1.29$ & 0.0010 & 0.0010 & 0.734 \\
 \midrule
-\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4568} & 0.4273 & 0.592 \\
+\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4693} & 0.4273 & 0.592 \\
 \bottomrule
 \end{tabular}
 \caption{Unsteered trials ($n = 120$, 14 events); top 7 of 17 survivors shown.
@@ -272,15 +281,34 @@ component $78.6\%$ of variance; participation ratio $1.59$). They are a single
 axis detected many times: low-arousal negative affect
 (\texttt{bored}, \texttt{lonely}, \texttt{melancholy}) at one pole, positive affect
 (\texttt{proud}, \texttt{grateful}, \texttt{jubilant}) and \texttt{compassionate}
-at the other, with $\beta$ signs reversing accordingly. That this axis is
-valence-aligned is consistent with \S\ref{sec:sem}, where valence was the only
-dimension the probes recovered well ($R^2 = 0.38$ vs.\ $0.18$ and $0.15$).
+at the other, with $\beta$ signs reversing accordingly.
+
+\paragraph{The axis survives a direction-only readout; its composition does not.}
+Because the probe scales with activation magnitude (\S3), we repeated the sweep on
+a magnitude-removed readout: each trial's 50-vector normalized to unit length,
+which cancels the shared $\lVert \bar a \rVert$ factor exactly. An association
+remains --- 15 of 50 directions are significant, with $\chi^2$ up to $28.0$ --- and
+\texttt{desperate} is if anything more clearly null ($\chi^2 = 0.25$,
+$p = 1.000$). But \emph{which} directions carry it is not stable: only 8 of the 17
+survivors are shared. The robust core is low-arousal negative affect
+(\texttt{bored}, \texttt{brooding}, \texttt{gloomy}, \texttt{lonely},
+\texttt{melancholy}, \texttt{nostalgic}, \texttt{sad}, plus \texttt{grateful}).
+The scalar readout adds a positive-valence pole (\texttt{proud}, \texttt{hopeful},
+\texttt{jubilant}); the direction-only readout instead adds high-arousal negative
+directions (\texttt{hostile}, \texttt{contemptuous}, \texttt{enraged},
+\texttt{defiant}). Whether the axis is best described as valence or as negative
+affect therefore depends on a measurement choice our preregistration
+mis-specified. Normalization also does not remove the length dependence
+($\rho = 0.61 \rightarrow 0.66$ for \texttt{desperate}), so magnitude and length
+are distinct nuisances.
 
 This is a genuine, selection-corrected finding, and it is \emph{not the hypothesis
 we registered}. We do not assert that \texttt{bored} measures boredom: it may index
 a response property we have not measured, exactly as \texttt{desperate} indexed
-length. The claim we make is narrow --- a valence-aligned axis in the residual
-stream carries information about shortcut-taking that response length does not.
+length. The claim we make is narrow --- some axis in the emotion subspace, with a
+low-arousal negative core, carries information about shortcut-taking that response
+length does not. Its full extent is readout-dependent, and exact cosine similarity
+is unrecoverable here because $\lVert \bar a \rVert$ was never stored.
 
 \subsection{Resolution limits of the text baseline}
 \label{sec:vtext}
