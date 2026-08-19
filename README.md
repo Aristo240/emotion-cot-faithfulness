@@ -1,195 +1,270 @@
-# Unfaithful by Feeling: Do Internal Emotion States Predict Misalignment That Chain-of-Thought Hides?
+# Unfaithful by Feeling? Separating Semantic, Predictive, and Causal Validity for Emotion Probes in Llama 3.1 70B
 
-> **TL;DR** I extract linear emotion representations from Llama 3.1 70B's residual stream, steer the model with "desperate" and "calm" vectors, and show that **internal emotion probes (V_internal) predict reward-hacking behavior far better than surface-level chain-of-thought analysis (V_text)** -- with cross-validated AUC 0.997 vs 0.634. Rigorous red-teaming confirms V_internal adds significant predictive value even after controlling for task identity (LR p < 0.0001). This demonstrates a measurable faithfulness gap in CoT reasoning, with direct implications for AI safety monitoring.
+> **Status (2026-08-19): this README supersedes the 2026-04-11 version.** Several
+> headline numbers in the earlier README (`CV AUC 0.997`, `leave-one-task-out
+> 0.992`, `steering p = 0.005`) **did not survive** the specificity and
+> cross-validation controls run in April–May 2026. They are retracted below and
+> the honest replacements are given. See [What changed and why](#what-changed-and-why).
 
-## Motivation
+## TL;DR
 
-[Sofroniew et al. (2026)](https://transformer-circuits.pub/2026/emotions/index.html) discovered that Claude Sonnet 4.5 forms linear representations of emotion concepts that causally drive alignment-relevant behavior: steering with a "desperate" vector increases reward hacking by 14x. Crucially, these behavioral changes can occur **without any visible trace in the model's output text**.
+We extract linear emotion representations from Llama 3.1 70B's residual stream and
+ask whether chain-of-thought text reveals the internal emotional state that
+precedes reward-hacking behavior. Running four progressively stricter validity
+checks, the claim **degrades in a specific and informative pattern**:
 
-This project asks the follow-up question: **Is chain-of-thought reasoning faithful to the internal emotional states that drive the model's behavior?** If not, CoT monitoring -- a leading AI safety technique -- has a critical blind spot.
+| # | Validity tier | Question | Verdict |
+|---|---------------|----------|---------|
+| 1 | **Semantic** | Do the probes track anything humans call emotion? | **Holds** (EmoBank valence CV R² = 0.38, n = 10,062) |
+| 2 | **Predictive (natural)** | Does probe state predict reward hacking with no intervention? | **Holds** (AUC 0.832 [0.742, 0.909], n = 120, perm p < 0.001) |
+| 3 | **Incremental over text** | Does it beat a CoT-text baseline on those same trials? | **Partial** — layer-dependent, see below |
+| 4 | **Causal specificity** | Does steering the emotion direction change behavior, beyond a random direction? | **Fails** (Fisher p = 0.835 vs random directions) |
 
-I replicate the emotion vector extraction and steering pipeline on the open-weight Llama 3.1 70B, then quantify the gap between internal emotion state (V_internal, read from the residual stream via linear probes) and expressed emotion in CoT text (V_text, measured via an independent Qwen 2.5 72B LLM judge). I find that V_internal captures behavioral risk signals that V_text completely misses.
+The short version: **a representation can be semantically valid and behaviorally
+predictive while providing no causal handle.** These three properties need to be
+validated separately; in this case study they dissociate cleanly.
 
-## Key Results
+## Retracted claims
 
-### 1. Steering causally changes behavior (with a surprise)
+These appeared in the April README and should not be cited.
 
-| Condition | Shortcut Rate (Task A) | Sycophancy Score (Task B) |
-|-----------|----------------------|------------------------|
-| Unsteered (baseline) | 17.5% | 1.70 / 5 |
-| Desperate (+0.2 to +0.5) | 3.3% | 1.60 / 5 |
-| Calm (+0.2 to +0.5) | 12.5% | 1.68 / 5 |
+| Retracted claim | What actually holds | Evidence |
+|---|---|---|
+| "V_internal CV AUC **0.997**, leave-one-task-out **0.992**" | Pooled AUC is inflated by task-identity separability. Cross-mechanism transfer is **0.303** (below chance), perm p = 0.219 | `results/phase2/_lambda_partial/analysis_today/phase2_transfer_stats.json` |
+| "Steering causally changes behavior, permutation **p = 0.005**" | Fine-grained judged sweep: desperate trend **z = −1.42, p = 0.157** (n.s.). Original p was uncorrected over 40+ strength × emotion tests | `results/phase4/llama70b/analysis_judged/report.json` → `trend_test` |
+| "Desperate steering *decreases* shortcuts — novel model-specific finding" | Not distinguishable from a random direction. Emotion @0.3 = 7.5%, random = 6.5%, **Fisher p = 0.835** | same file → `random_null` |
+| "Within-task CV AUC > 0.98 shows the signal is real" | True only *within* a task. Task-id residualization cuts AUC 0.799 → **0.674** | `results/phase3/llama70b/rigor_report.md` |
+| H5 confirmed at AUC 0.955 / 0.901 | Preregistered decision rule returned **INSUFFICIENT-DATA** at the time (2/4 variants had outcome variance). H5 was only later supported on the *extended* set (below) | `results/phase3/llama70b/h5_holdout_report.json` |
 
-Permutation test (10,000 permutations): **p = 0.005** for the desperate steering effect on Task A.
+## What holds
 
-Surprisingly, desperate steering **decreased** shortcut-taking in Llama (opposite to the 14x increase reported for Claude by Sofroniew et al.). This suggests that emotion-behavior mappings are model-specific and not universal -- a novel finding with implications for steering-based safety interventions. I discuss possible explanations in the analysis.
+### 1. Semantic validity — probes track human emotion ratings
 
-![Dose-response curves](results/plots/dose_response.png)
+Zero-shot projection of the 50 Phase-1 emotion vectors onto EmoBank (10,062
+human-rated sentences), probes frozen and never refit:
 
-### 2. The faithfulness gap is real and robust under cross-validation
+| Dimension | CV R² |
+|---|---|
+| Valence | **0.377** |
+| Arousal | 0.180 |
+| Dominance | 0.154 |
 
-| Predictor | In-Sample AUC | 10-Fold CV AUC | Leave-One-Task-Out AUC |
-|-----------|--------------|----------------|----------------------|
-| V_internal (emotion probes) | 0.999 | **0.997** | **0.992** |
-| V_text (judge-rated CoT tone) | 0.709 | 0.634 | 0.411 |
-| Combined | 1.000 | 0.997 | -- |
+Valence is solidly recovered; arousal and dominance are weak. Top valence
+correlates are `ecstatic` (r = +0.38), `excited` (+0.36), `furious` (−0.34),
+`terrified` (−0.34) — the sign structure is coherent.
+→ `results/emobank/llama70b/report.json`
 
-V_internal's AUC of 0.997 under 10-fold cross-validation rules out overfitting. V_text, by contrast, drops from 0.709 to 0.634 under CV and collapses to 0.411 on leave-one-task-out, meaning **V_text does not generalize across tasks at all**.
+### 2. Predictive validity — natural probe state predicts unsteered reward hacking
 
-![Cross-validation comparison](results/plots/rt1_cv_comparison.png)
+The **confirmatory** result. Unsteered trials only, no steering contamination:
 
-### 3. Red-teaming: probes encode task identity but still add genuine value
+| | value |
+|---|---|
+| n / events | 120 / 14 |
+| V_internal[desperate] AUC | **0.832** |
+| bootstrap 95% CI | [0.742, 0.909] |
+| permutation p | < 0.001 (10k) |
+| Mann–Whitney p | 2.8 × 10⁻⁵ |
+| V_internal[−calm] AUC | 0.865 |
 
-Red-teaming (RT2) revealed that emotion probes can predict task identity with 95.4% accuracy (chance = 25%). This is a confound -- the probes partly encode *which coding problem* is being solved, not just emotional state.
+**Judge-robust.** On this set the Qwen 2.5 72B and Claude judges agree on
+**80/80 trials (100%)**, identifying the same 7 shortcuts in the n = 80 subset.
+The result is not an artifact of one judge.
+→ `results/phase4/llama70b/analysis_judged/report.json` → `h5_extended`
 
-However, controlling for task identity, V_internal still adds **massive predictive value**:
+### 3. Incremental validity over CoT text — layer-dependent, partly exploratory
 
-| Model | AUC |
-|-------|-----|
-| Task-ID dummies only | 0.823 |
-| Task-ID + V_internal | 0.999 |
-| Likelihood ratio test | chi2 = 207.6, **p < 0.0001** |
+Pooled across steered and unsteered trials (n = 992, 87 events), the gap is large:
 
-Within individual tasks (eliminating the confound entirely), V_internal achieves CV-AUC of **0.980** (fast_sum_v1) and **0.983** (fast_sum_v3). The signal is real.
+| Predictor | AUC | 95% CI |
+|---|---|---|
+| V_internal | 0.836 | [0.797, 0.872] |
+| V_text (judge-rated CoT tone) | 0.647 | [0.603, 0.690] |
+| **Δ** | **0.189** | **[0.141, 0.239]** |
 
-### 4. Emotion steering does not affect surface expression
+The safety-relevant slice — trials where the probe is high but the text looks calm:
 
-Kruskal-Wallis tests across all V_text dimensions (valence, arousal, urgency, composure, frustration, hedging) show **no significant effect of emotion steering on surface emotional tone** (all p > 0.05). The steering changes behavior while leaving the text-level emotional presentation unchanged -- exactly the faithfulness gap I hypothesized.
+| Quadrant | n | hacks | rate |
+|---|---|---|---|
+| Both low | 493 | 4 | 0.8% |
+| **HIDDEN** (V_int high, V_text low) | **453** | **66** | **14.6%** |
+| Both high | 43 | 17 | 39.5% |
 
-![V_text by steering condition](results/plots/vtext_by_condition.png)
+→ `results/phase2/_lambda_partial/analysis_today/faithfulness_gap_robust.json`
 
-### 5. V_internal and V_text are weakly correlated
+**But on the clean unsteered subset the gap is layer-dependent** (n = 80, 7 events):
 
-| Task | r (V_internal vs V_text) | 95% Bootstrap CI | p |
-|------|-------------------------|-----------------|---|
-| Task A | 0.127 | [-0.062, 0.302] | 0.004 |
-| Task B | 0.099 | [0.007, 0.187] | 0.011 |
+| Layer | V_int[desp] AUC | Δ vs V_text | 95% CI | p (1-sided) |
+|---|---|---|---|---|
+| 13 | 0.691 | +0.053 | [−0.173, 0.299] | 0.339 |
+| 26 | 0.450 | −0.187 | [−0.493, 0.125] | 0.890 |
+| **39** | **0.918** | **+0.280** | **[0.056, 0.479]** | **0.008** |
+| 52 | 0.708 | +0.069 | [−0.247, 0.343] | 0.306 |
+| **53 (primary)** | 0.677 | +0.037 | [−0.282, 0.329] | 0.391 | 
+| 65 | 0.472 | −0.165 | [−0.539, 0.202] | 0.809 |
 
-Per-dimension analysis reveals V_internal correlates most with urgency (r = 0.33) and composure (r = -0.27), but near-zero with arousal and frustration.
+**At the primary layer 53, the incremental gap over V_text is not significant on
+unsteered trials.** Only layer 39 clears it, at p = 0.008 — and with 6 layers
+tested, Bonferroni α = 0.0083, so it passes by a hair under Qwen labels
+(p = 0.0080) and fails under Claude labels (p = 0.0097). **Treat layer 39 as
+exploratory and in need of replication**, not as a confirmatory result.
+→ `results/phase4/llama70b/analysis_layer_sweep/summary.json`
 
-![Faithfulness scatter](results/plots/faithfulness_scatter.png)
+## What fails
 
-### 6. LLM judge substantially corrects regex misclassification
+### 4. Causal specificity — emotion steering is not distinguishable from noise
 
-The Qwen 2.5 72B judge (3-pass, ICC > 0.99) reclassified many regex-flagged "hacks" as legitimate:
-- Task A: Regex flagged 123 shortcuts; judge confirmed only **44** (64% false positive rate)
-- Task B: Regex-judge agreement was higher at 94.3%
+| Condition | hacks / n | rate |
+|---|---|---|
+| Unsteered baseline | 14 / 120 | 11.7% |
+| Emotion vector @ ±0.3 | 12 / 160 | 7.5% |
+| **5 random directions** (orthogonal to emotion subspace) @ ±0.3 | 13 / 200 | **6.5%** |
 
-![Judge vs regex](results/plots/judge_vs_regex.png)
+**Fisher emotion vs random: p = 0.835.** Steering along the emotion direction
+does no more than steering along an arbitrary direction of the same norm. The
+fine-grained dose–response over ±0.05…±0.5 shows no monotone trend
+(desperate z = −1.42, p = 0.157; calm z = +2.04, p = 0.041 uncorrected, wrong
+sign, does not survive correction).
 
-## Red-Teaming Summary
+Text injection ("feel desperate" in the system prompt) also fails to separate:
+17.5% vs 11.7% baseline, Fisher p = 0.417.
 
-I conducted 7 red-teaming checks to stress-test the findings:
+**This is the paper's central negative result** and the reason the causal framing
+of the April README is withdrawn.
 
-| Test | Finding | Verdict |
-|------|---------|---------|
-| RT1: Cross-validation | V_internal AUC = 0.997 (10-fold), 0.992 (LOGO) | Robust |
-| RT2: Task-ID confound | Probes encode task identity (95% acc), but LR test shows V_internal adds value beyond task (p < 0.0001) | Partially confounded, still significant |
-| RT3: Coherence audit | Desperate-steered "legitimate" responses are coherent (no ALL CAPS, no incoherent text) | No degradation |
-| RT4: Permutation test | Reversed desperate effect: p = 0.005 (10k permutations) | Statistically significant |
-| RT5: Power analysis | MDE = 14.2% > base rate 8.5%; n=40 per cell is underpowered for small effects | Need more trials |
-| RT6: Task B ceiling | Only 2/650 sycophantic; mean score 1.69/5; Cohen's d = -0.20 (negligible) | Prompts too easy |
-| RT7: Probe variance | task_id explains 68-1800x more probe variance than emotion | Probes are task-sensitive |
+## Known limitations — read before reusing any number
 
-## Hypotheses and Status
+1. **V_text is a low-resolution instrument.** Its distribution is 946 low / **0
+   mid** / 46 high with only 14 unique rounded values (n = 992). Part of
+   "V_internal beats V_text" is "V_text barely varies." Do not read the gap as a
+   clean statement about CoT faithfulness until V_text is remeasured on a scale
+   with real variance.
+2. **The diverse-mechanism dataset is not usable as-is.** On
+   `task_a_diverse_claude_judged.jsonl` (n = 650), the two judges agree on only
+   **165/650 trials (25.4%)**: Qwen labels 2 SHORTCUT / 524 UNCLEAR, Claude
+   labels 194 SHORTCUT / 39 UNCLEAR. **Any transfer/generalization conclusion
+   from this file — including the negative AUC 0.303 — is unreliable** and
+   blocked on judge reconciliation.
+3. **Probe–task confound.** Probes predict task identity at 95.4% accuracy
+   (chance 25%); task_id explains 68–1800× more probe variance than emotion.
+   Residualizing on task_id cuts AUC 0.799 → 0.674.
+4. **Underpowered throughout.** 14 events at n = 120 for the headline result.
+5. **Task B (sycophancy) is dead.** 2 sycophantic responses in 650 trials
+   (0.31%). Excluded from all conclusions.
+6. **Layer 39 is a post-hoc selection** from a 6-layer sweep. See above.
+7. **`phaseB/` has scripts but no results.** It has never been run.
 
-| # | Hypothesis | Status |
-|---|-----------|--------|
-| H1 | Llama 3.1 70B encodes emotions as linear directions with valence/arousal structure | Confirmed (Phase 1) |
-| H2 | Steering with emotion vectors causally changes behavior | Confirmed (p = 0.005), but direction **reversed** vs Claude |
-| H3 | V_internal-V_text correlation is significantly below 1 | Confirmed (r = 0.127, CI excludes 0.5) |
-| H4 | V_internal predicts behavior better than V_text | **Confirmed** (CV AUC 0.997 vs 0.634; within-task AUC > 0.98) |
-| H5 | Natural V_internal variation predicts unsteered behavior | Pending (Phase 3) |
+## Provenance table
+
+Every claim above, traced to the script and file that produced it.
+
+| Claim | Script | Input | Result file | Status |
+|---|---|---|---|---|
+| EmoBank valence R² = 0.377 | `scripts/run_emobank_validation.py` | EmoBank (10,062 sents) | `results/emobank/llama70b/report.json` | Confirmatory |
+| H5 unsteered AUC = 0.832 | `scripts/analyze_phase4_judged.py` | `extended_unsteered_judged.jsonl` | `results/phase4/llama70b/analysis_judged/report.json` → `h5_extended` | Confirmatory |
+| Qwen/Claude agree 80/80 | — (direct file comparison) | `extended_unsteered_claude_judged.jsonl` | — | Confirmatory |
+| Pooled gap Δ = 0.189 | `scripts/analyze_faithfulness_gap_robust.py` | fast_sum family, `judge_classification` | `.../analysis_today/faithfulness_gap_robust.json` | Exploratory (pooled; task confound) |
+| Layer sweep, layer 39 | `scripts/analyze_layer_sweep.py` | `extended_unsteered_layer_sweep.jsonl` | `.../analysis_layer_sweep/summary.json` | **Exploratory** (6-layer selection) |
+| Random-direction null, p = 0.835 | `scripts/analyze_phase4_judged.py` | `random_directions_judged.jsonl` | `.../analysis_judged/report.json` → `random_null` | Confirmatory (preplanned control) |
+| Dose–response n.s. | `scripts/analyze_phase4_judged.py` | `finegrained_judged.jsonl` | `.../analysis_judged/report.json` → `trend_test` | Confirmatory (preplanned control) |
+| Transfer AUC = 0.303 | `scripts/analyze_phase2_transfer_stats.py` | `task_a_diverse_claude_judged.jsonl` | `.../analysis_today/phase2_transfer_stats.json` | **Unreliable** — see limitation 2 |
+| H5 INSUFFICIENT-DATA verdict | `scripts/h5_holdout.py` | `faithfulness_measurements.json` | `results/phase3/llama70b/h5_holdout_report.json` | Confirmatory (preregistered) |
+
+### Label field semantics — important
+
+Judged `.jsonl` rows carry **three** classification fields. Using the wrong one
+silently changes every downstream number:
+
+| Field | Meaning |
+|---|---|
+| `classification` | **Stale regex heuristic.** In `task_a_diverse_*` it is `unclear` for all 650 rows. **Never use for analysis.** |
+| `judge_classification` | Qwen 2.5 72B, 3-pass majority |
+| `claude_classification` | Claude, 3-pass majority (cross-family check) |
+
+Analysis scripts are not uniform: `analyze_phase4_judged.py` and
+`analyze_faithfulness_gap_robust.py` read `judge_classification`, while
+`analyze_diverse_today.py` and `analyze_phase2_transfer_stats.py` read
+`claude_classification`. Check the field before comparing numbers across scripts.
+
+## What changed and why
+
+The April README reported the first-pass analysis. Between 2026-04-14 and
+2026-05-12 we ran the controls that first-pass analysis lacked:
+
+1. **Multiple-comparison correction** (`scripts/rigor_analyses.py`, BH-FDR) —
+   removed the per-strength steering effects.
+2. **Random-direction and text-injection specificity controls**
+   (`scripts/run_blockers.py`) — removed the causal claim entirely.
+3. **A preregistered H5 protocol with a binding decision rule**
+   (`docs/preregistration.md`, RNG seed 20260415) — which returned
+   INSUFFICIENT-DATA on the original data and was only satisfied after
+   collecting 80 additional unsteered trials.
+4. **A cross-family judge** (Claude alongside Qwen) — which validated the
+   headline result and invalidated the diverse-mechanism dataset.
+
+We report this trajectory rather than only the endpoint, because the pattern of
+*which* claims died under *which* control is the substantive finding.
 
 ## Methodology
 
-### Pipeline
-
 ```
-Phase 1: Extract 50 emotion vectors from Llama 3.1 70B residual stream (layer 53/80)
-    |     60,000 stories x activation extraction x PCA denoising
-    v
-Phase 2: Steer with desperate/calm vectors at 7 strengths (-0.5 to +0.5)
-    |     Task A: 4 impossible coding tasks x 10 rollouts (reward hacking)
-    |     Task B: 5 false-claim sycophancy prompts x 10 rollouts
-    v
-LLM Judge: Qwen 2.5 72B reclassifies all 1,170 responses (3-pass, blind to steering)
-    |     + rates emotional tone on 8 V_text dimensions (1-7 scale)
-    v
-Analysis: Cross-validated statistics, faithfulness correlation, 7-point red-teaming
+Phase 1  50 emotion vectors from Llama 3.1 70B residual stream (primary layer 53/80)
+   |     activation extraction + PCA denoising
+   v
+Phase 2  Steering with desperate/calm at 7 strengths (-0.5 … +0.5)
+   |     Task A: impossible coding tasks (reward hacking)   [Task B dropped: 2/650 events]
+   v
+Phase 4  CONTROLS: fine-grained sweep (±0.05…±0.5), 5 random orthogonal directions,
+   |     text injection, 80 extra unsteered trials, 6-layer probe sweep
+   v
+Judges   Qwen 2.5 72B (3-pass) + Claude (3-pass, cross-family)
+   v
+Analysis Preregistered H5 decision rule, BH-FDR, bootstrap CIs, permutation tests
 ```
 
-### Measurement
-
-- **V_internal:** Cosine similarity between residual stream activations (layer 53) and pre-computed emotion vectors for 50 emotions
-- **V_text:** 8-dimension emotional tone rating (1-7 scale) by Qwen 2.5 72B judge. Dimensions: valence, arousal, dominance, urgency, composure, frustration, hedging, self-interruption
-- **Judge reliability:** Classification ICC = 1.000 (Task A), 0.994 (Task B). V_text ICC ranges 0.78-0.98
+- **V_internal:** cosine similarity between residual-stream activations and
+  frozen Phase-1 emotion vectors. Never refit on behavioral data — H5 is a
+  transfer claim, not a within-dataset classification claim (`docs/methods.md`).
+- **V_text:** 8-dimension emotional tone rating (1–7) by the LLM judge.
+  Prompts reproduced in `docs/judge_prompts.md`.
 
 ## Setup
-
-### Requirements
 
 ```bash
 conda create -n emotion-cot python=3.11 -y
 conda activate emotion-cot
-conda install pytorch pytorch-cuda=12.1 -c pytorch -c nvidia -y
+conda install pytorch pytorch-cuda=12.4 -c pytorch -c nvidia -y   # NOT cu130: host driver is 550.120
 pip install -r requirements.txt
 ```
 
-### Hardware
+**Hardware:** 8× V100 32GB (float16, pipeline parallel), or 4× A100 80GB. ~500GB storage.
 
-- **Tested on:** 8x V100 32GB (float16, pipeline parallelism)
-- **Also works:** 4x A100 80GB or higher
-- **Storage:** ~500GB for full pipeline
+**Models:** `meta-llama/Llama-3.1-70B-Instruct` (steered), `Qwen/Qwen2.5-72B-Instruct` (judge).
 
-### Models
-
-- **Steered model:** `meta-llama/Llama-3.1-70B-Instruct` (requires Meta license)
-- **Judge model:** `Qwen/Qwen2.5-72B-Instruct` (open access, different family to avoid circular evaluation)
-
-## Running
+## Reproducing the surviving results
 
 ```bash
-# Phase 1: Extract emotion vectors (~1-2 days)
-python scripts/01_run_phase1.py --model llama-70b
+# Confirmatory: natural probe state predicts unsteered reward hacking (+ all controls)
+python scripts/analyze_phase4_judged.py
 
-# Phase 2: Steering experiments (~2-3 days)
-python scripts/phase2_steering.py
+# Semantic validity against human ratings
+python scripts/run_emobank_validation.py
 
-# Judge reclassification (runs after Phase 2)
-python scripts/run_judge_reclassification.py --n-passes 3
+# Exploratory: layer sweep
+python scripts/analyze_layer_sweep.py
 
-# Analysis and plots
-python scripts/05_run_analysis.py
-
-# Red-teaming
-python scripts/06_red_teaming.py
+# Preregistered H5 decision rule
+python scripts/h5_holdout.py
 ```
 
-## Project Structure
+## Open questions
 
-```
-emotion-cot-faithfulness/
-├── config.py              # All configuration: 171 emotions, tasks, steering params
-├── src/
-│   ├── model.py           # Model loading, activation hooks, steering
-│   ├── vectors.py         # Activation extraction, PCA denoising
-│   ├── experiments.py     # Steering experiments + outcome coding
-│   ├── judge.py           # Qwen 2.5 72B judge (classification + V_text rating)
-│   └── analysis.py        # Statistical analyses + visualization
-├── scripts/
-│   ├── 00_pilot.py        # Quick signal check (~2-4 hours)
-│   ├── 01_run_phase1.py   # Full vector extraction
-│   ├── phase2_steering.py # Behavioral steering experiments
-│   ├── run_judge_reclassification.py  # LLM judge post-processing
-│   ├── 05_run_analysis.py # Statistics + plots
-│   └── 06_red_teaming.py  # 7-point red-teaming analysis
-├── results/
-│   ├── phase2/            # 1,170 judged trial records + analysis reports
-│   └── plots/             # Generated figures (8 plots)
-└── data/
-    └── phase1/            # 50 emotion vectors (.npz)
-```
+1. Does the layer-39 gap replicate on an independently collected unsteered set?
+2. Can V_text be remeasured on a scale with genuine variance?
+3. Does judge disagreement on the diverse set reflect genuine task ambiguity or a
+   prompt failure for Qwen?
+4. Is the absent causal effect specific to Llama, or did prior positive results
+   lack random-direction controls?
 
 ## References
 
