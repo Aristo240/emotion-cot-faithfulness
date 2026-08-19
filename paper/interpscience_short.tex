@@ -5,10 +5,12 @@
 % Deadline: 2026-08-28 AoE
 %
 % TO SWITCH TO THE OFFICIAL TEMPLATE: download neurips_2026.sty, then
-% replace the PREAMBLE block below with:
+% replace the preamble below with:
 %     \documentclass{article}
 %     \usepackage{neurips_2026}          % anonymous by default
-% The body below needs no other changes.
+% The body needs no other changes.
+%
+% Build: pdflatex -> bibtex -> pdflatex x2   (refs.bib)
 % =====================================================================
 
 \documentclass[10pt]{article}
@@ -17,15 +19,13 @@
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{xcolor}
 \usepackage[colorlinks=true,allcolors=blue]{hyperref}
 \usepackage{natbib}
 \usepackage{caption}
 \captionsetup{font=small,labelfont=bf}
 \setlength{\parskip}{2pt}
 
-\title{Semantically Valid, Behaviorally Predictive, Causally Inert:\\
-A Validity Ladder for Emotion Probes in Llama 3.1 70B}
+\title{A Validity Audit of Emotion Probes in Llama 3.1 70B}
 
 \author{Anonymous Author(s)\\Affiliation withheld for double-blind review}
 \date{}
@@ -34,107 +34,170 @@ A Validity Ladder for Emotion Probes in Llama 3.1 70B}
 \maketitle
 
 \begin{abstract}
-Interpretability results are routinely reported as though semantic
-interpretability, behavioral prediction, and causal control were a single
-property of a learned direction. We present a case study in which they come
-apart. Extracting linear emotion representations from the residual stream of
-Llama~3.1~70B and studying reward hacking on a code-generation task, we
-evaluate the same set of probes against four progressively stricter validity
-criteria. The probes recover human valence judgments on an external corpus
-(cross-validated $R^2 = 0.38$, $n = 10{,}062$). Their natural, unsteered
-activation predicts subsequent reward hacking with AUC $0.832$
-$[0.742, 0.909]$ (permutation $p < 0.001$), a result that reproduces exactly
-across two independent judge models from different families ($80/80$ trial-level
-agreement). Yet steering along the same directions does not change behavior more
-than steering along a random direction of equal norm ($7.5\%$ vs.\ $6.5\%$ hack
-rate; Fisher $p = 0.835$), and the fine-grained dose--response is flat
-($z = -1.42$, $p = 0.157$). The incremental advantage over a chain-of-thought
-text baseline, meanwhile, is strongly layer-dependent and is not significant at
-our pre-specified layer. We report the trajectory by which our own initial
-claims degraded under each added control, and argue that semantic, predictive,
-and causal validity should be reported as separate, separately-evidenced tiers
-rather than inferred from one another.
+\citet{sofroniew2026} report that emotion concepts in Claude Sonnet 4.5 are
+functional: steering a ``desperate'' direction causally increases reward hacking.
+We audit whether that interpretation transfers to a large open-weight model, by
+reconstructing emotion directions in Llama~3.1~70B and asking separately what
+evidence supports each level of interpretation. Semantic validity holds: the
+frozen directions recover human valence ratings on EmoBank zero-shot
+(cross-validated $R^2 = 0.38$, $n = 10{,}062$). A behavioral association holds
+within the task distribution: on unsteered trials the desperate projection
+separates reward-hacking from non-hacking responses with AUC $0.832$
+$[0.742, 0.909]$, unchanged under an independent cross-family rejudge of all 120
+trials. But the preregistered generalization criterion is \emph{not} met, because
+the mechanistically diverse task variants that the criterion requires did not
+yield usable labels; the internal signal does \emph{not} significantly beat a
+chain-of-thought text baseline at our pre-specified layer ($\Delta = 0.037$,
+$p = 0.39$); and steering the emotion direction is statistically indistinguishable
+from steering a random direction of matched norm ($7.5\%$ vs.\ $6.5\%$ hack rate,
+Fisher $p = 0.835$). We also note that our probe averages the residual stream
+across the response, so the association is concurrent rather than predictive. We
+report the sequence in which our own initially strong conclusions weakened under
+each added control, and release a claim-to-file provenance record. None of the
+methodological principles here are new; the contribution is a concrete, auditable
+case in which they bite.
 \end{abstract}
 
 \section{Introduction}
 
 A common inferential shortcut in interpretability runs: we found a direction that
-is semantically interpretable; it predicts a behavior we care about; therefore it
-is a mechanism, and steering it is a lever. Each link in that chain is an
-empirical claim, and each can fail independently.
+is semantically interpretable; it tracks a behavior we care about; therefore it is
+a mechanism, and steering it is a lever. Each link is a separate empirical claim,
+and \citet{joshi2026causality} argue that interpretability claims routinely outrun
+the level of causal evidence actually supplied.
 
-\citet{sofroniew2026} report that Claude Sonnet 4.5 forms linear representations
-of emotion concepts that causally drive alignment-relevant behavior, with
-steering along a ``desperate'' direction increasing reward hacking, and note that
-such behavioral shifts can occur without visible trace in the model's output
-text. This is an unusually clean setting in which to ask the follow-up question:
-\emph{if we replicate the representation, do we also replicate the causal
-handle?}
+\citet{sofroniew2026} provide an unusually crisp target for testing this. They
+report that Claude Sonnet 4.5 forms linear representations of emotion concepts
+that causally drive alignment-relevant behavior, with a ``desperate'' direction
+substantially increasing reward hacking, and note that such shifts can occur with
+no visible trace in the output text. We ask the natural follow-up: \emph{when this
+result is transferred to a large open-weight model, which parts of the
+interpretation survive which controls?}
 
-We extract emotion vectors from the open-weight Llama~3.1~70B and evaluate them
-against four tiers of validity (Table~\ref{tab:ladder}). Our contribution is not
-a new method. It is a documented dissociation: on the same probes, the same
-trials, and the same behavioral labels, tiers 1 and 2 hold, tier 3 holds only
-under a post-hoc layer choice, and tier 4 fails outright. We also report the
-sequence in which our own earlier, stronger conclusions collapsed --- which
-control killed which claim --- because that sequence is more diagnostic than the
-endpoint alone.
+We organize the audit into four progressively stronger validity questions
+(Table~\ref{tab:ladder}). This organization is not itself novel --- it restates
+distinctions already drawn by \citet{elazar2021amnesic}, \citet{stoehr2024scaling},
+\citet{palumbo2025axiomatic}, \citet{mueller2025mib} and \citet{joshi2026causality}.
+Our contribution is the audit: on the same probes, trials and labels, questions
+1 and 2 are answered affirmatively, question 3 is answered negatively at the
+pre-specified operating point, and question 4 is answered negatively outright.
 
 \begin{table}[t]
 \centering
 \small
 \begin{tabular}{@{}clll@{}}
 \toprule
-& \textbf{Tier} & \textbf{Question} & \textbf{Verdict} \\
+& \textbf{Question} & \textbf{Test} & \textbf{Verdict} \\
 \midrule
-1 & Semantic     & Do probes track what humans call emotion? & Holds \\
-2 & Predictive   & Does natural probe state predict the behavior? & Holds \\
-3 & Incremental  & Does it beat a text-based baseline? & Layer-dependent \\
-4 & Causal       & Does steering it beat a random direction? & \textbf{Fails} \\
+1 & Do the directions track human emotion? & EmoBank, zero-shot & Supported \\
+2 & Do they co-vary with the behavior? & Unsteered trials & Supported (concurrent, task-local) \\
+3 & Do they beat a text-level baseline? & Same trials, pre-specified layer & Not supported \\
+4 & Does steering them beat a random direction? & Matched-norm random null & \textbf{Not supported} \\
+\midrule
+-- & Does (2) generalize across mechanisms? & Preregistered criterion & \textbf{Inconclusive} \\
 \bottomrule
 \end{tabular}
-\caption{The validity ladder. Each tier is evidenced separately in \S\ref{sec:results}.}
+\caption{The four audit questions. Each is evidenced separately in \S\ref{sec:results}.}
 \label{tab:ladder}
 \end{table}
+
+\section{Related work and novelty statement}
+
+\paragraph{Emotion representations and steering.}
+Emotion concepts are recoverable from LLM hidden states across many models.
+\citet{maheswaran2026unified} find emotion directions that transfer across
+datasets; \citet{banayeeanzade2026psyset} evaluate emotion and personality
+steering across four model families and find both controllability and
+model-specific side effects on safety and truthfulness; \citet{jeong2026geometry}
+report near-identical emotion geometry across twelve small models whose
+\emph{behavioral} profiles diverge. We therefore claim no novelty for the
+existence of emotion representations in open-weight models, nor for the
+observation that similar geometry can coexist with different behavior.
+
+\paragraph{From representation to mechanism.}
+That information is decodable does not establish that the model uses it.
+\citet{hewitt2019control} motivate probe controls; \citet{elazar2021amnesic} show
+directly that probe accuracy need not correspond to behavioral importance.
+\citet{palumbo2025axiomatic} and \citet{mueller2025mib} develop standards for
+validating mechanistic interpretations and for evaluating whether methods recover
+causal variables. For interventions specifically, \citet{stoehr2024scaling}
+separate effectiveness from faithfulness and minimality, and
+\citet{wu2026steerable} show across 17 models that apparent steering conclusions
+can depend on normalization, layer and operating-point selection --- which is
+precisely why we decline to rescue our causal claim with a post-hoc layer choice
+(\S\ref{sec:layer}). Steering does sometimes establish genuine causal control
+\citep{rimsky2024caa, arditi2024refusal}, so a null here is informative rather
+than expected.
+
+\paragraph{Latent signals that are diagnostic but not causal.}
+\citet{yuan2026hidden} find hidden-state signals of reasoning errors that far
+outperform verbalized confidence, yet four interventions fail to convert the
+signal into control. \citet{wilhelm2026monitoring} detect reward hacking from
+residual-stream activations during generation across model families. These rule
+out any broad novelty claim that internal signals can be diagnostic without being
+causal, or that reward hacking is detectable from activations. Our setting differs
+in one respect worth stating precisely: their probes are \emph{trained on the
+behavioral outcome}, whereas our direction is built from an independent emotion
+corpus, semantically validated, and frozen before any behavioral analysis.
+
+\paragraph{Novelty statement.}
+We claim novelty for none of: emotion representations in LLMs, emotion steering in
+open models, similar geometry with divergent behavior, diagnostic-not-causal
+latent signals, activation-based reward-hacking detection, or LLM-judge
+unreliability. We claim only this: \emph{a targeted validity audit of one
+specific, alignment-relevant functional claim, in which several initially
+compelling conclusions die under specific, named controls, with the record of
+which control killed which claim released alongside.}
 
 \section{Setup}
 
 \paragraph{Probes.} We extract 50 emotion vectors from the Llama~3.1~70B residual
-stream by contrasting emotion-eliciting narrative contexts, with PCA denoising.
-Our pre-specified probe site is layer 53 of 80. $V_{\text{internal}}$ for a trial
-is the cosine similarity between the trial's residual-stream activation and a
-frozen Phase-1 emotion vector. \textbf{Probes are never refit on behavioral
-data}, so every predictive result below is a transfer claim rather than a
-within-dataset classification score.
+stream with PCA denoising; the pre-specified probe site is layer 53 of 80.
+$V_{\text{internal}}$ for a trial is the cosine similarity between the trial's
+mean residual-stream activation and a frozen emotion vector. Probes are never
+refit on behavioral data, so every association below is zero-shot transfer rather
+than a within-dataset classification score.
+
+\paragraph{An important measurement caveat.} Our implementation averages
+activations from token 50 to the end of the sequence, which \emph{includes the
+generated response}. The activation is therefore measured concurrently with ---
+not before --- the reward-hacking behavior it is compared against. We consequently
+describe our tier-2 result as an \emph{association} throughout, and explicitly not
+as prediction of a future choice. A pre-decision readout at the assistant-header
+position, as used by \citet{sofroniew2026}, would be required to license the
+stronger claim; our codebase contains such a function but the data analyzed here
+were not generated with it. This is a
+limitation of the present audit, and it means part of the association may reflect
+the shortcut text itself rather than an antecedent state.
 
 \paragraph{Behavior.} Reward hacking is elicited with impossible-by-construction
-coding tasks, where an honest attempt must fail and a shortcut (hardcoding
-expected outputs, faking a verifier, silently dropping a requirement) passes.
-A parallel sycophancy task was collected but is excluded throughout: it yielded
-2 sycophantic responses in 650 trials and has no usable variance.
+coding tasks, where an honest attempt must fail and a shortcut (hardcoding outputs,
+faking a verifier, silently dropping a requirement) passes. A parallel sycophancy
+task is excluded throughout: it produced 2 sycophantic responses in 650 trials.
 
-\paragraph{Labels.} Responses are classified by an LLM judge with three
-independent passes. Because judge choice turned out to be consequential, we run
-\emph{two} judges from different model families --- Qwen~2.5~72B and Claude ---
-and report their agreement wherever labels carry a conclusion.
+\paragraph{Labels.} Responses are classified by an LLM judge over three independent
+passes. Because judge choice proved consequential, we run two judges from
+different families --- Qwen~2.5~72B and Claude --- and report agreement wherever
+labels carry a conclusion \citep{shi2025position, zheng2023judging}.
 
 \paragraph{Text baseline.} $V_{\text{text}}$ is an 8-dimension emotional tone
-rating (1--7) of the model's chain-of-thought, produced by the same judge and
-blind to steering condition. It stands in for what a CoT monitor could observe.
+rating (1--7) of the model's chain-of-thought by the same judge, blind to steering
+condition. It stands in for what a CoT monitor could observe
+\citep{chen2025reasoning}.
 
-\paragraph{Preregistration.} The tier-2 hypothesis was preregistered with a
-binding decision rule before the confirmatory data were collected. On the
-original dataset the rule returned \textsc{insufficient-data} (only 2 of 4 task
-variants produced outcome variance); we honored that verdict and collected 80
-additional unsteered trials rather than reporting the exploratory value.
+\paragraph{Preregistration.} The tier-2 hypothesis was preregistered with a binding
+decision rule. The registration discloses that it was drafted \emph{after} an
+exploratory AUC of $0.900$ had been observed on an initial 40-trial subset, and it
+was deliberately written so that this subset would fail. We do not claim a
+pre-data-inspection standard.
 
 \section{Results}
 \label{sec:results}
 
-\subsection{Tier 1: the probes are semantically valid}
+\subsection{Question 1: the directions are semantically valid}
 
-We project the frozen probes onto EmoBank, a corpus of 10,062 sentences with
-human valence--arousal--dominance ratings, with no refitting.
+Projecting the frozen probes onto EmoBank \citep{buechel2017emobank} --- 10,062
+sentences with human valence--arousal--dominance ratings --- with no refitting:
 
 \begin{center}\small
 \begin{tabular}{@{}lccc@{}}
@@ -146,16 +209,15 @@ Cross-validated $R^2$ & \textbf{0.377} & 0.180 & 0.154 \\
 \end{tabular}
 \end{center}
 
-Valence is recovered substantially; arousal and dominance weakly. The sign
-structure is coherent (\texttt{ecstatic} $r = +0.38$, \texttt{excited} $+0.36$,
-\texttt{furious} $-0.34$, \texttt{terrified} $-0.34$). The directions are
-measuring something a human would recognize as affect, not an arbitrary
-task-correlated axis --- at least along valence.
+Valence is substantially recovered, arousal and dominance weakly, with coherent
+sign structure (\texttt{ecstatic} $r = +0.38$, \texttt{furious} $-0.34$,
+\texttt{terrified} $-0.34$). This supports construct validity for the valence
+axis. It does \emph{not} establish that the ``desperate'' vector represents a
+desperation \emph{state}.
 
-\subsection{Tier 2: natural probe state predicts reward hacking}
+\subsection{Question 2: a concurrent behavioral association holds}
 
-On unsteered trials only ($n = 120$, 14 hacking events), with no intervention of
-any kind:
+On unsteered trials only ($n = 120$, 14 hacking events), no intervention:
 
 \begin{center}\small
 \begin{tabular}{@{}lcccc@{}}
@@ -168,25 +230,29 @@ $V_{\text{internal}}$[$-$calm]   & 0.865 & --- & --- & --- \\
 \end{tabular}
 \end{center}
 
-This is the paper's one confirmatory positive. It is robust to judge identity:
-Qwen and Claude agree on \textbf{80/80 trials (100\%)} on this set, flagging the
-same shortcuts. A representation extracted with no access to the behavioral task
-predicts, from the residual stream, whether the model is about to cheat.
+The association is not an artifact of judge choice: Qwen and Claude, judging
+independently, agree on \textbf{120/120 trials} and identify the same 14 shortcuts.
 
-\subsection{Tier 3: incremental validity over CoT text is layer-dependent}
+\paragraph{But the preregistered criterion is not met.} The registration makes the
+leave-one-task-out mean, not the pooled AUC, the load-bearing metric, and requires
+that at least 6 of the 9 planned task variants produce outcome variance ---
+explicitly to guard against pooled AUC inflated by between-task differences in
+predictor scale. The five mechanistically diverse variants added to satisfy this
+criterion did not yield usable labels (\S\ref{sec:judge}), so the suite still has
+2 variants with outcome variance. The preregistered verdict is therefore
+\textsc{insufficient-data}, and we report it as such. \textbf{We do not claim H5
+as confirmed.} A strong pooled AUC that we decline to promote is, we think, the
+more informative outcome to report.
 
-Pooled across steered and unsteered trials ($n = 992$, 87 events),
-$V_{\text{internal}}$ substantially outperforms the text baseline: AUC $0.836$
-$[0.797, 0.872]$ vs.\ $0.647$ $[0.603, 0.690]$, paired
-$\Delta = 0.189$ $[0.141, 0.239]$. The safety-relevant partition is stark: among
-453 trials where the probe reads high but the text reads calm, the hack rate is
-$14.6\%$, against $0.8\%$ where both read low.
+\subsection{Question 3: no advantage over the text baseline at the pre-specified layer}
+\label{sec:layer}
 
-This pooled comparison, however, inherits a task-identity confound (probes
-predict which task is being solved at $95.4\%$ accuracy; residualizing on task id
-reduces AUC from $0.799$ to $0.674$). Restricting to the clean unsteered set and
-sweeping the probe layer (Table~\ref{tab:layers}) gives a less comfortable
-picture.
+Pooled across steered and unsteered trials ($n = 992$, 87 events) the gap looks
+large --- $V_{\text{internal}}$ AUC $0.836$ $[0.797, 0.872]$ vs.\ $V_{\text{text}}$
+$0.647$ $[0.603, 0.690]$, $\Delta = 0.189$ $[0.141, 0.239]$ --- but that pooled
+comparison inherits a task-identity confound: probes predict which task is being
+solved at $95.4\%$ accuracy, and residualizing on task id drops AUC from $0.799$
+to $0.674$. On the clean unsteered set, sweeping the probe layer:
 
 \begin{table}[t]
 \centering\small
@@ -196,30 +262,32 @@ Layer & $V_{\text{int}}$[desp] AUC & $\Delta$ vs.\ $V_{\text{text}}$ & 95\% CI &
 \midrule
 13 & 0.691 & $+0.053$ & $[-0.173,\ 0.299]$ & 0.339 \\
 26 & 0.450 & $-0.187$ & $[-0.493,\ 0.125]$ & 0.890 \\
-\textbf{39} & \textbf{0.918} & $\mathbf{+0.280}$ & $\mathbf{[0.056,\ 0.479]}$ & \textbf{0.008} \\
+39 & 0.918 & $+0.280$ & $[0.056,\ 0.479]$ & 0.008 \\
 52 & 0.708 & $+0.069$ & $[-0.247,\ 0.343]$ & 0.306 \\
-53 (pre-specified) & 0.677 & $+0.037$ & $[-0.282,\ 0.329]$ & 0.391 \\
+\textbf{53 (pre-specified)} & 0.677 & $\mathbf{+0.037}$ & $[-0.282,\ 0.329]$ & \textbf{0.391} \\
 65 & 0.472 & $-0.165$ & $[-0.539,\ 0.202]$ & 0.809 \\
 \bottomrule
 \end{tabular}
-\caption{Incremental AUC over the text baseline on unsteered trials
-($n = 80$, 7 events). \textbf{At our pre-specified layer 53 the gap is not
-significant.} Layer 39 clears $p < 0.01$, but with 6 layers tested the Bonferroni
-threshold is $\alpha = 0.0083$: it passes under Qwen labels ($p = 0.0080$) and
-fails under Claude labels ($p = 0.0097$).}
+\caption{Incremental AUC over the text baseline, unsteered trials
+($n = 80$, 7 events). At the pre-specified layer the gap is not significant.
+Layer 39 clears $p < 0.01$, but with 6 layers tested the Bonferroni threshold is
+$\alpha = 0.0083$: it passes under Qwen labels ($p = 0.0080$) and fails under
+Claude labels ($p = 0.0097$).}
 \label{tab:layers}
 \end{table}
 
-We therefore decline to claim a confirmed faithfulness gap. The honest statement
-is: \emph{the gap is large when trials are pooled, absent at the pre-specified
-layer on clean trials, and present at one exploratory layer at a significance
-level that does not survive correction robustly.} Layer 39 is a hypothesis for
-replication, not a result.
+We therefore do not claim a faithfulness gap. Layer 39 is a hypothesis for
+replication. Treating it as a result would be exactly the operating-point
+selection that \citet{wu2026steerable} show can manufacture steering conclusions.
+We also note that our $V_{\text{text}}$ instrument is near-degenerate --- 946
+trials in the low third, \emph{zero} in the middle third, 46 in the high third,
+across 14 unique rounded values --- so even the pooled gap partly measures baseline
+coarseness rather than CoT unfaithfulness.
 
-\subsection{Tier 4: causal specificity fails}
+\subsection{Question 4: causal specificity is unsupported}
 
-The decisive control. We steer along five random directions orthogonal to the
-emotion subspace, at the same norm as the emotion steering.
+The decisive control: five random directions orthogonal to the emotion subspace,
+steered at matched norm.
 
 \begin{center}\small
 \begin{tabular}{@{}lcc@{}}
@@ -235,110 +303,96 @@ Random directions @ $\pm0.3$ & 13 / 200 & 6.5\% \\
 \end{tabular}
 \end{center}
 
-Steering the emotion direction does nothing that steering an arbitrary direction
-of the same magnitude does not also do. The fine-grained dose--response over
-$\pm0.05$ to $\pm0.5$ is flat for the desperate direction ($z = -1.42$,
-$p = 0.157$); the calm direction reaches $p = 0.041$ uncorrected with the wrong
-sign and does not survive correction. Injecting ``feel desperate'' into the
-system prompt likewise fails to separate from baseline ($17.5\%$ vs.\ $11.7\%$,
-Fisher $p = 0.417$).
+Steering the emotion direction does nothing that a matched arbitrary direction does
+not also do. The fine-grained dose--response over $\pm0.05$ to $\pm0.5$ is flat for
+desperate ($z = -1.42$, $p = 0.157$); calm reaches $p = 0.041$ uncorrected with the
+wrong sign. Injecting ``feel desperate'' into the system prompt likewise fails to
+separate from baseline ($17.5\%$ vs.\ $11.7\%$, Fisher $p = 0.417$).
 
-We emphasize what this does \emph{not} say. It does not show that emotion
-representations are epiphenomenal in general, and it does not contradict
-\citet{sofroniew2026} on a different model. It shows that in this model, at this
-site, with this norm, \textbf{a direction that is semantically valid and
-behaviorally predictive supplies no causal handle} --- and that without a
-random-direction control we would have reported the opposite.
+We state the scope carefully. This does not show the representation is causally
+inert in general, and it does not contradict \citet{sofroniew2026} on a different
+model. It shows that \emph{at this site, at this norm, in this model, the
+intervention lacks specificity} --- and that without a random-direction null we
+would have reported a significant, publishable, and wrong causal effect in the
+opposite direction to the original.
 
-\subsection{What died, and to what}
+\subsection{Judge validity is task-dependent}
+\label{sec:judge}
 
-Our own earlier analysis of this dataset reported a cross-validated AUC of
-$0.997$, a leave-one-task-out AUC of $0.992$, and a causal steering effect at
-$p = 0.005$. Table~\ref{tab:autopsy} records which control removed which claim.
+Our two judges agree on $120/120$ unsteered trials. On the 650-trial diverse suite
+built to test cross-mechanism generalization, the same two judges agree on
+$165/650$ ($25.4\%$): Qwen labels 2 responses \textsc{shortcut} and 524
+\textsc{unclear}; Claude labels 194 \textsc{shortcut} and 39 \textsc{unclear}. We
+therefore exclude that dataset entirely --- including a tempting negative
+generalization result it appears to support --- rather than mine it. Judge
+validity established on one distribution does not carry to another
+\citep{shi2025position}; we recommend reporting cross-family agreement per
+dataset, not per paper.
+
+\subsection{Claim autopsy}
 
 \begin{table}[t]
 \centering\small
-\begin{tabular}{@{}p{0.35\textwidth}p{0.28\textwidth}p{0.28\textwidth}@{}}
+\begin{tabular}{@{}p{0.32\textwidth}p{0.30\textwidth}p{0.30\textwidth}@{}}
 \toprule
-\textbf{Original claim} & \textbf{Control applied} & \textbf{Outcome} \\
+\textbf{Our earlier claim} & \textbf{Control applied} & \textbf{Outcome} \\
 \midrule
-CV AUC $0.997$, LOTO $0.992$ & Cross-mechanism transfer & AUC $0.303$, below chance \\
+CV AUC $0.997$; LOTO $0.992$ & Task-id residualization & $0.799 \rightarrow 0.674$ \\
 Steering effect $p = 0.005$ & BH-FDR over $40+$ tests & $p = 0.11$, n.s. \\
-Steering direction reversal is a novel model-specific finding & Random-direction null & Indistinguishable, $p = 0.835$ \\
-Within-task AUC $> 0.98$ proves the signal & Task-id residualization & $0.799 \rightarrow 0.674$ \\
-H5 confirmed at AUC $0.955$ & Preregistered decision rule & \textsc{insufficient-data}; re-run after new collection \\
+Reversed steering direction is a novel model-specific finding & Random-direction null & Indistinguishable, $p = 0.835$ \\
+$V_{\text{internal}}$ beats CoT text & Clean unsteered set, pre-specified layer & $\Delta = 0.037$, $p = 0.39$ \\
+H5 confirmed at AUC $0.955$ & Preregistered decision rule & \textsc{insufficient-data} \\
+Generalizes across mechanisms & Cross-family judge check & Dataset unusable; withheld \\
 \bottomrule
 \end{tabular}
-\caption{Claim autopsy. No claim survived every control it was subjected to in
-its original form; one (tier 2) survived in weakened form after additional data
-collection.}
+\caption{Which control removed which claim. No claim survived every control in its
+original form.}
 \label{tab:autopsy}
 \end{table}
 
 \section{Discussion}
 
-\paragraph{Prediction is not control, and interpretability is not either.}
-The tier-2 result is genuinely useful for monitoring: a probe that flags
-impending reward hacking at AUC $0.83$ with no intervention is a plausible
-detector. The tier-4 failure means the same probe is not a plausible
-\emph{intervention} target. These are different products and should be evidenced
-differently. We suspect the conflation is common because the same figure ---
-a direction with a name --- serves both narratives.
+\paragraph{The controls that mattered were cheap.} A matched-norm random direction,
+a second judge from a different family, and a decision rule written down in advance
+cost far less than the experiments they invalidated. Each removed a claim we
+believed. We suggest all three as defaults rather than as robustness appendices.
 
-\paragraph{Random-direction controls should be default, not optional.}
-Our causal claim was significant, replicated a published effect qualitatively,
-and was wrong. The only thing that revealed it was steering along directions with
-no semantic content at matched norm. Any steering result without such a control
-is compatible with ``large perturbations perturb.''
+\paragraph{Association and control are different products.} An association at
+AUC $0.83$ might support monitoring; it does not identify an intervention target.
+Because both are usually illustrated by the same object --- a named direction ---
+the two narratives are easy to conflate. \citet{yuan2026hidden} report the same
+dissociation in a different domain, which suggests it is not incidental.
 
-\paragraph{Baselines need measured resolution.}
-Part of our tier-3 gap is an artifact of the baseline: our $V_{\text{text}}$
-distribution has 946 trials in the low third, \emph{zero} in the middle third,
-and 46 in the high third, across only 14 unique rounded values. A comparison
-against a near-degenerate baseline overstates the gap. We report the instrument's
-resolution alongside the comparison; we think this should be routine.
-
-\paragraph{Judge agreement is a load-bearing statistic.}
-On the unsteered set, two judges from different families agreed on $80/80$
-trials, which is why we trust tier 2. On a second dataset of 650 trials designed
-to test cross-mechanism generalization, the same two judges agreed on
-$165/650$ ($25.4\%$): Qwen labeled 2 responses as shortcuts and 524 as unclear,
-while Claude labeled 194 as shortcuts. We consequently withhold \emph{all}
-generalization conclusions from that dataset, including the negative one, and
-recommend reporting cross-family judge agreement per-dataset rather than per-paper.
+\paragraph{Report your instrument's resolution.} Part of our apparent text-baseline
+gap is baseline coarseness, not model unfaithfulness. Comparative claims should
+state the resolution of the weaker instrument.
 
 \section{Limitations}
 
-Single model, single behavior, single probe-extraction method; 14 events at
-$n = 120$ for the headline result. The tier-4 null is a null: it bounds the
-effect at this site and norm but cannot exclude effects at other layers, larger
-norms, or with steering applied at other token positions. Layer 39 is a post-hoc
-selection from a 6-layer sweep and is reported as such. The cross-mechanism
-dataset is unusable pending judge reconciliation, so we cannot say whether the
-tier-2 result generalizes across shortcut types --- in our view the single most
-important open question, and one we deliberately do not answer here rather than
-answer from unreliable labels.
+Single model, single behavior, single extraction method; 14 events at $n = 120$.
+Our probe is a response-mean readout, so tier 2 is concurrent association and not
+prediction --- the single most important fix for future work. The tier-4 null bounds
+the effect at one site and norm and cannot exclude effects elsewhere, and
+\citet{wu2026steerable} give concrete reasons such nulls can be operating-point
+artifacts. Layer 39 is a post-hoc selection from six. Whether the tier-2
+association generalizes across shortcut mechanisms remains genuinely open; we
+deliberately answer it from no data rather than from unreliable labels.
 
 \section{Conclusion}
 
-We report a clean dissociation between semantic, predictive, and causal validity
-for the same set of interpretability probes, together with the sequence of
-controls that produced it. We suggest that these tiers be reported separately and
-evidenced separately, that random-direction nulls accompany steering claims, that
-baseline instruments have their resolution stated, and that cross-family judge
-agreement be reported per dataset. Our strongest positive result --- residual-stream
-state predicting reward hacking before it occurs --- survives all of this; our
-most exciting one did not.
+We audited one alignment-relevant mechanistic claim at four levels of evidence.
+Semantic validity and a concurrent, task-local behavioral association survive; the
+preregistered generalization criterion is unmet; the advantage over a text baseline
+disappears at the pre-specified operating point; and the causal intervention fails a
+random-direction specificity test. The methodological standards applied here are
+established. What we add is a worked case in which applying them changes the
+answer, together with the record of which control changed it.
 
-\paragraph{Reproducibility.} All analysis scripts, judged trial records,
-preregistration, and a claim-to-file provenance table are released with the paper.
+\paragraph{Reproducibility.} Analysis scripts, judged trial records, the
+preregistration with its honesty disclosure, and a claim-to-file provenance table
+are released with the paper.
 
 \bibliographystyle{plainnat}
-\begin{thebibliography}{1}
-\bibitem[Sofroniew et~al.(2026)]{sofroniew2026}
-N.~Sofroniew, I.~Kauvar, et~al.
-\newblock Emotion concepts and their function in a large language model.
-\newblock \emph{Transformer Circuits Thread}, 2026.
-\end{thebibliography}
+\bibliography{refs}
 
 \end{document}

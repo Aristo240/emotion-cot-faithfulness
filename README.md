@@ -16,13 +16,24 @@ checks, the claim **degrades in a specific and informative pattern**:
 | # | Validity tier | Question | Verdict |
 |---|---------------|----------|---------|
 | 1 | **Semantic** | Do the probes track anything humans call emotion? | **Holds** (EmoBank valence CV R² = 0.38, n = 10,062) |
-| 2 | **Predictive (natural)** | Does probe state predict reward hacking with no intervention? | **Holds** (AUC 0.832 [0.742, 0.909], n = 120, perm p < 0.001) |
-| 3 | **Incremental over text** | Does it beat a CoT-text baseline on those same trials? | **Partial** — layer-dependent, see below |
-| 4 | **Causal specificity** | Does steering the emotion direction change behavior, beyond a random direction? | **Fails** (Fisher p = 0.835 vs random directions) |
+| 2 | **Behavioral association** | Does probe state co-vary with reward hacking with no intervention? | **Holds, concurrent and task-local** (AUC 0.832 [0.742, 0.909], n = 120, perm p < 0.001) |
+| 3 | **Incremental over text** | Does it beat a CoT-text baseline on those same trials? | **Not at the pre-specified layer** (Δ = 0.037, p = 0.39) |
+| 4 | **Causal specificity** | Does steering the emotion direction beat a random direction of matched norm? | **Fails** (Fisher p = 0.835) |
+| — | **Preregistered generalization** | Does tier 2 hold across shortcut mechanisms? | **INSUFFICIENT-DATA** — criterion unmet, see below |
 
 The short version: **a representation can be semantically valid and behaviorally
-predictive while providing no causal handle.** These three properties need to be
-validated separately; in this case study they dissociate cleanly.
+associated while providing no causal handle.** These properties need to be
+validated separately; in this case study they dissociate.
+
+> ⚠️ **Read this before quoting the tier-2 number.** `compute_emotion_probes`
+> (`scripts/phase2_steering.py:187`) averages the residual stream from token 50 to
+> the **end of the sequence**, which includes the generated response. The probe is
+> therefore measured *concurrently with* the reward-hacking behavior, not before
+> it. Tier 2 is an **association**, not prediction of a future choice, and part of
+> it may reflect the shortcut text itself. A pre-decision readout at the
+> assistant-header position exists in `src/experiments.py`
+> (`compute_token_position_probes`) but **was not used** to generate any data
+> analyzed here. Fixing this is the highest-value next experiment.
 
 ## Retracted claims
 
@@ -54,9 +65,10 @@ correlates are `ecstatic` (r = +0.38), `excited` (+0.36), `furious` (−0.34),
 `terrified` (−0.34) — the sign structure is coherent.
 → `results/emobank/llama70b/report.json`
 
-### 2. Predictive validity — natural probe state predicts unsteered reward hacking
+### 2. Behavioral association — probe state co-varies with unsteered reward hacking
 
-The **confirmatory** result. Unsteered trials only, no steering contamination:
+Unsteered trials only, no steering contamination. **Concurrent, not predictive**
+(see the warning above), and **not a confirmatory H5 claim** (see below):
 
 | | value |
 |---|---|
@@ -67,10 +79,22 @@ The **confirmatory** result. Unsteered trials only, no steering contamination:
 | Mann–Whitney p | 2.8 × 10⁻⁵ |
 | V_internal[−calm] AUC | 0.865 |
 
-**Judge-robust.** On this set the Qwen 2.5 72B and Claude judges agree on
-**80/80 trials (100%)**, identifying the same 7 shortcuts in the n = 80 subset.
-The result is not an artifact of one judge.
+**Judge-robust.** The n = 120 set is 80 trials from
+`extended_unsteered_claude_judged.jsonl` plus 40 unsteered trials from
+`task_a_claude_judged.jsonl`. Qwen 2.5 72B and Claude, judging independently,
+agree on **120/120 trials (100%)** — 80/80 and 40/40 respectively — identifying
+the same 14 shortcuts. The result is not an artifact of one judge.
 → `results/phase4/llama70b/analysis_judged/report.json` → `h5_extended`
+
+**But the preregistered criterion is NOT met.** `docs/preregistration.md` §5 makes
+the leave-one-task-out mean — not pooled AUC — the load-bearing metric, and
+requires **≥6 of the 9 planned task variants** to produce outcome variance
+(`min_tasks_required()` in `scripts/h5_holdout.py` scales 4→3, 9→6). The 5
+diverse variants added to satisfy this did not yield usable labels (see
+limitation 2), so the suite still has 2 variants with outcome variance. The
+preregistered verdict remains **INSUFFICIENT-DATA**. A pooled AUC > 0.70 is
+explicitly declared insufficient by the registration. **Do not cite tier 2 as a
+confirmed H5 result.**
 
 ### 3. Incremental validity over CoT text — layer-dependent, partly exploratory
 
@@ -134,6 +158,10 @@ of the April README is withdrawn.
 
 ## Known limitations — read before reusing any number
 
+0. **The probe is a response-mean readout, so tier 2 is concurrent.** See the
+   warning at the top. `TOKEN_OFFSET = 50` to end-of-sequence, spanning the
+   generated response. No result here licenses a claim about detecting an
+   internal state *before* the model commits to a shortcut.
 1. **V_text is a low-resolution instrument.** Its distribution is 946 low / **0
    mid** / 46 high with only 14 unique rounded values (n = 992). Part of
    "V_internal beats V_text" is "V_text barely varies." Do not read the gap as a
@@ -161,8 +189,8 @@ Every claim above, traced to the script and file that produced it.
 | Claim | Script | Input | Result file | Status |
 |---|---|---|---|---|
 | EmoBank valence R² = 0.377 | `scripts/run_emobank_validation.py` | EmoBank (10,062 sents) | `results/emobank/llama70b/report.json` | Confirmatory |
-| H5 unsteered AUC = 0.832 | `scripts/analyze_phase4_judged.py` | `extended_unsteered_judged.jsonl` | `results/phase4/llama70b/analysis_judged/report.json` → `h5_extended` | Confirmatory |
-| Qwen/Claude agree 80/80 | — (direct file comparison) | `extended_unsteered_claude_judged.jsonl` | — | Confirmatory |
+| Association AUC = 0.832 (n=120) | `scripts/analyze_phase4_judged.py` | `extended_unsteered_judged.jsonl` + unsteered rows of `task_a_judged.jsonl` | `results/phase4/llama70b/analysis_judged/report.json` → `h5_extended` | **Exploratory** — prereg criterion unmet |
+| Qwen/Claude agree 120/120 | — (direct file comparison) | `extended_unsteered_claude_judged.jsonl` (80) + `task_a_claude_judged.jsonl` @ strength 0 (40) | — | Confirmatory |
 | Pooled gap Δ = 0.189 | `scripts/analyze_faithfulness_gap_robust.py` | fast_sum family, `judge_classification` | `.../analysis_today/faithfulness_gap_robust.json` | Exploratory (pooled; task confound) |
 | Layer sweep, layer 39 | `scripts/analyze_layer_sweep.py` | `extended_unsteered_layer_sweep.jsonl` | `.../analysis_layer_sweep/summary.json` | **Exploratory** (6-layer selection) |
 | Random-direction null, p = 0.835 | `scripts/analyze_phase4_judged.py` | `random_directions_judged.jsonl` | `.../analysis_judged/report.json` → `random_null` | Confirmatory (preplanned control) |
