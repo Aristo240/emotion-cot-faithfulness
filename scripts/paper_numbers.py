@@ -177,60 +177,40 @@ raw_auc = {e: auc(np.array([float(t_["emotion_probes"][e]) for t_ in unsteered])
 raw_order = sorted(emos, key=lambda e: -raw_auc[e])
 desp_raw_rank = raw_order.index("desperate") + 1
 
-# Permutation null on the LABELS, shared across directions so that the
-# max-T statistic correctly accounts for correlation between directions.
-rng = np.random.default_rng(SEED)
-NP = 10000
-null = {e: np.empty(NP) for e in emos}
-maxnull = np.empty(NP)
-for i in range(NP):
-    yp = rng.permutation(y)
-    vals = [abs(auc(resid[e], yp) - 0.5) for e in emos]
-    for e, v in zip(emos, vals):
-        null[e][i] = v
-    maxnull[i] = max(vals)
-pval = {e: float((np.sum(null[e] >= abs(obs[e] - 0.5)) + 1) / (NP + 1)) for e in emos}
-maxT = {e: float((np.sum(maxnull >= abs(obs[e] - 0.5)) + 1) / (NP + 1)) for e in emos}
-order = sorted(emos, key=lambda e: pval[e])
-bh, prev, m = {}, 1.0, len(emos)
-for i, e in enumerate(reversed(order)):
-    prev = min(prev, pval[e] * m / (m - i))
-    bh[e] = prev
+# NOTE ON SCOPE. Inference for the direction sweep lives entirely in
+# scripts/conditional_null.py: nested likelihood-ratio chi2, family-wise
+# corrected by max-T under a length-preserving null. An earlier version of this
+# script also ran a max-T permutation test and a Benjamini-Hochberg correction on
+# the RESIDUALISED AUC. Those are removed. They were a second, differently
+# defined inference on a different statistic under a different null, and they
+# disagreed with the reported analysis (they gave 7 and 12 significant directions
+# against the paper's 18, and three different p-values for `desperate`). Leaving
+# them in the released JSON invited a reader to verify the paper against the
+# wrong number. Residualised AUC is retained below as a DESCRIPTIVE effect size
+# with a bootstrap CI, and no p-value is derived from it here.
 
-print(f"  {'direction':<15}{'residAUC':>9}{'CI':>18}{'raw p':>9}{'BH q':>9}{'max-T p':>10}")
+m = len(emos)
+order = sorted(emos, key=lambda e: -abs(obs[e] - 0.5))   # by descriptive effect size
+print(f"  {'direction':<15}{'residAUC':>10}{'95% CI':>20}   (descriptive only)")
 rows_out = []
 for e in order[:8]:
     ci = boot_ci(resid[e], y, 3000)
-    tag = "  SURVIVES max-T" if maxT[e] < 0.05 else ("  BH only" if bh[e] < 0.05 else "")
-    print(f"  {e:<15}{obs[e]:>9.3f}{f'[{ci[0]:.3f},{ci[1]:.3f}]':>18}"
-          f"{pval[e]:>9.4f}{bh[e]:>9.4f}{maxT[e]:>10.4f}{tag}")
-    rows_out.append({"direction": e, "resid_auc": obs[e], "ci95": ci,
-                     "p": pval[e], "bh_q": bh[e], "maxT_p": maxT[e]})
-# Store ALL 50 (not only the printed top 8) so every direction the paper may
-# mention is sourced.
-all_dirs = [{"direction": e, "resid_auc": obs[e], "p": pval[e],
-             "bh_q": bh[e], "maxT_p": maxT[e]} for e in order]
+    print(f"  {e:<15}{obs[e]:>10.3f}{f'[{ci[0]:.3f}, {ci[1]:.3f}]':>20}")
+    rows_out.append({"direction": e, "resid_auc": obs[e], "ci95": ci})
+all_dirs = [{"direction": e, "resid_auc": obs[e]} for e in order]
 ci_dr = boot_ci(resid["desperate"], y, 3000)
-print(f"  {'desperate*':<15}{obs['desperate']:>9.3f}"
-      f"{f'[{ci_dr[0]:.3f},{ci_dr[1]:.3f}]':>18}"
-      f"{pval['desperate']:>9.4f}{bh['desperate']:>9.4f}{maxT['desperate']:>10.4f}"
-      f"   * PREREGISTERED - NULL")
+print(f"  {'desperate*':<15}{obs['desperate']:>10.3f}"
+      f"{f'[{ci_dr[0]:.3f}, {ci_dr[1]:.3f}]':>20}   * PREREGISTERED")
 print(f"\n  raw (uncorrected) AUC: best is {raw_order[0]} at {raw_auc[raw_order[0]]:.3f}; "
       f"desperate ranks {desp_raw_rank}/{m} at {raw_auc['desperate']:.3f}")
-print(f"  surviving BH q<0.05 : {sum(bh[e] < 0.05 for e in emos)}/{m}")
-print(f"  surviving max-T<0.05: {sum(maxT[e] < 0.05 for e in emos)}/{m}"
-      f"   (family-wise over all {m} directions)")
+print("  significance for these directions: see results/conditional_null.json")
 R["directions"] = {
+    "_inference_lives_in": "results/conditional_null.json",
     "raw_auc": raw_auc,
     "raw_auc_best": {"direction": raw_order[0], "auc": raw_auc[raw_order[0]]},
     "desperate_raw_auc_rank": desp_raw_rank,
     "n_directions": m, "top": rows_out, "all": all_dirs,
-    "desperate": {"resid_auc": obs["desperate"], "ci95": ci_dr,
-                  "p": pval["desperate"], "bh_q": bh["desperate"],
-                  "maxT_p": maxT["desperate"]},
-    "n_bh_significant": int(sum(bh[e] < 0.05 for e in emos)),
-    "n_maxT_significant": int(sum(maxT[e] < 0.05 for e in emos)),
-    "maxT_survivors": [e for e in order if maxT[e] < 0.05],
+    "desperate": {"resid_auc": obs["desperate"], "ci95": ci_dr},
 }
 
 # ============ §4.3b nested logistic regression (standard test, replaces residAUC)

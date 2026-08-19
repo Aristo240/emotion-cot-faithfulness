@@ -81,6 +81,20 @@ for name, resid in [("bored", 0.858), ("lonely", 0.760), ("nostalgic", 0.797),
 chk("desperate resid CI lo", 0.412, J["directions"]["desperate"]["ci95"][0], tol=1e-3)
 chk("desperate resid CI hi", 0.756, J["directions"]["desperate"]["ci95"][1], tol=1e-3)
 chk("n directions", 50, J["directions"]["n_directions"], tol=0)
+# The residualised-AUC permutation/BH inference was retired: it was a second,
+# looser criterion on a different statistic that disagreed with the reported one.
+# Fail if it reappears in the released JSON.
+for _dead in ("n_bh_significant", "n_maxT_significant", "maxT_survivors"):
+    checks += 1
+    if _dead in J["directions"]:
+        fails.append(f"retired key {_dead!r} is back in paper_numbers.json")
+for _dead in ("p", "bh_q", "maxT_p"):
+    checks += 1
+    if any(_dead in r for r in J["directions"]["all"]):
+        fails.append(f"retired per-direction key {_dead!r} is back in paper_numbers.json")
+checks += 1
+if J["directions"].get("_inference_lives_in") != "results/conditional_null.json":
+    fails.append("paper_numbers.json no longer points at where inference lives")
 # section 4.2 quotes a raw AUC and a rank; both must come from the script
 chk("bored raw AUC", 0.985, J["directions"]["raw_auc"]["bored"])
 chk("desperate raw AUC", 0.832, J["directions"]["raw_auc"]["desperate"])
