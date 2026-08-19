@@ -42,12 +42,12 @@ it rests on separately. Four controls change the conclusion.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ against
 reward hacking on unsteered trials, but correlates with response length at
 $\rho = 0.61$; residualized on length its AUC is $0.592$, and it does not add to a
-length-only model ($\chi^2(1) = 3.3$, family-wise $p = 0.47$).
+length-only model ($\chi^2(1) = 3.3$, family-wise $p = 0.44$).
 (ii)~\emph{Multiplicity.} Sweeping all 50 directions with a family-wise
-correction, 17 are significant. These are not 17 findings: the survivors form one
-axis (first principal component, $78.6\%$ of variance), and it is not the direction
+correction, 18 are significant. These are not 18 findings: the survivors form one
+axis (first principal component, $78.8\%$ of variance), and it is not the direction
 we registered. Under a magnitude-removed readout an association remains but only 8
-of the 17 directions recur, so the axis is real and its composition is not.
+of the 18 directions recur, so the axis is real and its composition is not.
 (iii)~\emph{Specificity.} Emotion steering is not distinguishable from
 matched-norm random directions ($7.5\%$ vs.\ $6.5\%$, Fisher $p = 0.84$), at power
 sufficient to detect a $2.42\times$ effect where the original reports
@@ -170,7 +170,7 @@ Judge validity established on one distribution does not transfer
 
 \paragraph{Reproducibility.} \texttt{scripts/paper\_numbers.py} regenerates every
 number here into \texttt{results/paper\_numbers.json}; a second script gates this
-manuscript against that file with 211 assertions.
+manuscript against that file with 202 assertions.
 
 \section{Results}
 
@@ -232,14 +232,17 @@ hypothesis $y \perp \text{direction}$, but length alone predicts the outcome at
 AUC $0.888$, so free permutation removes a dependence the statistic is designed to
 condition on. We therefore also build a \emph{conditional} null: fit
 $\text{logit}(p) = a + b\cdot\text{length}$ by unpenalized maximum likelihood, draw
-$y^* \sim \text{Bernoulli}(\hat p)$, and recompute all 50 statistics ($B = 2000$).
-The generating model is deliberately unpenalized: ridge shrinkage there would make
-the simulated data less length-dependent than the observed data, weakening the very
-conditioning we want. This reproduces the outcome--length
+$y^* \sim \text{Bernoulli}(\hat p)$, and recompute all 50 statistics
+($B = 10{,}000$). The generating model is deliberately unpenalized: ridge shrinkage
+there would make the simulated data less length-dependent than the observed data,
+weakening the conditioning we want. This reproduces the outcome--length
 relationship exactly. (Stratified permutation, the other natural choice, is
 degenerate here: $60\%$ of trials fall in length quintiles containing either no
-events or only events.) The conditional null is indeed stricter --- its $p$ exceeds
-the free-permutation $p$ for 42 of 50 directions --- and the result survives it.
+events or only events.) In the event the choice makes little difference: both nulls
+give 18 significant directions and per-direction $p$ that differ by at most
+$0.02$. We report the conditional null because it is the principled one, not
+because it changes the answer --- but at $B = 2000$ it appeared appreciably
+stricter, and that impression was Monte Carlo noise.
 
 \begin{table}[t]
 \centering\small
@@ -247,37 +250,44 @@ the free-permutation $p$ for 42 of 50 directions --- and the result survives it.
 \toprule
 Direction & $\chi^2(1)$ & $\beta$ & cond.\ max-$T$ $p$ & free max-$T$ $p$ & resid.\ AUC \\
 \midrule
-\texttt{bored}         & \textbf{38.7} & $+2.48$ & \textbf{0.0005} & 0.0005 & 0.858 \\
-\texttt{lonely}        & 29.6 & $+1.91$ & 0.0005 & 0.0005 & 0.760 \\
-\texttt{nostalgic}     & 27.5 & $+1.84$ & 0.0005 & 0.0005 & 0.797 \\
-\texttt{melancholy}    & 24.8 & $+1.63$ & 0.0005 & 0.0005 & 0.765 \\
-\texttt{gloomy}        & 21.2 & $+1.46$ & 0.0005 & 0.0005 & 0.761 \\
-\texttt{compassionate} & 19.7 & $-1.50$ & 0.0010 & 0.0005 & 0.265 \\
-\texttt{sad}           & 18.6 & $+1.29$ & 0.0010 & 0.0010 & 0.734 \\
+\texttt{bored}         & \textbf{38.7} & $+2.48$ & \textbf{0.0001} & 0.0001 & 0.858 \\
+\texttt{lonely}        & 29.6 & $+1.91$ & 0.0001 & 0.0001 & 0.760 \\
+\texttt{nostalgic}     & 27.5 & $+1.84$ & 0.0001 & 0.0001 & 0.797 \\
+\texttt{melancholy}    & 24.8 & $+1.63$ & 0.0001 & 0.0001 & 0.765 \\
+\texttt{gloomy}        & 21.2 & $+1.46$ & 0.0001 & 0.0001 & 0.761 \\
+\texttt{compassionate} & 19.7 & $-1.50$ & 0.0003 & 0.0004 & 0.265 \\
+\texttt{sad}           & 18.6 & $+1.29$ & 0.0005 & 0.0008 & 0.734 \\
 \midrule
-\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4693} & 0.4273 & 0.592 \\
+\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4404} & 0.4456 & 0.592 \\
 \bottomrule
 \end{tabular}
-\caption{Unsteered trials ($n = 120$, 14 events); top 7 of 17 survivors shown.
+\caption{Unsteered trials ($n = 120$, 14 events); top 7 of 18 survivors shown.
 Inference is the nested likelihood-ratio $\chi^2(1)$ for adding a direction to a
 length-only logistic model, family-wise corrected by max-$T$ over all 50
 directions. The conditional null preserves the outcome--length relationship; the
-free-permutation null does not (\S\ref{sec:dirs}). $p = 0.0005$ is the resolution
-floor at $B = 2000$. Residualized AUC is reported as a descriptive effect size
+free-permutation null does not (\S\ref{sec:dirs}). $p = 0.0001$ is the resolution
+floor at $B = 10{,}000$. Residualized AUC is reported as a descriptive effect size
 only. $\beta$ sign shows \texttt{compassionate} is \emph{negatively} associated.
 $^*$Preregistered --- not significant under either null.}
 \label{tab:dirs}
 \end{table}
 
-Seventeen of 50 directions are significant at $\alpha = .05$ under the conditional
-null. With 14 events an unpenalized fit can quasi-separate, so we report ridge-penalized
-estimates (intercept unpenalized) as primary; the unpenalized fit agrees in sign
-and significance, event and non-event distributions overlap so there is no complete
-separation, and no draw in either null failed to converge.
+Eighteen of 50 directions are significant at $\alpha = .05$ under the conditional
+null. That count should be read as approximate: several directions sit near the
+threshold, and at $B = 2000$ we obtained 17. The identity of the leading directions
+is stable; the boundary is not.
 
-\paragraph{The survivors are one axis, not seventeen findings.} The surviving
-directions are heavily intercorrelated (mean $|r| = 0.75$; first principal
-component $78.6\%$ of variance; participation ratio $1.59$). They are a single
+With 14 events an unpenalized fit can quasi-separate, so we report ridge-penalized
+estimates (intercept unpenalized) as primary; event and non-event distributions
+overlap so there is no complete separation, and no draw in either null failed to
+converge. Varying the penalty over $\{0, 0.5, 1, 2\}$ changes the count from 16 to
+18 and retains at least 16 of the 18, with \texttt{desperate} null at every setting
+($p$ from $0.38$ to $0.50$); at $\lambda = 0$, 13 fits fail to converge, which is
+why a penalty is used at all.
+
+\paragraph{The survivors are one axis, not eighteen findings.} The surviving
+directions are heavily intercorrelated (mean $|r| = 0.76$; first principal
+component $78.8\%$ of variance; participation ratio $1.58$). They are a single
 axis detected many times: low-arousal negative affect
 (\texttt{bored}, \texttt{lonely}, \texttt{melancholy}) at one pole, positive affect
 (\texttt{proud}, \texttt{grateful}, \texttt{jubilant}) and \texttt{compassionate}
@@ -289,7 +299,7 @@ a magnitude-removed readout: each trial's 50-vector normalized to unit length,
 which cancels the shared $\lVert \bar a \rVert$ factor exactly. An association
 remains --- 15 of 50 directions are significant, with $\chi^2$ up to $28.0$ --- and
 \texttt{desperate} is if anything more clearly null ($\chi^2 = 0.25$,
-$p = 1.000$). But \emph{which} directions carry it is not stable: only 8 of the 17
+$p = 1.000$). But \emph{which} directions carry it is not stable: only 8 of the 18
 survivors are shared. The robust core is low-arousal negative affect
 (\texttt{bored}, \texttt{brooding}, \texttt{gloomy}, \texttt{lonely},
 \texttt{melancholy}, \texttt{nostalgic}, \texttt{sad}, plus \texttt{grateful}).

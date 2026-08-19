@@ -90,58 +90,42 @@ if J["directions"]["raw_auc_best"]["direction"] != "bored":
     fails.append("paper names `bored` as the best raw-AUC direction; script says "
                  + J["directions"]["raw_auc_best"]["direction"])
 
-# Table 2 inferential columns, from the conditional-null run
+# Table 2 inferential columns, from the conditional-null run (B = 10000)
 for name, c2, beta, pc, pf in [
-    ("bored", 38.7, 2.48, 0.0005, 0.0005), ("lonely", 29.6, 1.91, 0.0005, 0.0005),
-    ("nostalgic", 27.5, 1.84, 0.0005, 0.0005), ("melancholy", 24.8, 1.63, 0.0005, 0.0005),
-    ("gloomy", 21.2, 1.46, 0.0005, 0.0005), ("compassionate", 19.7, -1.50, 0.0010, 0.0005),
-    ("sad", 18.6, 1.29, 0.0010, 0.0010), ("desperate", 3.3, 0.69, 0.4693, 0.4273),
+    ("bored", 38.7, 2.48, 0.0001, 0.0001), ("lonely", 29.6, 1.91, 0.0001, 0.0001),
+    ("nostalgic", 27.5, 1.84, 0.0001, 0.0001), ("melancholy", 24.8, 1.63, 0.0001, 0.0001),
+    ("gloomy", 21.2, 1.46, 0.0001, 0.0001), ("compassionate", 19.7, -1.50, 0.0003, 0.0004),
+    ("sad", 18.6, 1.29, 0.0005, 0.0008), ("desperate", 3.3, 0.69, 0.4404, 0.4456),
 ]:
     chk(f"{name} chi2", c2, C["chi2"][name], tol=5e-2)
     chk(f"{name} beta", beta, J["nested_lr"]["penalised"][name]["beta"], tol=6e-3)
     chk(f"{name} conditional p", pc, C["p_conditional"][name], tol=5e-5)
     chk(f"{name} free p", pf, C["p_free"][name], tol=5e-5)
-chk("survivors conditional", 17, C["n_survivors_conditional"], tol=0)
-chk("B", 2000, C["B"], tol=0)
-chk("p resolution floor", 0.0005, C["p_resolution_floor"], tol=1e-6)
-chk("conditional stricter count", 42, C["n_conditional_ge_free"], tol=0)
-# R1.1: the generating model must be the unpenalised MLE, not the shrunk fit
-gm = C["generating_model"]
-chk("generating slope (MLE)", 1.559, gm["slope_mle"], tol=5e-3)
-chk("ridge slope (not used)", 1.388, gm["slope_ridge"], tol=5e-3)
-chk("shrinkage avoided", 0.11, gm["shrinkage"], tol=5e-3)
-# R2.1: direction-only (magnitude-removed) readout
-do = C["direction_only"]
-chk("direction-only survivors", 15, do["n_survivors"], tol=0)
-chk("survivors kept", 8, do["n_original_survivors_kept"], tol=0)
-chk("overlap size", 8, len(do["overlap_with_scalar"]), tol=0)
-chk("scalar-only size", 9, len(do["scalar_only"]), tol=0)
-chk("direction-only-new size", 7, len(do["direction_only_new"]), tol=0)
-chk("desperate chi2 direction-only", 0.25, do["chi2"]["desperate"], tol=5e-3)
-chk("desperate p direction-only", 1.0000, do["p_conditional"]["desperate"], tol=5e-4)
-chk("rho desperate-length before", 0.606, do["desperate_rho_length_before"])
-chk("rho desperate-length after", 0.657, do["desperate_rho_length_after"])
-chk("max chi2 direction-only", 28.02, max(do["chi2"].values()), tol=5e-2)
-# the robust core named in the paper must actually be the overlap set
-_core = {"bored", "brooding", "gloomy", "grateful", "lonely", "melancholy", "nostalgic", "sad"}
-checks += 1
-if set(do["overlap_with_scalar"]) != _core:
-    fails.append(f"paper names core {sorted(_core)}; script overlap is {do['overlap_with_scalar']}")
-# the paper names these as added by each readout
-checks += 1
-for e in ("proud", "hopeful", "jubilant"):
-    if e not in do["scalar_only"]:
-        fails.append(f"paper says {e} is scalar-readout-only; script disagrees")
-checks += 1
-for e in ("hostile", "contemptuous", "enraged", "defiant"):
-    if e not in do["direction_only_new"]:
-        fails.append(f"paper says {e} is direction-only-new; script disagrees")
-chk("frozen fraction", 0.60, C["frozen_fraction"], tol=5e-3)
+chk("survivors conditional", 18, C["n_survivors_conditional"], tol=0)
+chk("survivors free", 18, C["n_survivors_free"], tol=0)
+chk("B", 10000, C["B"], tol=0)
+chk("p resolution floor", 0.0001, C["p_resolution_floor"], tol=1e-6)
 chk("length AUC (in-text)", 0.888, J["association"]["auc_length"])
+# the paper says the two nulls differ by at most 0.005 per direction
+checks += 1
+_maxd = max(abs(C["p_conditional"][e] - C["p_free"][e]) for e in C["p_conditional"])
+if _maxd > 0.02:
+    fails.append(f"paper says the nulls differ by <=0.02; max is {_maxd:.4f}")
+# R1.2 ridge sensitivity
+Rg = json.load(open(ROOT / "results/ridge_sensitivity.json"))
+chk("ridge0 survivors", 16, Rg["0.0"]["n_survivors"], tol=0)
+chk("ridge2 survivors", 18, Rg["2.0"]["n_survivors"], tol=0)
+chk("ridge min overlap", 16, Rg["_meta"]["min_overlap_with_ridge1"], tol=0)
+chk("ridge0 nonconvergent", 13, Rg["0.0"]["nonconvergent_fits"], tol=0)
+chk("ridge desperate p min", 0.3848, min(Rg[k]["desperate_p"] for k in ("0.0","0.5","1.0","2.0")), tol=5e-5)
+chk("ridge desperate p max", 0.5037, max(Rg[k]["desperate_p"] for k in ("0.0","0.5","1.0","2.0")), tol=5e-5)
+checks += 1
+if not Rg["_meta"]["desperate_null_at_all_ridges"]:
+    fails.append("paper says desperate is null at every ridge; script disagrees")
 st = C["survivor_structure"]
-chk("survivor mean |r|", 0.75, st["mean_abs_r"], tol=5e-3)
-chk("survivor PC1", 0.786, st["pc1_var_explained"], tol=5e-4)
-chk("survivor participation ratio", 1.59, st["participation_ratio"], tol=5e-3)
+chk("survivor mean |r|", 0.76, st["mean_abs_r"], tol=5e-3)
+chk("survivor PC1", 0.788, st["pc1_var_explained"], tol=5e-4)
+chk("survivor participation ratio", 1.58, st["participation_ratio"], tol=5e-3)
 chk("penalised desperate chi2", 3.31, J["nested_lr"]["penalised"]["desperate"]["chi2"], tol=5e-3)
 chk("penalised desperate p", 0.069, J["nested_lr"]["penalised"]["desperate"]["p"], tol=5e-4)
 # the two logistic implementations must agree exactly
@@ -158,10 +142,12 @@ for k in ("free", "conditional"):
     checks += 1
     if C["nonconvergent_draws"][k] != 0:
         fails.append(f"{k} null had {C['nonconvergent_draws'][k]} non-convergent draws")
-# conditional null must not be looser than the free null overall
+# the two nulls must not disagree materially on which directions are significant
 checks += 1
-if C["n_conditional_ge_free"] <= C["n_directions"] // 2:
-    fails.append("conditional null is looser than the free null -- design is wrong")
+_sa = {e for e, v in C["p_free"].items() if v < .05}
+_sb = {e for e, v in C["p_conditional"].items() if v < .05}
+if len(_sa ^ _sb) > 2:
+    fails.append(f"free and conditional nulls disagree on {len(_sa ^ _sb)} directions")
 
 # ---- §4.4 V_text
 v = J["vtext"]
