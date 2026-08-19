@@ -161,6 +161,52 @@ for lay in ("39", "52", "53", "65"):
         fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
 in_tex("no layer in our sweep offers a length-independent version")
 
+# ---- §4.3b nested LR (paper Table 2 cols 5-6)
+lrp = J["nested_lr"]["penalised"]
+for name, c2, beta in [("bored", 32.3, 1.73), ("nostalgic", 23.9, 1.38),
+                       ("melancholy", 21.7, 1.25), ("gloomy", 18.9, 1.15),
+                       ("lonely", 25.2, 1.40), ("sad", 16.7, 1.04),
+                       ("compassionate", 16.9, -1.13), ("desperate", 2.9, 0.52)]:
+    chk(f"{name} chi2", c2, lrp[name]["chi2"], tol=5e-2)
+    chk(f"{name} beta", beta, lrp[name]["beta"], tol=5e-3)
+chk("desperate nested p", 0.089, lrp["desperate"]["p"], tol=5e-4)
+# paper claims all seven survivors exceed chi2 16.7 at p < 1e-4
+for name in ("bored", "nostalgic", "melancholy", "gloomy", "lonely", "sad", "compassionate"):
+    checks += 1
+    if not (lrp[name]["chi2"] >= 16.6 and lrp[name]["p"] < 1e-4):
+        fails.append(f"{name}: paper claims chi2>=16.6 and p<1e-4, got "
+                     f"{lrp[name]['chi2']:.2f}, {lrp[name]['p']:.2g}")
+# paper claims unpenalised agrees in sign and significance
+for name in ("bored", "nostalgic", "melancholy", "gloomy", "lonely", "sad", "compassionate"):
+    checks += 1
+    u = J["nested_lr"]["unpenalised"][name]
+    if not (u["p"] < 0.05 and (u["beta"] > 0) == (lrp[name]["beta"] > 0)):
+        fails.append(f"{name}: unpenalised fit disagrees with penalised")
+checks += 1
+if not J["nested_lr"]["separation_overlap"]:
+    fails.append("paper claims distributions overlap (no complete separation)")
+
+# ---- §4.6b layer profile correlations
+sp = J["layer_profiles"]["spearman"]
+chk("profile 13 vs 53", 0.24, sp["13"]["53"], tol=5e-3)
+chk("profile 26 vs 53", 0.24, sp["26"]["53"], tol=5e-3)
+chk("profile 13 vs 26", 0.04, sp["13"]["26"], tol=5e-3)
+chk("profile 39 vs 53", 0.82, sp["39"]["53"], tol=5e-3)
+block = ["39", "52", "53", "65"]
+vals = [sp[a][b] for a in block for b in block if a != b]
+checks += 1
+if not (min(vals) >= 0.61 - 5e-3 and max(vals) <= 0.99 + 5e-3):
+    fails.append(f"paper claims late block spans 0.61-0.99, got {min(vals):.2f}-{max(vals):.2f}")
+
+# ---- §4.5b random-arm homogeneity
+rates = sorted(v[2] for v in J["random_arm_homogeneity"]["per_direction"].values())
+checks += 1
+if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
+    fails.append(f"random-arm per-direction rates differ from paper: {rates}")
+
+in_tex("late-layer phenomenon")
+in_tex("no complete separation")
+
 # ---- §4.7 prereg
 if "INSUFFICIENT-DATA" not in J["prereg"]["verdict"]:
     fails.append("prereg verdict is not INSUFFICIENT-DATA")

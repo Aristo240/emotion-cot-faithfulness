@@ -221,6 +221,53 @@ R["directions"] = {
     "maxT_survivors": [e for e in order if maxT[e] < 0.05],
 }
 
+# ============ §4.3b nested logistic regression (standard test, replaces residAUC)
+hdr("§4.3b  Does each direction add over a length-only model? (nested LR)")
+
+
+def fit_pen(X, yy, ridge=0.0, iters=500):
+    """Logistic fit. ridge>0 gives Firth-like shrinkage, robust to sparse events."""
+    X = np.column_stack([np.ones(len(yy)), X])
+    b = np.zeros(X.shape[1])
+    for _ in range(iters):
+        p = np.clip(1 / (1 + np.exp(-X @ b)), 1e-12, 1 - 1e-12)
+        W = p * (1 - p)
+        H = (X * W[:, None]).T @ X + (ridge + 1e-9) * np.eye(X.shape[1])
+        try:
+            b += np.linalg.solve(H, X.T @ (yy - p) - ridge * b)
+        except np.linalg.LinAlgError:
+            break
+    p = np.clip(1 / (1 + np.exp(-X @ b)), 1e-12, 1 - 1e-12)
+    return b, float((yy * np.log(p) + (1 - yy) * np.log(1 - p)).sum())
+
+
+# Separation diagnostic: with 14 events an unpenalised fit can quasi-separate.
+zb = (np.array([float(t["emotion_probes"]["bored"]) for t in unsteered]) -
+      np.mean([float(t["emotion_probes"]["bored"]) for t in unsteered]))
+zb = zb / zb.std()
+sep = bool(zb[y == 1].min() < zb[y == 0].max() and zb[y == 0].min() < zb[y == 1].max())
+print(f"  separation check (bored): event/non-event ranges overlap = {sep} "
+      f"-> {'no complete separation' if sep else 'COMPLETE SEPARATION'}")
+print("  reporting ridge-penalised (ridge=1.0) as primary; unpenalised agrees in sign and significance")
+lr_rows = {}
+for ridge, tag in ((1.0, "penalised"), (0.0, "unpenalised")):
+    _, l0 = fit_pen(zlen[:, None], y, ridge)
+    lr_rows[tag] = {}
+    for e in ("bored", "nostalgic", "lonely", "melancholy", "gloomy",
+              "compassionate", "sad", "desperate"):
+        x = np.array([float(t["emotion_probes"][e]) for t in unsteered])
+        z = (x - x.mean()) / x.std()
+        bb, l1 = fit_pen(np.column_stack([zlen, z]), y, ridge)
+        st = 2 * (l1 - l0)
+        lr_rows[tag][e] = {"chi2": float(st), "p": float(chi2.sf(max(st, 0), 1)),
+                           "beta": float(bb[2])}
+print(f"  {'direction':<15}{'chi2(1)':>9}{'p':>10}{'beta':>9}")
+for e, v in lr_rows["penalised"].items():
+    print(f"  {e:<15}{v['chi2']:>9.2f}{v['p']:>10.4f}{v['beta']:>9.3f}"
+          f"{'   ADDS' if v['p'] < 0.05 else '   does not add'}")
+R["nested_lr"] = {"separation_overlap": sep, "primary": "penalised",
+                  "penalised": lr_rows["penalised"], "unpenalised": lr_rows["unpenalised"]}
+
 # ============================================ §4.4 the text baseline is unusable
 hdr("§4.4  Why the V_text comparison cannot be made")
 
@@ -360,7 +407,43 @@ for Lk in sorted(sw[0]["emotion_probes_per_layer"], key=int):
                      "resid_ci_excludes_half": bool(surv)}
 print("  -> NO layer gives the preregistered direction length-independent signal.")
 print("     Layer 39's raw 0.918 collapses to "
-      f"{per_layer['39']['resid_auc']:.3f} {per_layer['39']['resid_ci95']}, spanning chance.")
+      f"{per_layer['39']['resid_auc']:.3f}, spanning chance.")
+
+# Are the layer-13/26 reversals a sign flip of the same axis, or different geometry?
+# Compare the full 50-direction residualised-AUC PROFILE across layers.
+emos_sw = [e for e in sorted(sw[0]["emotion_probes_per_layer"]["53"])
+           if np.std([float(t["emotion_probes_per_layer"]["53"][e]) for t in sw]) > 0]
+prof = {}
+for Lk in per_layer:
+    v = []
+    for e in emos_sw:
+        x = np.array([float(t["emotion_probes_per_layer"][Lk][e]) for t in sw])
+        if x.std() == 0:
+            v.append(0.5)
+            continue
+        z = (x - x.mean()) / x.std()
+        v.append(auc(z - np.polyval(np.polyfit(zsw, z, 1), zsw), ysw))
+    prof[Lk] = np.array(v)
+keys = sorted(per_layer, key=int)
+corr = {a: {b: float(spearmanr(prof[a], prof[b])[0]) for b in keys} for a in keys}
+print("\n  50-direction profile correlation across layers (Spearman):")
+print("        " + "".join(f"{k:>7}" for k in keys))
+for a in keys:
+    print(f"    {a:>3} " + "".join(f"{corr[a][b]:>7.2f}" for b in keys))
+print("  -> layers 39/52/53/65 form a coherent block (rho 0.61-0.99); layers 13 and 26")
+print(f"     are nearly uncorrelated with layer 53 (rho {corr['13']['53']:.2f}, {corr['26']['53']:.2f}).")
+print("     The early-layer reversal is DIFFERENT geometry, not a sign flip of the same axis.")
+print(f"     Layer 39 correlates with the steered layer 53 at rho {corr['39']['53']:.2f}.")
+R["layer_profiles"] = {"spearman": corr,
+                       "block": ["39", "52", "53", "65"],
+                       "note": "13/26 uncorrelated with 53; not a sign flip"}
+
+# §4.5b homogeneity of the pooled random arm
+per_dir = pj["random_null"]["per_random_direction"]
+rates = [v[2] for v in per_dir.values()]
+print(f"\n  random-arm homogeneity: per-direction rates {rates} "
+      f"(min {min(rates):.3f}, max {max(rates):.3f}) -> pooling is reasonable")
+R["random_arm_homogeneity"] = {"per_direction": per_dir, "min": min(rates), "max": max(rates)}
 R["layers"] = {"n": ls["n"], "events": ls["events"],
                "length_auc_tokens": auc(Lsw, ysw),
                "per_layer": per_layer,
