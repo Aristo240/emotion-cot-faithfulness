@@ -208,7 +208,7 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
 in_tex("a single axis detected many times")
-in_tex("Four controls reshape the result")
+in_tex("Four controls change the conclusion")
 
 # ---- §4.7 prereg
 if "INSUFFICIENT-DATA" not in J["prereg"]["verdict"]:
@@ -220,6 +220,25 @@ in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
 in_tex("No layer in the sweep gives the preregistered direction")  # layer objection answered
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
+# P1-class drift: the summary table must name the null the results section uses.
+in_tex("max-$T$ over 50, length-preserving null")
+# the intro tally must match Table 1's verdict column
+checks += 1
+_tab = TEX.split(r"\label{tab:summary}")[0].split(r"\midrule")[-1]
+_rows = [r for r in _tab.split(r"\\") if r.strip() and "bottomrule" not in r]
+_sup = sum("Supported" in r for r in _rows)
+_not = sum("Not supported" in r for r in _rows)
+_oth = sum(("Not evaluable" in r or "Inconclusive" in r) for r in _rows)
+if not (len(_rows) == 7 and _sup == 2 and _not == 3 and _oth == 2):
+    fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not, "
+                 f"{_oth} other) contradict the intro tally of 7/2/3/2")
+checks += 1
+if "Permutation max-$T$ over 50" in TEX:
+    fails.append("Table 1 still names the free-permutation null, which is not primary")
+# the abstract must not quote the retired residualised-AUC max-T value for desperate
+checks += 1
+if "0.91" in TEX_FLAT.split("end{abstract}")[0]:
+    fails.append("abstract quotes the retired residualised-AUC max-T p (0.91)")
 
 # no stray citation keys
 bib = (ROOT / "paper/refs.bib").read_text()
