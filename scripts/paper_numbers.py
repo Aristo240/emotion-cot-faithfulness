@@ -225,17 +225,24 @@ R["directions"] = {
 hdr("§4.3b  Does each direction add over a length-only model? (nested LR)")
 
 
-def fit_pen(X, yy, ridge=0.0, iters=500):
-    """Logistic fit. ridge>0 gives Firth-like shrinkage, robust to sparse events."""
+def fit_pen(X, yy, ridge=0.0, iters=100, tol=1e-10):
+    """Ridge-penalised logistic fit. The INTERCEPT IS NOT PENALISED -- penalising
+    it would shrink fitted probabilities toward 0.5 and bias any simulation drawn
+    from this model. Shared verbatim with scripts/conditional_null.py."""
     X = np.column_stack([np.ones(len(yy)), X])
+    pen = np.ones(X.shape[1]) * ridge
+    pen[0] = 0.0                                  # intercept unpenalised
     b = np.zeros(X.shape[1])
     for _ in range(iters):
         p = np.clip(1 / (1 + np.exp(-X @ b)), 1e-12, 1 - 1e-12)
         W = p * (1 - p)
-        H = (X * W[:, None]).T @ X + (ridge + 1e-9) * np.eye(X.shape[1])
+        H = (X * W[:, None]).T @ X + np.diag(pen) + 1e-9 * np.eye(X.shape[1])
         try:
-            b += np.linalg.solve(H, X.T @ (yy - p) - ridge * b)
+            step = np.linalg.solve(H, X.T @ (yy - p) - pen * b)
         except np.linalg.LinAlgError:
+            return b, None
+        b = b + step
+        if np.max(np.abs(step)) < tol:
             break
     p = np.clip(1 / (1 + np.exp(-X @ b)), 1e-12, 1 - 1e-12)
     return b, float((yy * np.log(p) + (1 - yy) * np.log(1 - p)).sum())

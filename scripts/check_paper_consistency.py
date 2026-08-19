@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 J = json.load(open(ROOT / "results/paper_numbers.json"))
+C = json.load(open(ROOT / "results/conditional_null.json"))
 TEX = (ROOT / "paper/interpscience_short.tex").read_text()
 
 fails, checks = [], 0
@@ -71,32 +72,57 @@ chk("paired dAUC hi", 0.183, a["paired_dauc_length_minus_desperate"]["ci95"][1],
 chk("LR chi2", 3.26, a["lr_test_vint_over_length"]["chi2"], tol=5e-3)
 chk("LR p", 0.071, a["lr_test_vint_over_length"]["p"], tol=5e-4)
 
-# ---- §4.3 direction sweep (paper Table 2)
-for name, auc_, p_, bh_, mt_ in [
-    ("bored", 0.858, 0.0001, 0.0050, 0.0001),
-    ("nostalgic", 0.797, 0.0003, 0.0075, 0.0027),
-    ("melancholy", 0.765, 0.0010, 0.0100, 0.0132),
-    ("gloomy", 0.761, 0.0007, 0.0087, 0.0163),
-    ("lonely", 0.760, 0.0006, 0.0087, 0.0167),
-    ("compassionate", 0.265, 0.0035, 0.0281, 0.0479),
-    ("sad", 0.734, 0.0041, 0.0281, 0.0490),
-    ("desperate", 0.592, 0.2687, 0.3535, 0.9115),
-]:
-    chk(f"{name} residAUC", auc_, d[name]["resid_auc"])
-    chk(f"{name} raw p", p_, d[name]["p"], tol=5e-5)
-    chk(f"{name} BH q", bh_, d[name]["bh_q"], tol=5e-5)
-    chk(f"{name} maxT p", mt_, d[name]["maxT_p"], tol=5e-5)
-chk("n maxT survivors", 7, J["directions"]["n_maxT_significant"], tol=0)
-chk("n BH survivors", 12, J["directions"]["n_bh_significant"], tol=0)
-chk("n directions", 50, J["directions"]["n_directions"], tol=0)
-# the paper says "and, under BH, proud" -- verify proud is BH-significant, not max-T
-if not (d["proud"]["bh_q"] < 0.05 <= d["proud"]["maxT_p"]):
-    fails.append(f"proud: paper claims BH-only, got BH q={d['proud']['bh_q']:.4f}, "
-                 f"maxT p={d['proud']['maxT_p']:.4f}")
-checks += 1
-# desperate CI quoted in two places must be identical
+# ---- §4.3 direction sweep. Inference = nested LR + conditional max-T.
+# Residualised AUC is descriptive only, so no p-values are checked against it.
+for name, resid in [("bored", 0.858), ("lonely", 0.760), ("nostalgic", 0.797),
+                    ("melancholy", 0.765), ("gloomy", 0.761),
+                    ("compassionate", 0.265), ("sad", 0.734), ("desperate", 0.592)]:
+    chk(f"{name} residAUC (descriptive)", resid, d[name]["resid_auc"])
 chk("desperate resid CI lo", 0.412, J["directions"]["desperate"]["ci95"][0], tol=1e-3)
 chk("desperate resid CI hi", 0.756, J["directions"]["desperate"]["ci95"][1], tol=1e-3)
+chk("n directions", 50, J["directions"]["n_directions"], tol=0)
+
+# Table 2 inferential columns, from the conditional-null run
+for name, c2, beta, pc, pf in [
+    ("bored", 38.7, 2.48, 0.0005, 0.0005), ("lonely", 29.6, 1.91, 0.0005, 0.0005),
+    ("nostalgic", 27.5, 1.84, 0.0005, 0.0005), ("melancholy", 24.8, 1.63, 0.0005, 0.0005),
+    ("gloomy", 21.2, 1.46, 0.0005, 0.0005), ("compassionate", 19.7, -1.50, 0.0005, 0.0005),
+    ("sad", 18.6, 1.29, 0.0005, 0.0010), ("desperate", 3.3, 0.69, 0.4568, 0.4273),
+]:
+    chk(f"{name} chi2", c2, C["chi2"][name], tol=5e-2)
+    chk(f"{name} beta", beta, J["nested_lr"]["penalised"][name]["beta"], tol=6e-3)
+    chk(f"{name} conditional p", pc, C["p_conditional"][name], tol=5e-5)
+    chk(f"{name} free p", pf, C["p_free"][name], tol=5e-5)
+chk("survivors conditional", 17, C["n_survivors_conditional"], tol=0)
+chk("B", 2000, C["B"], tol=0)
+chk("p resolution floor", 0.0005, C["p_resolution_floor"], tol=1e-6)
+chk("conditional stricter count", 39, C["n_conditional_ge_free"], tol=0)
+chk("frozen fraction", 0.60, C["frozen_fraction"], tol=5e-3)
+chk("length AUC (in-text)", 0.888, J["association"]["auc_length"])
+st = C["survivor_structure"]
+chk("survivor mean |r|", 0.75, st["mean_abs_r"], tol=5e-3)
+chk("survivor PC1", 0.786, st["pc1_var_explained"], tol=5e-4)
+chk("survivor participation ratio", 1.59, st["participation_ratio"], tol=5e-3)
+chk("penalised desperate chi2", 3.31, J["nested_lr"]["penalised"]["desperate"]["chi2"], tol=5e-3)
+chk("penalised desperate p", 0.069, J["nested_lr"]["penalised"]["desperate"]["p"], tol=5e-4)
+# the two logistic implementations must agree exactly
+checks += 1
+if C["chi2_max_disagreement_vs_paper_numbers"] > 1e-6:
+    fails.append(f"logistic implementations disagree by "
+                 f"{C['chi2_max_disagreement_vs_paper_numbers']:.2e}")
+# nulls must be calibrated and convergent
+for k in ("free", "conditional"):
+    checks += 1
+    if abs(C["mean_sim_events"][k] - C["events"]) > 0.5:
+        fails.append(f"{k} null miscalibrated: mean events "
+                     f"{C['mean_sim_events'][k]:.2f} vs {C['events']}")
+    checks += 1
+    if C["nonconvergent_draws"][k] != 0:
+        fails.append(f"{k} null had {C['nonconvergent_draws'][k]} non-convergent draws")
+# conditional null must not be looser than the free null overall
+checks += 1
+if C["n_conditional_ge_free"] <= C["n_directions"] // 2:
+    fails.append("conditional null is looser than the free null -- design is wrong")
 
 # ---- §4.4 V_text
 v = J["vtext"]
@@ -161,31 +187,6 @@ for lay in ("39", "52", "53", "65"):
         fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
 in_tex("no layer in our sweep offers a length-independent version")
 
-# ---- §4.3b nested LR (paper Table 2 cols 5-6)
-lrp = J["nested_lr"]["penalised"]
-for name, c2, beta in [("bored", 32.3, 1.73), ("nostalgic", 23.9, 1.38),
-                       ("melancholy", 21.7, 1.25), ("gloomy", 18.9, 1.15),
-                       ("lonely", 25.2, 1.40), ("sad", 16.7, 1.04),
-                       ("compassionate", 16.9, -1.13), ("desperate", 2.9, 0.52)]:
-    chk(f"{name} chi2", c2, lrp[name]["chi2"], tol=5e-2)
-    chk(f"{name} beta", beta, lrp[name]["beta"], tol=5e-3)
-chk("desperate nested p", 0.089, lrp["desperate"]["p"], tol=5e-4)
-# paper claims all seven survivors exceed chi2 16.7 at p < 1e-4
-for name in ("bored", "nostalgic", "melancholy", "gloomy", "lonely", "sad", "compassionate"):
-    checks += 1
-    if not (lrp[name]["chi2"] >= 16.6 and lrp[name]["p"] < 1e-4):
-        fails.append(f"{name}: paper claims chi2>=16.6 and p<1e-4, got "
-                     f"{lrp[name]['chi2']:.2f}, {lrp[name]['p']:.2g}")
-# paper claims unpenalised agrees in sign and significance
-for name in ("bored", "nostalgic", "melancholy", "gloomy", "lonely", "sad", "compassionate"):
-    checks += 1
-    u = J["nested_lr"]["unpenalised"][name]
-    if not (u["p"] < 0.05 and (u["beta"] > 0) == (lrp[name]["beta"] > 0)):
-        fails.append(f"{name}: unpenalised fit disagrees with penalised")
-checks += 1
-if not J["nested_lr"]["separation_overlap"]:
-    fails.append("paper claims distributions overlap (no complete separation)")
-
 # ---- §4.6b layer profile correlations
 sp = J["layer_profiles"]["spearman"]
 chk("profile 13 vs 53", 0.24, sp["13"]["53"], tol=5e-3)
@@ -206,6 +207,8 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
+in_tex("a single axis detected many times")
+in_tex("Four controls reshape the result")
 
 # ---- §4.7 prereg
 if "INSUFFICIENT-DATA" not in J["prereg"]["verdict"]:

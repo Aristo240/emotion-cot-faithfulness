@@ -47,33 +47,43 @@ valence CV R² = **0.377**, arousal 0.180, dominance 0.154. Coherent sign struct
 (`ecstatic` +0.38, `furious` −0.34). Supports a valence axis; does **not** establish
 that any vector represents the state its label names.
 
-### 2. A real association — on a different axis than we registered
+### 2. A real association — one axis, not the one we registered
 
-`desperate` reaches raw AUC 0.832 against reward hacking on 120 unsteered trials,
-but ρ(probe, response length) = **0.606** (p = 2.2e−13), and residualizing on
-length leaves AUC **0.592 [0.412, 0.756]** — null on every criterion
-(raw p = 0.269, BH q = 0.354, max-T p = 0.912).
+`desperate` reaches raw AUC 0.832 on 120 unsteered trials, but ρ(probe, response
+length) = **0.606** (p = 2.2e−13) and it ranks only **8th of 50** by raw AUC
+(`bored` 0.985). Adding it to a length-only logistic model gives χ²(1) = 3.31,
+**p = 0.069** — it adds nothing.
 
-Sweeping all 50 directions with a permutation max-T correction (10k label
-permutations shared across directions, so the correction accounts for their
-correlation), **7 of 50 survive family-wise at α = .05**:
+Inference is the nested likelihood-ratio χ² for adding a direction to a
+length-only model, family-wise corrected by max-T over all 50 directions. Two
+nulls, because the choice matters: length alone predicts the outcome at AUC 0.888,
+so a *free* label permutation destroys the very dependence the statistic conditions
+on. The **conditional** null draws y\* ~ Bernoulli(p̂) from a fitted
+`y ~ length` model, reproducing that dependence exactly. It is stricter (its p
+exceeds the free-permutation p for 39/50 directions) and the result survives.
 
-| Direction | Resid. AUC | 95% CI | max-T p |
-|---|---|---|---|
-| `bored` | **0.858** | [0.749, 0.948] | **0.0001** |
-| `nostalgic` | 0.797 | [0.636, 0.938] | 0.0027 |
-| `melancholy` | 0.765 | [0.579, 0.918] | 0.0132 |
-| `gloomy` | 0.761 | [0.585, 0.910] | 0.0163 |
-| `lonely` | 0.760 | [0.567, 0.928] | 0.0167 |
-| `compassionate` | 0.265 | [0.108, 0.447] | 0.0479 |
-| `sad` | 0.734 | [0.556, 0.885] | 0.0490 |
-| **`desperate`** (preregistered) | **0.592** | [0.412, 0.756] | **0.9115** |
+| Direction | χ²(1) | β | cond. max-T p | free max-T p | resid. AUC |
+|---|---|---|---|---|---|
+| `bored` | **38.7** | +2.48 | **0.0005** | 0.0005 | 0.858 |
+| `lonely` | 29.6 | +1.91 | 0.0005 | 0.0005 | 0.760 |
+| `nostalgic` | 27.5 | +1.84 | 0.0005 | 0.0005 | 0.797 |
+| `melancholy` | 24.8 | +1.63 | 0.0005 | 0.0005 | 0.765 |
+| `gloomy` | 21.2 | +1.46 | 0.0005 | 0.0005 | 0.761 |
+| `compassionate` | 19.7 | **−1.50** | 0.0005 | 0.0005 | 0.265 |
+| `sad` | 18.6 | +1.29 | 0.0005 | 0.0010 | 0.734 |
+| **`desperate`** (registered) | **3.3** | +0.69 | **0.4568** | 0.4273 | 0.592 |
 
-A coherent low-arousal negative-affect cluster is positively associated with
-shortcut-taking; `compassionate` is negatively associated. **This was not the
-registered hypothesis.** The direction was chosen after seeing the data; only the
-max-T column licenses any claim. We do not assert `bored` measures boredom — it may
-index a response property we have not measured, exactly as `desperate` indexed length.
+17 of 50 survive at α=.05 — but **they are one axis detected many times, not 17
+findings**: mean |r| = 0.75, PC1 = **78.6%** of variance, participation ratio 1.59.
+Low-arousal negative affect at one pole, positive affect and `compassionate` at
+the other, with β signs reversing. That this axis is valence-aligned matches §1,
+where valence was the only dimension the probes recovered well.
+
+p = 0.0005 is the resolution floor at B = 2000. Residualized AUC is descriptive
+only; no p-value is derived from it. Ridge-penalized fits (intercept unpenalized)
+are primary; the unpenalized fit agrees in sign and significance, distributions
+overlap so there is no complete separation, and 0/2000 draws failed to converge in
+either null.
 
 ## What fails
 

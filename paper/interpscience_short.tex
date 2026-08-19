@@ -39,16 +39,16 @@
 functional: steering a ``desperate'' direction causally increases reward hacking.
 We ask which parts of that interpretation survive transfer to a large open-weight
 model, by reconstructing emotion directions in Llama~3.1~70B and testing each
-claim it rests on separately. Three controls reshape the result. (i) A \emph{response-length}
+claim it rests on separately. Four controls reshape the result. (i) A \emph{response-length}
 control eliminates our preregistered hypothesis: the desperate projection reaches
 AUC $0.832$ against reward hacking on unsteered trials, but correlates with
 response length at $\rho = 0.61$, and after residualizing on length its AUC is
 $0.592$ $[0.412, 0.756]$ --- indistinguishable from chance (max-$T$ $p = 0.91$).
 (ii) A \emph{multiplicity} control nonetheless leaves real signal: sweeping all 50
-directions with a permutation max-$T$ correction, 7 survive family-wise at
-$\alpha = .05$, forming a coherent low-arousal negative-affect cluster led by
-\texttt{bored} (residualized AUC $0.858$, max-$T$ $p = 10^{-4}$). The association
-is real but is not the hypothesized one. (iii) A \emph{specificity} control
+directions with a max-$T$ correction under a null that preserves the
+outcome--length relationship, 17 survive at $\alpha = .05$ --- but they are one
+valence-aligned axis detected many times (PC1 $= 78.6\%$ of variance), not 17
+findings. The association is real and is not the hypothesized one. (iii) A \emph{specificity} control
 eliminates the causal claim: emotion steering is indistinguishable from
 matched-norm random directions ($7.5\%$ vs.\ $6.5\%$, Fisher $p = 0.84$), at a
 power sufficient to detect a $2.42\times$ effect where the original reports
@@ -122,21 +122,17 @@ rescue our causal claim with a post-hoc layer choice (\S\ref{sec:causal}).
 Steering does sometimes establish genuine control
 \citep{rimsky2024caa, arditi2024refusal}, so a null is informative rather than expected.
 
-\paragraph{Latent signals that are diagnostic but not causal.}
-\citet{yuan2026hidden} find hidden-state error signals that outperform verbalized
-confidence, yet four interventions fail to convert them into control.
-\citet{wilhelm2026monitoring} detect reward hacking from residual-stream
-activations. These pre-empt any claim that diagnostic-not-causal signals, or
-activation-based reward-hacking detection, are new. Our probes differ in being
-built from an independent emotion corpus and frozen before any behavioral
-analysis, rather than trained on the outcome.
-
 \paragraph{Novelty statement.}
-We claim novelty for none of: emotion representations in LLMs, emotion steering,
-diagnostic-not-causal signals, activation-based reward-hacking detection, LLM-judge
-unreliability, or any control we apply. We claim only a targeted audit of one
-alignment-relevant functional claim in which each control changes the conclusion,
-released with a script that regenerates every reported number.
+\citet{yuan2026hidden} find hidden-state error signals that outperform verbalized
+confidence yet resist four interventions, and \citet{wilhelm2026monitoring} detect
+reward hacking from residual-stream activations. With the work above, these
+pre-empt novelty for all of: emotion representations in LLMs, emotion steering,
+diagnostic-not-causal signals, activation-based reward-hacking detection,
+LLM-judge unreliability, and every control we apply. (Our probes do differ in
+being built from an independent emotion corpus and frozen before any behavioral
+analysis, rather than trained on the outcome.) We claim only a targeted audit of
+one alignment-relevant functional claim in which each control changes the
+conclusion, released with a script that regenerates every reported number.
 
 \section{Setup}
 
@@ -147,9 +143,9 @@ frozen vector. Probes are never refit on behavioral data.
 
 \paragraph{Measurement caveat (consequential).} Our implementation averages
 activations from token 50 to end-of-sequence, so the readout window
-\emph{includes the generated response}. The probe is measured concurrently with
-the behavior, and is structurally entangled with how much text was produced. This
-motivates \S\ref{sec:len} and means we describe results as associations, never as
+\emph{includes the generated response}: the probe is measured concurrently with the
+behavior and is structurally entangled with how much text was produced. This
+motivates \S\ref{sec:len}; we therefore describe results as associations, never as
 prediction of a future choice.
 
 \paragraph{Behavior and labels.} Reward hacking is elicited with
@@ -203,8 +199,10 @@ Length does not \emph{beat} the probe --- the paired bootstrap $\Delta$AUC is
 $+0.057$ $[-0.080, +0.183]$. The problem is that the probe carries nothing else:
 $\rho(V_{\text{int}}[\text{desperate}], \text{length}) = 0.606$
 ($p = 2.2\times10^{-13}$); adding the probe to a length-only logistic model gives
-$\chi^2(1) = 3.26$, $p = 0.071$; and residualizing the probe on length leaves
-AUC $= \mathbf{0.592}$ $[0.412, 0.756]$.
+$\chi^2(1) = 3.26$, $p = 0.071$ (unpenalized; $3.31$, $p = 0.069$ penalized as in
+\S\ref{sec:dirs}); and residualizing on length leaves AUC $= \mathbf{0.592}$
+$[0.412, 0.756]$. The direction is not even distinctive before this correction:
+it ranks 8th of 50 by raw AUC, behind \texttt{bored} at $0.985$.
 
 We read this as a measurement artifact rather than a substantive null: because the
 readout window spans the response, a longer response mechanically changes the
@@ -217,56 +215,70 @@ preregistered claim is not supported as stated.
 \label{sec:dirs}
 
 Length residualization does not empty the emotion subspace. We repeat the analysis
-for all 50 directions and correct for selection with a permutation max-$T$
-procedure (10,000 label permutations, shared across directions so the correction
-accounts for their correlation).
+for all 50 directions, using the standard nested likelihood-ratio test --- does the
+direction add to a model that already contains length? --- and correct for
+selection with a max-$T$ procedure over all 50 directions.
+
+The choice of null matters here. A free label permutation tests the \emph{marginal}
+hypothesis $y \perp \text{direction}$, but length alone predicts the outcome at
+AUC $0.888$, so free permutation destroys a dependence the statistic is designed to
+condition on. We therefore also build a \emph{conditional} null: fit
+$\text{logit}(p) = a + b\cdot\text{length}$, draw $y^* \sim \text{Bernoulli}(\hat p)$,
+and recompute all 50 statistics ($B = 2000$). This reproduces the outcome--length
+relationship exactly. (Stratified permutation, the other natural choice, is
+degenerate here: $60\%$ of trials fall in length quintiles containing either no
+events or only events.) The conditional null is indeed stricter --- its $p$ exceeds
+the free-permutation $p$ for 39 of 50 directions --- and the result survives it.
 
 \begin{table}[t]
 \centering\small
-\begin{tabular}{@{}lcccrr@{}}
+\begin{tabular}{@{}lrrccc@{}}
 \toprule
-Direction & Resid.\ AUC & 95\% CI & max-$T$ $p$ & $\chi^2(1)$ & $\beta$ \\
+Direction & $\chi^2(1)$ & $\beta$ & cond.\ max-$T$ $p$ & free max-$T$ $p$ & resid.\ AUC \\
 \midrule
-\texttt{bored}         & \textbf{0.858} & $[0.749, 0.948]$ & \textbf{0.0001} & 32.3 & $+1.73$ \\
-\texttt{nostalgic}     & 0.797 & $[0.636, 0.938]$ & 0.0027 & 23.9 & $+1.38$ \\
-\texttt{melancholy}    & 0.765 & $[0.579, 0.918]$ & 0.0132 & 21.7 & $+1.25$ \\
-\texttt{gloomy}        & 0.761 & $[0.585, 0.910]$ & 0.0163 & 18.9 & $+1.15$ \\
-\texttt{lonely}        & 0.760 & $[0.567, 0.928]$ & 0.0167 & 25.2 & $+1.40$ \\
-\texttt{sad}           & 0.734 & $[0.556, 0.885]$ & 0.0490 & 16.7 & $+1.04$ \\
-\texttt{compassionate} & 0.265 & $[0.108, 0.447]$ & 0.0479 & 16.9 & $-1.13$ \\
+\texttt{bored}         & \textbf{38.7} & $+2.48$ & \textbf{0.0005} & 0.0005 & 0.858 \\
+\texttt{lonely}        & 29.6 & $+1.91$ & 0.0005 & 0.0005 & 0.760 \\
+\texttt{nostalgic}     & 27.5 & $+1.84$ & 0.0005 & 0.0005 & 0.797 \\
+\texttt{melancholy}    & 24.8 & $+1.63$ & 0.0005 & 0.0005 & 0.765 \\
+\texttt{gloomy}        & 21.2 & $+1.46$ & 0.0005 & 0.0005 & 0.761 \\
+\texttt{compassionate} & 19.7 & $-1.50$ & 0.0005 & 0.0005 & 0.265 \\
+\texttt{sad}           & 18.6 & $+1.29$ & 0.0005 & 0.0010 & 0.734 \\
 \midrule
-\texttt{desperate}$^*$ & 0.592 & $[0.412, 0.756]$ & \textbf{0.9115} & 2.9 & $+0.52$ \\
+\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4568} & 0.4273 & 0.592 \\
 \bottomrule
 \end{tabular}
-\caption{Unsteered trials ($n = 120$, 14 events). Columns 2--4: length-residualized
-AUC and its family-wise max-$T$ $p$ over all 50 directions. Columns 5--6: the
-standard nested test --- ridge-penalized likelihood-ratio $\chi^2(1)$ for adding
-the direction to a length-only logistic model, and its coefficient. All seven
-survivors add at $p < 10^{-4}$; the $\beta$ sign shows \texttt{compassionate} is
-\emph{negatively} associated. $^*$Preregistered --- null on every criterion
-($\chi^2$ n.s., $p = 0.089$).}
+\caption{Unsteered trials ($n = 120$, 14 events); top 7 of 17 survivors shown.
+Inference is the nested likelihood-ratio $\chi^2(1)$ for adding a direction to a
+length-only logistic model, family-wise corrected by max-$T$ over all 50
+directions. The conditional null preserves the outcome--length relationship; the
+free-permutation null does not (\S\ref{sec:dirs}). $p = 0.0005$ is the resolution
+floor at $B = 2000$. Residualized AUC is reported as a descriptive effect size
+only. $\beta$ sign shows \texttt{compassionate} is \emph{negatively} associated.
+$^*$Preregistered --- null under both nulls.}
 \label{tab:dirs}
 \end{table}
 
-\paragraph{The result does not depend on the residualization.} ``Residualized
-AUC'' is a convenient summary but not a standard statistic, and its bootstrap CI
-does not propagate uncertainty in the residualization coefficient. We therefore
-also run the conventional nested test (Table~\ref{tab:dirs}, cols.\ 5--6): a
-likelihood-ratio $\chi^2$ for adding each direction to a length-only logistic
-model. All seven max-$T$ survivors add at $\chi^2(1) \ge 16.6$, $p < 10^{-4}$,
-while \texttt{desperate} does not ($\chi^2 = 2.9$, $p = 0.089$). With 14 events
-an unpenalized fit can quasi-separate, so we report ridge-penalized estimates as
-primary; the unpenalized fit agrees in sign and significance, and the event and
-non-event distributions overlap, so there is no complete separation.
+Seventeen of 50 directions survive at $\alpha = .05$ under the conditional null.
+With 14 events an unpenalized fit can quasi-separate, so we report ridge-penalized
+estimates (intercept unpenalized) as primary; the unpenalized fit agrees in sign
+and significance, event and non-event distributions overlap so there is no complete
+separation, and no draw in either null failed to converge.
 
-The survivors are coherent: a low-arousal negative-affect cluster is positively
-associated with shortcut-taking, while \texttt{compassionate} (and, under BH,
-\texttt{proud}) is negatively associated. This is a genuine, selection-corrected
-finding. It is also \emph{not the hypothesis we registered}, and we report it as
-exploratory in the sense that matters: the direction was chosen after seeing the
-data, and only the max-$T$ column licenses any claim at all. We do not assert that
-\texttt{bored} measures boredom; it may index a response property we have not
-measured, exactly as \texttt{desperate} indexed length.
+\paragraph{Seventeen survivors are one axis, not seventeen findings.} The surviving
+directions are heavily intercorrelated (mean $|r| = 0.75$; first principal
+component $78.6\%$ of variance; participation ratio $1.59$). They are a single
+axis detected many times: low-arousal negative affect
+(\texttt{bored}, \texttt{lonely}, \texttt{melancholy}) at one pole, positive affect
+(\texttt{proud}, \texttt{grateful}, \texttt{jubilant}) and \texttt{compassionate}
+at the other, with $\beta$ signs reversing accordingly. That this axis is
+valence-aligned is consistent with \S\ref{sec:sem}, where valence was the only
+dimension the probes recovered well ($R^2 = 0.38$ vs.\ $0.18$ and $0.15$).
+
+This is a genuine, selection-corrected finding, and it is \emph{not the hypothesis
+we registered}. We do not assert that \texttt{bored} measures boredom: it may index
+a response property we have not measured, exactly as \texttt{desperate} indexed
+length. The claim we make is narrow --- a valence-aligned axis in the residual
+stream carries information about shortcut-taking that response length does not.
 
 \subsection{The text baseline cannot support the comparison it was used for}
 \label{sec:vtext}
@@ -293,14 +305,12 @@ $V_{\text{int}}$, all trials & 0.837 & 992 (87) \\
 \end{center}
 
 Where $V_{\text{text}}$ can discriminate at all, it matches $V_{\text{int}}$. The
-apparent gap ($0.837$ vs.\ $0.647$) is produced by tie compression in a
-non-responsive instrument, not by chain-of-thought unfaithfulness. We therefore
-withdraw any faithfulness-gap claim, including a quadrant analysis
-(``high probe, calm text'') that an earlier draft of this work reported: it
-partitions on a variable that is constant for three quarters of trials. The same
-degeneracy makes the reported empty middle tertile an artifact --- the 33rd and
-67th percentiles are both exactly $-1.0$, so the middle bin is empty by
-construction.
+apparent gap ($0.837$ vs.\ $0.647$) is tie compression in a non-responsive
+instrument, not chain-of-thought unfaithfulness. We withdraw any faithfulness-gap
+claim, including a quadrant analysis (``high probe, calm text'') an earlier draft
+reported: it partitions on a variable constant for three quarters of trials. The
+same degeneracy makes the empty middle tertile an artifact --- the 33rd and 67th
+percentiles are both exactly $-1.0$.
 
 \subsection{A matched-norm random null refutes causal specificity, with power}
 \label{sec:causal}
@@ -334,16 +344,14 @@ $\sim\!14\times$. The design therefore \emph{excludes} the claimed effect
 magnitude, while being unable to exclude effects below $2.42\times$.
 
 \paragraph{Why no layer rescues the registered direction.}
-\citet{wu2026steerable} show that operating-point choice can determine steering
+\citet{wu2026steerable} show operating-point choice can determine steering
 conclusions, so a null at one layer invites the objection that we picked the wrong
-site. Our sweep initially appeared to supply that objection: on the 80-trial
-subset for which activations were re-extracted (7 events), raw AUC for
-$V_{\text{int}}$[desperate] ranges from $0.450$ (layer 26) to $\mathbf{0.918}$
-(layer 39), against $0.677$ at the layer we steered.
-
-Applying \S\ref{sec:len}'s control dissolves it. Response length --- here in
-tokens, the units the probe actually averages over --- alone reaches AUC $0.912$
-on this subset, and every layer's advantage goes with it.
+site --- and our sweep appeared to supply it. On the 80-trial subset for which
+activations were re-extracted (7 events), raw AUC for $V_{\text{int}}$[desperate]
+ranges from $0.450$ (layer 26) to $\mathbf{0.918}$ (layer 39), against $0.677$ at
+the steered layer. Applying \S\ref{sec:len}'s control dissolves it: response
+length in tokens --- the units the probe averages over --- alone reaches AUC
+$0.912$ here, and every layer's advantage goes with it.
 
 \begin{center}\small
 \begin{tabular}{@{}lcccc@{}}
@@ -369,18 +377,15 @@ mode \citet{wu2026steerable} describe.
 
 \paragraph{The early layers are different geometry, not a reversal.} Layers 13 and
 26 are significantly \emph{anti}-predictive after residualization (CIs
-$[0.198, 0.477]$ and $[0.123, 0.411]$), which would be alarming if it were a sign
-flip of the same axis. It is not. Comparing the full 50-direction residualized-AUC
-profile across layers, layers 39/52/53/65 form a tightly correlated block
-(Spearman $0.61$--$0.99$), whereas layers 13 and 26 are nearly uncorrelated with
-layer 53 ($\rho = 0.24$ for both) and with each other ($\rho = 0.04$). The
-behaviorally associated axis is a late-layer phenomenon; the early layers carry
-weakly structured, unrelated geometry. This also reinforces the decision above:
-layer 39 correlates with the steered layer 53 at $\rho = 0.82$, so the two sites
-are largely measuring the same thing.
-
-Finally, the five random directions are pooled above; their individual hack rates
-are $0.075, 0.075, 0.075, 0.025, 0.075$, so pooling is not masking heterogeneity.
+$[0.198, 0.477]$, $[0.123, 0.411]$), which would be alarming as a sign flip of the
+same axis. It is not one: comparing the full 50-direction residualized-AUC profile
+across layers, 39/52/53/65 form a tightly correlated block (Spearman
+$0.61$--$0.99$) while layers 13 and 26 are nearly uncorrelated with layer 53
+($\rho = 0.24$ both) and each other ($\rho = 0.04$). The behaviorally associated
+axis is a late-layer phenomenon. This also reinforces the decision above: layer 39
+correlates with the steered layer 53 at $\rho = 0.82$, so the two sites largely
+measure the same thing. (The five random directions pooled above have individual
+rates $0.075, 0.075, 0.075, 0.025, 0.075$; pooling masks no heterogeneity.)
 
 \paragraph{Scope.} This is a conceptual, not direct, replication: different model,
 extraction, and steering norms than \citet{sofroniew2026}. The honest scope is: at
@@ -402,19 +407,17 @@ pre-data-inspection standard.
 \section{Discussion}
 
 \paragraph{Trivial-baseline controls belong beside random-direction controls.} The
-field has largely internalized that a steering effect must beat a random
-direction. The symmetric requirement --- that a probe must beat a trivial feature
-of the output --- is applied far less often, and here a character count was
-decisive at every layer we could evaluate.
-
-\paragraph{Report the resolution of your instrument.} A comparison against a
-predictor constant for $74\%$ of trials is not a weak comparison; it is not a
-comparison. Tie fractions should accompany reported AUCs.
+field has internalized that a steering effect must beat a random direction. The
+symmetric requirement --- that a probe beat a trivial feature of the output --- is
+applied far less often, and here a character count was decisive at every layer we
+could evaluate. Relatedly, a comparison against a predictor constant for $74\%$ of
+trials is not a weak comparison but no comparison at all; tie fractions should
+accompany reported AUCs.
 
 \paragraph{Correcting for selection can rescue as well as kill.} The max-$T$ sweep
-is the same tool that forbids the post-hoc layer choice in \S\ref{sec:causal}, and
-it is what licenses the one positive association we report. Multiplicity control
-is not only a way to lose results.
+forbids the post-hoc layer choice in \S\ref{sec:causal} and simultaneously
+licenses the one positive association we report. Multiplicity control is not only
+a way to lose results.
 
 \section{Limitations}
 
