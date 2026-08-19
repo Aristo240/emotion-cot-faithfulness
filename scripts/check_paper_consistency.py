@@ -81,6 +81,14 @@ for name, resid in [("bored", 0.858), ("lonely", 0.760), ("nostalgic", 0.797),
 chk("desperate resid CI lo", 0.412, J["directions"]["desperate"]["ci95"][0], tol=1e-3)
 chk("desperate resid CI hi", 0.756, J["directions"]["desperate"]["ci95"][1], tol=1e-3)
 chk("n directions", 50, J["directions"]["n_directions"], tol=0)
+# section 4.2 quotes a raw AUC and a rank; both must come from the script
+chk("bored raw AUC", 0.985, J["directions"]["raw_auc"]["bored"])
+chk("desperate raw AUC", 0.832, J["directions"]["raw_auc"]["desperate"])
+chk("desperate raw rank", 8, J["directions"]["desperate_raw_auc_rank"], tol=0)
+checks += 1
+if J["directions"]["raw_auc_best"]["direction"] != "bored":
+    fails.append("paper names `bored` as the best raw-AUC direction; script says "
+                 + J["directions"]["raw_auc_best"]["direction"])
 
 # Table 2 inferential columns, from the conditional-null run
 for name, c2, beta, pc, pf in [
@@ -247,6 +255,12 @@ for key in set(re.findall(r"\\cite[tp]?\{([^}]*)\}", TEX)):
         checks += 1
         if f"{{{k}," not in bib:
             fails.append(f"citation {k!r} not in refs.bib")
+
+_m = re.search(r"with (\d+) assertions", TEX)
+if not _m:
+    fails.append("manuscript no longer states an assertion count")
+elif int(_m.group(1)) != checks:
+    fails.append(f"manuscript says {_m.group(1)} assertions; this run made {checks}")
 
 print(f"ran {checks} checks against results/paper_numbers.json")
 if fails:

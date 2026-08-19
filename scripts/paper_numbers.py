@@ -170,6 +170,13 @@ for e in emos:
     resid[e] = z - np.polyval(np.polyfit(zlen, z, 1), zlen)
 obs = {e: auc(resid[e], y) for e in emos}
 
+# Raw (uncorrected) AUC and the rank of the preregistered direction among all 50.
+# Quoted in the paper's section 4.2, so it must be emitted here.
+raw_auc = {e: auc(np.array([float(t_["emotion_probes"][e]) for t_ in unsteered]), y)
+           for e in emos}
+raw_order = sorted(emos, key=lambda e: -raw_auc[e])
+desp_raw_rank = raw_order.index("desperate") + 1
+
 # Permutation null on the LABELS, shared across directions so that the
 # max-T statistic correctly accounts for correlation between directions.
 rng = np.random.default_rng(SEED)
@@ -208,10 +215,15 @@ print(f"  {'desperate*':<15}{obs['desperate']:>9.3f}"
       f"{f'[{ci_dr[0]:.3f},{ci_dr[1]:.3f}]':>18}"
       f"{pval['desperate']:>9.4f}{bh['desperate']:>9.4f}{maxT['desperate']:>10.4f}"
       f"   * PREREGISTERED - NULL")
-print(f"\n  surviving BH q<0.05 : {sum(bh[e] < 0.05 for e in emos)}/{m}")
+print(f"\n  raw (uncorrected) AUC: best is {raw_order[0]} at {raw_auc[raw_order[0]]:.3f}; "
+      f"desperate ranks {desp_raw_rank}/{m} at {raw_auc['desperate']:.3f}")
+print(f"  surviving BH q<0.05 : {sum(bh[e] < 0.05 for e in emos)}/{m}")
 print(f"  surviving max-T<0.05: {sum(maxT[e] < 0.05 for e in emos)}/{m}"
       f"   (family-wise over all {m} directions)")
 R["directions"] = {
+    "raw_auc": raw_auc,
+    "raw_auc_best": {"direction": raw_order[0], "auc": raw_auc[raw_order[0]]},
+    "desperate_raw_auc_rank": desp_raw_rank,
     "n_directions": m, "top": rows_out, "all": all_dirs,
     "desperate": {"resid_auc": obs["desperate"], "ci95": ci_dr,
                   "p": pval["desperate"], "bh_q": bh["desperate"],
