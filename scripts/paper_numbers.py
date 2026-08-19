@@ -328,14 +328,42 @@ R["causal"] = {
 }
 
 # ========================================================= §4.6 layer dependence
-hdr("§4.6  Layer dependence (context for the causal null)")
+hdr("§4.6  Layer dependence, under the same length control")
 ls = json.load(open(P4 / "analysis_layer_sweep/summary.json"))["qwen"]
 print(f"  n={ls['n']}, events={ls['events']}  (SUBSET of the {len(y)}-trial set: the 80 trials")
 print("   for which activations were re-extracted; not directly comparable to §4.2)")
-for L in ls["per_layer"]:
-    print(f"    layer {L['layer']:>2}: V_int[desperate] AUC {L['vint_desperate_auc']['auc']:.3f}")
+
+# Re-derive from the raw sweep so the length control can be applied per layer.
+# This file has no response text, but carries seq_len and prompt_token_count,
+# so response length in TOKENS is available -- a closer proxy to the probe's
+# averaging window than characters.
+sw = [t for t in load(P4 / "extended_unsteered_layer_sweep.jsonl")
+      if t.get("judge_classification") in ("SHORTCUT", "LEGITIMATE")]
+ysw = np.array([1 if t["judge_classification"] == "SHORTCUT" else 0 for t in sw])
+Lsw = np.array([t["seq_len"] - t["prompt_token_count"] for t in sw], float)
+zsw = (Lsw - Lsw.mean()) / Lsw.std()
+print(f"  response length in tokens, alone: AUC {auc(Lsw, ysw):.3f}")
+print(f"  {'layer':>6}{'raw':>9}{'resid':>9}{'resid 95% CI':>20}{'rho(len)':>10}")
+per_layer = {}
+for Lk in sorted(sw[0]["emotion_probes_per_layer"], key=int):
+    x = np.array([float(t["emotion_probes_per_layer"][Lk]["desperate"]) for t in sw])
+    z = (x - x.mean()) / x.std()
+    res = z - np.polyval(np.polyfit(zsw, z, 1), zsw)
+    ci = boot_ci(res, ysw, 4000)
+    rr = float(spearmanr(x, Lsw)[0])
+    surv = ci[0] > 0.5 or ci[1] < 0.5
+    print(f"  {Lk:>6}{auc(x, ysw):>9.3f}{auc(res, ysw):>9.3f}"
+          f"{f'[{ci[0]:.3f},{ci[1]:.3f}]':>20}{rr:>10.3f}"
+          f"{'  CI excludes 0.5' if surv else ''}")
+    per_layer[Lk] = {"raw_auc": auc(x, ysw), "resid_auc": auc(res, ysw),
+                     "resid_ci95": ci, "rho_length": rr,
+                     "resid_ci_excludes_half": bool(surv)}
+print("  -> NO layer gives the preregistered direction length-independent signal.")
+print("     Layer 39's raw 0.918 collapses to "
+      f"{per_layer['39']['resid_auc']:.3f} {per_layer['39']['resid_ci95']}, spanning chance.")
 R["layers"] = {"n": ls["n"], "events": ls["events"],
-               "per_layer": {L["layer"]: L["vint_desperate_auc"]["auc"] for L in ls["per_layer"]},
+               "length_auc_tokens": auc(Lsw, ysw),
+               "per_layer": per_layer,
                "note": "80-trial subset; not the 120-trial association set"}
 
 # ============================================================== preregistration

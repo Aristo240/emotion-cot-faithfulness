@@ -90,6 +90,7 @@ Directions track human emotion & EmoBank, zero-shot & Supported (valence) & \ref
 \emph{Some} direction tracks it & Permutation max-$T$ over 50 & Supported, not the registered one & \ref{sec:dirs} \\
 Probe beats CoT text & ROC tie structure & \textbf{Not evaluable} & \ref{sec:vtext} \\
 Steering causes the behavior & Matched-norm random null & \textbf{Refuted} at $\ge2.42\times$ & \ref{sec:causal} \\
+Layer 39 is a better site & Response length, per layer & \textbf{Refuted} --- same artifact & \ref{sec:causal} \\
 Association generalizes across mechanisms & Preregistered rule & Inconclusive & \ref{sec:prereg} \\
 \bottomrule
 \end{tabular}
@@ -317,14 +318,44 @@ a $\mathbf{2.42\times}$ relative risk. \citet{sofroniew2026} report
 $\sim\!14\times$. The design therefore \emph{excludes} the claimed effect
 magnitude, while being unable to exclude effects below $2.42\times$.
 
+\paragraph{Why we did not steer at a different layer.}
+\citet{wu2026steerable} show that operating-point choice can determine steering
+conclusions, so a null at one layer invites the objection that we picked the wrong
+site. Our sweep initially appeared to supply that objection: on the 80-trial
+subset for which activations were re-extracted, raw AUC for
+$V_{\text{int}}$[desperate] ranges from $0.450$ (layer 26) to $\mathbf{0.918}$
+(layer 39), against $0.677$ at the layer we steered.
+
+Applying \S\ref{sec:len}'s control dissolves it. Response length --- here in
+tokens, the units the probe actually averages over --- alone reaches AUC $0.912$
+on this subset, and every layer's advantage goes with it.
+
+\begin{center}\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Layer & raw AUC & length-resid.\ AUC & 95\% CI & $\rho$(probe, length) \\
+\midrule
+13 & 0.691 & 0.333 & $[0.198, 0.477]$ & 0.619 \\
+26 & 0.450 & 0.262 & $[0.123, 0.411]$ & 0.445 \\
+\textbf{39} & \textbf{0.918} & \textbf{0.646} & $\mathbf{[0.395, 0.871]}$ & 0.603 \\
+52 & 0.708 & 0.532 & $[0.294, 0.773]$ & 0.392 \\
+53 (steered) & 0.677 & 0.524 & $[0.290, 0.761]$ & 0.373 \\
+65 & 0.472 & 0.360 & $[0.137, 0.591]$ & 0.344 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Layer 39's apparent superiority is the same length artifact, and its residualized
+CI spans chance. \textbf{No layer in the sweep gives the preregistered direction
+length-independent signal}, so there is no operating point at which steering it
+would test the hypothesis we registered. We report this rather than steering at a
+site selected post hoc on a confounded statistic --- which is precisely the failure
+mode \citet{wu2026steerable} describe.
+
 \paragraph{Scope.} This is a conceptual, not direct, replication: different model,
-extraction, and steering norms. We steer at layer 53; our own layer sweep (an
-80-trial subset, not the 120-trial set above) shows the association is strongly
-layer-dependent, ranging from AUC $0.450$ at layer 26 to $0.918$ at layer 39.
-\emph{We did not steer at layer 39}, and \citet{wu2026steerable} show precisely
-this kind of operating-point choice can determine steering conclusions. The
-honest scope is: at this site, at this norm, in this model, the intervention lacks
-specificity.
+extraction, and steering norms than \citet{sofroniew2026}. The honest scope is: at
+this norm, in this model, and at every layer we can evaluate, the intervention
+lacks specificity.
 
 \subsection{The preregistered generalization criterion remains unmet}
 \label{sec:prereg}
@@ -367,9 +398,13 @@ response, so \S\ref{sec:len} cannot separate measurement artifact from mediation
 The \S\ref{sec:dirs} cluster is post-hoc; max-$T$ controls selection but not the
 possibility that these directions index a further unmeasured response property.
 Length residualization is linear and would not remove a nonlinear dependence. The
-causal null is bounded at one site and norm and, most importantly, we did not
-steer at layer 39. Whether any association generalizes across shortcut mechanisms
-is genuinely open: we answer it from no data rather than from unreliable labels.
+causal null is bounded at one steering norm: we show that no layer in our sweep
+offers a length-independent version of the registered direction, but we cannot
+exclude other token positions, extraction methods, or norms. We also did not steer
+the directions that \emph{do} survive \S\ref{sec:dirs} --- a natural next
+experiment, but one testing a hypothesis we never registered. Whether any
+association generalizes across shortcut mechanisms is genuinely open: we answer it
+from no data rather than from unreliable labels.
 
 \section{Conclusion}
 

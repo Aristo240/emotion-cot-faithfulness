@@ -26,11 +26,14 @@ def chk(label, claimed, actual, tol=5e-4):
         fails.append(f"{label}: paper says {claimed}, script gives {actual}")
 
 
+TEX_FLAT = re.sub(r"\s+", " ", TEX)
+
+
 def in_tex(s):
-    """Assert a literal string appears in the paper."""
+    """Assert a phrase appears in the paper, ignoring LaTeX line wrapping."""
     global checks
     checks += 1
-    if s not in TEX:
+    if re.sub(r"\s+", " ", s) not in TEX_FLAT:
         fails.append(f"missing from paper: {s!r}")
 
 
@@ -134,10 +137,29 @@ chk("len unsteered", 1402, ml["unsteered"], tol=0.5)
 chk("len emotion", 1324, ml["emotion_abs_ge_0.3"], tol=0.5)
 chk("len random", 1456, ml["random"], tol=0.5)
 
-# ---- §4.6 layers
-chk("layer 26 AUC", 0.450, J["layers"]["per_layer"]["26"])
-chk("layer 39 AUC", 0.918, J["layers"]["per_layer"]["39"])
+# ---- §4.6 layers, raw and length-residualised
 chk("layer sweep n", 80, J["layers"]["n"], tol=0)
+chk("length AUC tokens", 0.912, J["layers"]["length_auc_tokens"])
+for lay, raw, res, lo, hi, rr in [
+    ("13", 0.691, 0.333, 0.198, 0.477, 0.619),
+    ("26", 0.450, 0.262, 0.123, 0.411, 0.445),
+    ("39", 0.918, 0.646, 0.395, 0.871, 0.603),
+    ("52", 0.708, 0.532, 0.294, 0.773, 0.392),
+    ("53", 0.677, 0.524, 0.290, 0.761, 0.373),
+    ("65", 0.472, 0.360, 0.137, 0.591, 0.344),
+]:
+    L = J["layers"]["per_layer"][lay]
+    chk(f"layer {lay} raw", raw, L["raw_auc"])
+    chk(f"layer {lay} resid", res, L["resid_auc"])
+    chk(f"layer {lay} resid CI lo", lo, L["resid_ci95"][0], tol=1e-3)
+    chk(f"layer {lay} resid CI hi", hi, L["resid_ci95"][1], tol=1e-3)
+    chk(f"layer {lay} rho", rr, L["rho_length"])
+# the paper's central layer claim: no layer survives for `desperate`
+for lay in ("39", "52", "53", "65"):
+    checks += 1
+    if J["layers"]["per_layer"][lay]["resid_ci_excludes_half"]:
+        fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
+in_tex("no layer in our sweep offers a length-independent version")
 
 # ---- §4.7 prereg
 if "INSUFFICIENT-DATA" not in J["prereg"]["verdict"]:
@@ -146,7 +168,7 @@ checks += 1
 
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
-in_tex("We did not steer at layer 39")          # scope caveat present
+in_tex("No layer in the sweep gives the preregistered direction")  # layer objection answered
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
 

@@ -129,9 +129,16 @@ effects below 2.42×.
    **165/650 (25.4%)** — Qwen: 2 SHORTCUT / 524 UNCLEAR; Claude: 194 SHORTCUT.
    All conclusions from it are withheld, including negative ones. By contrast the
    120-trial unsteered set has **120/120** agreement.
-6. **We did not steer at layer 39.** The association ranges from AUC 0.450 (layer 26)
-   to 0.918 (layer 39) across the sweep, while all steering was done at layer 53.
-   This is the single largest gap in the causal null.
+6. **Layer 39 is not a better site — it is the same artifact.** The sweep's raw
+   AUC ranges from 0.450 (layer 26) to 0.918 (layer 39) vs 0.677 at the steered
+   layer 53, which looks like an operating-point objection to the causal null. It
+   isn't: response length *in tokens* alone reaches AUC 0.912 on that subset, and
+   after residualizing, layer 39 gives **0.646 [0.395, 0.871]** — spanning chance.
+   **No layer gives the preregistered direction length-independent signal**, so
+   there is no site at which steering it would test the registered hypothesis.
+   (The low-arousal *cluster* does survive at layer 39 — `lonely` 0.838,
+   `nostalgic` 0.834 — so steering *those* is a coherent future experiment, but it
+   tests a hypothesis we never registered.)
 7. **Conceptual, not direct, replication:** different model, extraction, and norms
    than Sofroniew et al.
 8. **Probe–task confound:** probes predict task identity at 95.4% accuracy.
