@@ -460,10 +460,16 @@ _rows = [r for r in _tab.split(r"\\") if r.strip() and "bottomrule" not in r]
 _sup = sum("Supported" in r for r in _rows)
 _not = sum("Not supported" in r for r in _rows)
 _oth = sum(("Not evaluable" in r or "Not identifiable" in r or "Inconclusive" in r) for r in _rows)
+# The verdicts are deliberately distinct, so the tally checks each kind separately.
+# 1 supported, 1 exploratory, 1 not supported, and 4 unresolved for four different
+# reasons: not identifiable, no effect detected, not identifiable (text), inconclusive.
 _exp = sum("Exploratory" in r for r in _rows)
-if not (len(_rows) == 7 and _sup == 1 and _not == 3 and _exp == 1 and _oth == 2):
-    fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not, "
-                 f"{_exp} exploratory, {_oth} other) contradict the intro tally")
+_unres = sum(("Not identifiable" in r or "No effect detected" in r
+              or "Inconclusive" in r or "Not evaluable" in r) for r in _rows)
+if not (len(_rows) == 7 and _sup == 1 and _not == 1 and _exp == 1 and _unres == 4):
+    fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not "
+                 f"supported, {_exp} exploratory, {_unres} unresolved) contradict the "
+                 f"intro tally of 1/1/1/4")
 # the 50-direction sweep is post hoc, so the paper must not call it a supported finding
 checks += 1
 if "selection-corrected finding" in TEX_FLAT:
