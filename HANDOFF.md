@@ -137,15 +137,51 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 249 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 260 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
+
+**Judge validity was mischaracterised (fixed 2026-08-20).** Section 3 used to quote raw
+agreement on the diverse suite, `165/650 = 25.4%`, which reads as the two judges
+*contradicting* each other. They never do:
+
+| Qwen \ Claude | LEGITIMATE | SHORTCUT | UNCLEAR |
+|---|---|---|---|
+| **LEGITIMATE** | 124 | **0** | 0 |
+| **SHORTCUT** | **0** | 2 | 0 |
+| **UNCLEAR** | 293 | 192 | 39 |
+
+Every one of the 485 disagreements is Qwen abstaining while Claude commits; where Qwen
+commits, agreement is **126/126** (95% upper bound on the contradiction rate: 2.4%).
+Three further facts, now in the paper:
+
+- The abstention is **informative**: 99% on trials Claude calls SHORTCUT against 73%
+  elsewhere, Fisher p = 4.2e-19, OR 35.9. The committed subset is therefore a biased
+  sample and the suite cannot be rescued by analysing what remains. That is *why*
+  excluding it is right, and it is a stronger reason than "the judges disagree".
+- It is **mechanism-specific**, not diffuse: 100% / 100% / 100% / 98% abstention on
+  four mechanisms and **5%** on `tight_budget_v1`. The judge labels one of the five.
+  That is what blocks the preregistered rule, which needs >= 6 of 9 variants to
+  produce outcome variance, and it is now section 4.6's stated reason.
+- On the in-distribution 120 there are **zero** abstentions. What fails to transfer is
+  willingness to label, not agreement.
+
+The Limitations line "rather than from unreliable labels" was wrong for the same
+reason and now reads "rather than from a subset our judge selected".
 
 **Not fixed, and worth doing before submission:**
 
 - No anonymized artifact link, though the abstract promises "a released script".
-- Judge validity is judge *agreement* (120/120 between Qwen and Claude). No
-  human-labelled subset exists. Even 20 human labels would close it.
+- **No human labels exist anywhere in this project**, and none were ever promised --
+  the preregistration does not mention them and `docs/methods.md` documents only
+  LLM-judge reliability. (`gfs/human_val.log` belongs to the other project.) Two
+  subsets are worth labelling: all 14 SHORTCUT plus ~26 LEGITIMATE from the unsteered
+  120 -- the outcome variable for sections 4.2-4.3, where both judges agree 120/120 so
+  agreement proves nothing -- and the 192 diverse-suite trials in the UNCLEAR/SHORTCUT
+  cell, which decide section 4.6. The stake on the first is bounded: flipping one of
+  the 14 events moves `bored` chi2 from 38.7 to 27.4, and the two worst flips together
+  to 18.9, against a family-wise threshold near 12-14. The headline tolerates one or
+  two label errors, so this is a credibility gap rather than a live threat.
 - `bored` reaches raw AUC 0.985 on 14 events. It is not task-identity separability
   (checked: AUC 0.40-0.68 against variant, 0.97-1.00 within variant) and not
   nonlinear length, but nobody has read the responses to find out what it *is*.
@@ -160,7 +196,7 @@ manuscript's stated count must change with it.
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 249 assertions gating the .tex against all five
+python scripts/check_paper_consistency.py  # 260 assertions gating the .tex against all five
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical

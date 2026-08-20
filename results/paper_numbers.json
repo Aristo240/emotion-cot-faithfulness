@@ -15,7 +15,44 @@
   "diverse_n": 650,
   "diverse_qwen_shortcut": 2,
   "diverse_qwen_unclear": 524,
-  "diverse_claude_shortcut": 194
+  "diverse_claude_shortcut": 194,
+  "diverse_qwen_commits": 126,
+  "diverse_commit_rate": 0.19384615384615383,
+  "diverse_contradictions_given_both_commit": 0,
+  "diverse_contradiction_rate_upper95": 0.023809523809523808,
+  "diverse_abstain_on_claude_shortcut": [
+   192,
+   194
+  ],
+  "diverse_abstain_elsewhere": [
+   332,
+   456
+  ],
+  "diverse_abstention_fisher_p": 4.2426690222245987e-19,
+  "diverse_abstention_odds_ratio": 35.855421686746986,
+  "diverse_abstention_per_mechanism": {
+   "tight_budget_v1": [
+    6,
+    130
+   ],
+   "hardcoded_lookup_v1": [
+    128,
+    130
+   ],
+   "fake_verifier_v1": [
+    130,
+    130
+   ],
+   "silent_spec_drop_v1": [
+    130,
+    130
+   ],
+   "misleading_impl_v1": [
+    130,
+    130
+   ]
+  },
+  "tier2_qwen_unclear": 0
  },
  "semantic": {
   "n": 10062,

@@ -101,6 +101,52 @@ R["judge"] = {"tier2_agree": tot_a, "tier2_n": tot_n,
               "diverse_qwen_unclear": sum(t.get("judge_classification") == "UNCLEAR" for t in dv),
               "diverse_claude_shortcut": sum(t.get("claude_classification") == "SHORTCUT" for t in dv)}
 
+# ---- Raw agreement conflates two different failures. Added 2026-08-20: the
+# 25.4% figure reads as the judges CONTRADICTING each other. They do not. Every
+# disagreement is the primary judge abstaining (UNCLEAR) while Claude commits, so
+# the quantity that fails to transfer is willingness to label, not agreement.
+# Reported separately: (a) how often the primary judge commits, (b) how often the
+# two contradict GIVEN both commit, (c) whether the abstention is independent of
+# the outcome -- if it is not, the committed subset is a biased sample and the
+# suite cannot be rescued by analysing what remains.
+_COMMIT = ("SHORTCUT", "LEGITIMATE")
+_q = [t.get("judge_classification") for t in dv]
+_c = [t.get("claude_classification") for t in dv]
+_both = [i for i in range(len(dv)) if _q[i] in _COMMIT and _c[i] in _COMMIT]
+_contra = [i for i in _both if _q[i] != _c[i]]
+# Claude-SHORTCUT vs abstention: 2x2 Fisher, tests informative missingness.
+_cs = [i for i in range(len(dv)) if _c[i] == "SHORTCUT"]
+_a_in = sum(1 for i in _cs if _q[i] == "UNCLEAR")
+_a_out = sum(1 for i in range(len(dv)) if _c[i] != "SHORTCUT" and _q[i] == "UNCLEAR")
+_n_out = len(dv) - len(_cs)
+_or, _p = fisher_exact([[_a_in, len(_cs) - _a_in], [_a_out, _n_out - _a_out]])
+_per = {}
+for t_ in dv:
+    k = t_.get("task_id", "?")
+    u, n_ = _per.get(k, (0, 0))
+    _per[k] = (u + (t_.get("judge_classification") == "UNCLEAR"), n_ + 1)
+print(f"  diverse: primary judge commits on {len(_both)}/{len(dv)} "
+      f"({len(_both)/len(dv):.1%}); contradictions given both commit "
+      f"{len(_contra)}/{len(_both)}")
+print(f"  abstention on Claude-SHORTCUT {_a_in}/{len(_cs)} = {_a_in/len(_cs):.1%} vs "
+      f"{_a_out}/{_n_out} = {_a_out/_n_out:.1%} elsewhere; Fisher p = {_p:.2g}")
+for k in sorted(_per):
+    print(f"    abstention {k:<22} {_per[k][0]:>4}/{_per[k][1]:<4} = {_per[k][0]/_per[k][1]:.0%}")
+R["judge"].update({
+    "diverse_qwen_commits": len(_both),
+    "diverse_commit_rate": len(_both) / len(dv),
+    "diverse_contradictions_given_both_commit": len(_contra),
+    # rule of three: with 0 events in n trials the 95% upper bound is 3/n
+    "diverse_contradiction_rate_upper95": 3.0 / len(_both),
+    "diverse_abstain_on_claude_shortcut": [_a_in, len(_cs)],
+    "diverse_abstain_elsewhere": [_a_out, _n_out],
+    "diverse_abstention_fisher_p": float(_p),
+    "diverse_abstention_odds_ratio": float(_or),
+    "diverse_abstention_per_mechanism": {k: list(v) for k, v in _per.items()},
+    "tier2_qwen_unclear": sum(1 for t_ in unsteered
+                              if t_.get("judge_classification") == "UNCLEAR"),
+})
+
 # ==================================================================== §4.1 sem
 hdr("§4.1  Semantic validity (EmoBank, zero-shot, frozen probes)")
 emo = json.load(open(ROOT / "results/emobank/llama70b/report.json"))

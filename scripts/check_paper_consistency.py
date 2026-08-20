@@ -265,6 +265,38 @@ in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
 in_tex("max-$T$ over 50, length-preserving null")
+# ---- §3 judge abstention, not contradiction (added 2026-08-20 in response to review)
+# The paper used to quote raw agreement (165/650), which reads as the judges
+# contradicting each other. These assertions pin the corrected characterisation.
+_j = J["judge"]
+chk("diverse commit count", 126, _j["diverse_qwen_commits"], tol=0)
+chk("diverse abstention rate", 0.806, 1 - _j["diverse_commit_rate"], tol=5e-4)
+chk("contradictions given both commit", 0, _j["diverse_contradictions_given_both_commit"], tol=0)
+chk("contradiction upper bound", 0.024, _j["diverse_contradiction_rate_upper95"], tol=5e-4)
+chk("abstention on Claude-SHORTCUT", 0.99,
+    _j["diverse_abstain_on_claude_shortcut"][0] / _j["diverse_abstain_on_claude_shortcut"][1], tol=5e-3)
+chk("abstention elsewhere", 0.73,
+    _j["diverse_abstain_elsewhere"][0] / _j["diverse_abstain_elsewhere"][1], tol=5e-3)
+chk("tier-2 abstentions", 0, _j["tier2_qwen_unclear"], tol=0)
+checks += 1
+if not _j["diverse_abstention_fisher_p"] < 1e-18:
+    fails.append(f"paper says Fisher p = 4e-19 for informative abstention; script gives "
+                 f"{_j['diverse_abstention_fisher_p']:.2g}")
+# §3 and §4.6 both say the abstention is mechanism-specific: one labelled, >=98% on the rest
+_pm = _j["diverse_abstention_per_mechanism"]
+chk("diverse mechanisms", 5, len(_pm), tol=0)
+_rates = sorted(u / n_ for u, n_ in _pm.values())
+checks += 1
+if not (_rates[0] < 0.10 and all(r >= 0.98 for r in _rates[1:])):
+    fails.append(f"paper says one mechanism is labelled and the other four abstain >=98%; "
+                 f"rates are {[round(r, 3) for r in _rates]}")
+# the exclusion is justified by informative missingness, so the committed subset
+# must NOT be a fair sample: assert the two abstention rates actually differ
+checks += 1
+if (_j["diverse_abstain_on_claude_shortcut"][0] / _j["diverse_abstain_on_claude_shortcut"][1]
+        <= _j["diverse_abstain_elsewhere"][0] / _j["diverse_abstain_elsewhere"][1]):
+    fails.append("paper says abstention is higher on Claude-SHORTCUT trials; it is not")
+
 # ---- §4.1 trivial text baseline (added 2026-08-20 in response to review)
 chk("TF-IDF valence R2", 0.219, E["tfidf_cv_r2"]["V"])
 chk("TF-IDF arousal R2", 0.092, E["tfidf_cv_r2"]["A"])
