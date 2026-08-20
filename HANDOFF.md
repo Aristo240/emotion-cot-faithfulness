@@ -163,7 +163,7 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 267 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 284 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
 
@@ -195,6 +195,52 @@ Three further facts, now in the paper:
 The Limitations line "rather than from unreliable labels" was wrong for the same
 reason and now reads "rather than from a subset our judge selected".
 
+**A second external review found a real defect in section 4.5 (fixed 2026-08-20).**
+The arm reported as "Emotion vector @ +-0.3" pooled **both signs and two different
+emotions**. It was `desperate` and `calm` at +0.30 and -0.30 together, 12/160. The
+claim under audit is directional, so pooling could have cancelled a real effect, and
+`calm` is not the registered direction at all. The per-cell numbers:
+
+| cell | hacks / n | rate |
+|---|---|---|
+| `desperate` @ +0.3 | 1 / 39 | 2.6% |
+| `desperate` @ -0.3 | 4 / 40 | 10.0% |
+| `calm` @ +-0.3 | 7 / 79 | 8.9% |
+| random @ +0.3 | 9 / 100 | 9.0% |
+| random @ -0.3 | 4 / 100 | 4.0% |
+| unsteered | 14 / 120 | 11.7% |
+
+Disaggregating does not overturn the conclusion, it sharpens it. `+0.3 desperate`
+sits at 2.6% against 9.0% for random directions at the same signed strength
+(Fisher p = 0.28) and 11.7% unsteered (p = 0.12), so the point estimate runs
+**opposite** to the registered prediction rather than merely failing to reach it.
+
+**The manipulation check that review asked for exists in the stored data and is
+favourable.** Steering `desperate` shifts the desperate projection monotonically
+with signed strength, -0.656 at -0.5, -0.616 unsteered, -0.580 at +0.3, -0.569 at
++0.5, with the +0.3 shift distinguishable from unsteered (Mann-Whitney p = 0.025).
+So the intervention moved what it targeted and the behaviour did not follow. That
+converts the paper's most vulnerable null into one of its stronger results, and it
+is now a labelled paragraph in section 4.5. `scripts/steering_directional.py`
+computes all of it and the gate pins it.
+
+The 2.42x bound belongs to the pooled contrast only. The directional interval is
+[0.04, 2.17] on one event in 39 trials and excludes very little, which the paper
+now says. Table 1's verdict no longer carries the 2.42x figure.
+
+**Other review fixes:** Table 1 said "EmoBank, zero-shot" while section 4.1 says
+out-of-fold, which was a contradiction; the ridge sweep bound was written
+`p <= 0.50` when a null claim needs the lower bound `p >= 0.38`; "we read this as a
+measurement artifact" asserted the reading the same paragraph says cannot be
+identified; the Discussion said a character count beat the probe when the paired
+bootstrap says it did not; and section 4.4 claimed the non-modal subset shows "most of
+the gap is tie compression" when that subset is selected on the predictor's own
+values.
+
+**Appendices are now A to D**, all reachable through `\input`, and
+`check_paper_consistency.py` reads them so a gated sentence cannot be hidden by
+moving it out of the body.
+
 **Not fixed, and worth doing before submission:**
 
 - No anonymized artifact link, though the abstract promises "a released script".
@@ -222,7 +268,7 @@ reason and now reads "rather than from a subset our judge selected".
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 267 assertions gating the .tex against all five
+python scripts/check_paper_consistency.py  # 284 assertions gating the .tex against all six
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical

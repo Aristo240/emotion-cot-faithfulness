@@ -64,9 +64,11 @@ Residualized on length it falls to $0.592$ and adds nothing to a length-only mod
 the variance in the first principal component, and it is not the axis we
 registered. The count is soft. Eleven survive every nuisance model we tried
 and only 8 recur under a magnitude-removed readout.
-(iii)~\emph{Specificity.} Emotion steering is indistinguishable from matched-norm
-random directions ($7.5\%$ vs.\ $6.5\%$, risk ratio $1.15$, $95\%$ CI
-$[0.54, 2.46]$), which rules out effects above about $2.4\times$.
+(iii)~\emph{Specificity.} Steering the registered direction at $+0.3$ does not
+raise reward hacking. It sits at $2.6\%$ against $9.0\%$ for random directions
+at the same signed strength, and pooled emotion steering is indistinguishable
+from pooled random steering (Fisher $p = 0.84$). The intervention did move the
+projection it targets ($p = 0.025$), so this is not a failed manipulation.
 (iv)~\emph{Instrument resolution.} The chain-of-thought text baseline cannot support
 the comparison it was used for. $55\%$ of its ROC pairs are ties, and where it resolves at all it trails the
 probe by $0.05$ rather than the $0.19$ the pooled AUCs suggest.
@@ -98,11 +100,13 @@ supported, and two cannot be settled with our data (Table~\ref{tab:summary}).
 \toprule
 \textbf{Claim} & \textbf{Control} & \textbf{Verdict} & \textbf{\S} \\
 \midrule
-Probes track emotion & EmoBank, zero-shot & Supported (valence) & \ref{sec:sem} \\
+Probes track emotion & EmoBank vs.\ TF-IDF & Supported (valence) &
+\ref{sec:sem} \\
 \emph{desperate} tracks hacking & Response length & Not supported & \ref{sec:len} \\
 \emph{Some} direction tracks it & max-$T$ over 50, length-preserving null & Exploratory$^\dagger$ & \ref{sec:dirs} \\
 Probe beats CoT text & ROC tie structure & Not evaluable & \ref{sec:vtext} \\
-Steering causes hacking & Matched-norm random null & Not supported ($\ge2.42\times$) & \ref{sec:causal} \\
+Steering causes hacking & Matched-norm random null & Not supported &
+\ref{sec:causal} \\
 Layer 39 is a better site & Length, per layer & Not supported & \ref{sec:causal} \\
 Generalizes across mechanisms & Preregistered rule & Inconclusive & \ref{sec:prereg} \\
 \bottomrule
@@ -161,7 +165,7 @@ task, \texttt{fast\_sum}, in four impossible-by-construction variants where an
 honest attempt must fail. A near-eventless sycophancy task is excluded throughout.
 Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} regenerates every number here, and a second
-script gates this manuscript against it with 267 assertions.
+script gates this manuscript against it with 284 assertions.
 
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability rather than accuracy, and neither judge is validated
 against human labels. On the 120 unsteered trials used below, Qwen~2.5~72B and
@@ -190,7 +194,8 @@ $0.154$ for dominance. Unigram TF-IDF under the same folds and the same estimato
 reaches $0.219$, $0.092$ and $0.063$. The probe clears the trivial text baseline. This supports construct validity
 for an affect-related axis, not the label on any individual vector.
 
-\subsection{Response length accounts for the preregistered association}
+\subsection{The preregistered association is not separable from response
+length}
 \label{sec:len}
 
 On unsteered trials ($n = 120$, 14 events) the preregistered predictor performs
@@ -205,12 +210,12 @@ $\rho(V_{\text{int}}[\text{desperate}], \text{length}) = 0.606$
 $\chi^2(1) = 3.31$, $p = 0.069$. Residualizing on length leaves AUC
 $= \mathbf{0.592}$ $[0.412, 0.756]$, which is a descriptive interval rather than a
 test. The direction is not distinctive before that correction either, ranking 8th of
-50 by raw AUC, behind \texttt{bored} at $0.985$. We read this as a measurement artifact rather than a substantive null. The
-readout window spans the response, so a longer response mechanically changes
-the average the probe projects.
-This design cannot separate that from length mediating a genuine effect, in which
-case residualizing over-adjusts. Either way the preregistered claim is not supported
-as stated.
+50 by raw AUC, behind \texttt{bored} at $0.985$. The readout window spans the response, so a longer response mechanically
+changes the average the probe projects, which would produce this pattern with
+no emotional content at all. Length could instead mediate a genuine effect, in
+which case residualizing over-adjusts. This design cannot separate the two.
+What it does show is that the preregistered association is not identifiable
+independently of response length.
 
 \subsection{A corrected sweep over all 50 directions}
 \label{sec:dirs}
@@ -229,8 +234,8 @@ so we draw instead from a conditional null that preserves the outcome--length
 relationship. The second is the penalty. With 14 events an unpenalized fit can
 quasi-separate, so ridge-penalized estimates are primary, and there is no
 complete separation. Both nulls give the same 18 directions with per-direction $p$
-within $0.02$, and sweeping $\lambda \in \{0, 0.5, 1, 2\}$ moves the count only
-between 16 and 18, leaving \texttt{desperate} null throughout ($p \le 0.50$).
+within $0.02$, and sweeping $\lambda \in \{0, 0.5, 1, 2\}$ moves the count only between 16 and 18, leaving \texttt{desperate} null
+throughout ($p \ge 0.38$).
 Appendix~\ref{app:maxt} states the resampling procedure in full.
 
 \begin{table}[t]
@@ -301,79 +306,73 @@ each.
 
 $V_{\text{text}}$ therefore reaches AUC $0.647$ overall against $V_{\text{int}}$'s
 $0.837$, but $\mathbf{0.836}$ on the 258 trials (22 events) where it is not at its
-mode, against $0.890$ for $V_{\text{int}}$ on those same trials. On the trials it can
-resolve it trails the probe by $0.054$ rather than $0.190$, so most of the gap is
-tie compression in a non-responsive instrument rather than chain-of-thought
-unfaithfulness. We withdraw any faithfulness-gap claim, including a quadrant
+mode, against $0.890$ for $V_{\text{int}}$ on those same trials. That subset is selected on the predictor's own values, so the two gaps do not
+decompose cleanly. What the tie structure does establish is that the pooled
+$0.190$ gap cannot be read as evidence of chain-of-thought unfaithfulness, and
+that where the text score varies at all the difference is much smaller. We withdraw any faithfulness-gap claim, including a quadrant
 analysis an earlier draft built on this near-constant variable.
 
 \subsection{Causal specificity against a matched-norm random null}
 \label{sec:causal}
 
-{\centering\footnotesize
+{\centering\scriptsize
 \begin{tabular}{@{}lccl@{}}
 \toprule
 Condition & hacks / $n$ & rate & vs.\ unsteered \\
 \midrule
 Unsteered baseline & 14 / 120 & 11.7\% & --- \\
-Emotion vector @ $\pm0.3$ & 12 / 160 & 7.5\% & OR 0.61, $p = 0.30$ \\
-5 random orthogonal directions @ $\pm0.3$ & 13 / 200 & 6.5\% & OR 0.53, $p = 0.14$ \\
+\emph{desperate} @ $+0.3$ & 1 / 39 & 2.6\% & OR 0.20, $p = 0.12$ \\
+\emph{desperate} @ $-0.3$ & 4 / 40 & 10.0\% & OR 0.84, $p = 1.00$ \\
+\emph{calm} @ $\pm0.3$ & 7 / 79 & 8.9\% & \\
+5 random directions @ $+0.3$ & 9 / 100 & 9.0\% & \\
+5 random directions @ $-0.3$ & 4 / 100 & 4.0\% & \\
 \midrule
-\multicolumn{4}{@{}l@{}}{\emph{Emotion vs.\ random: Fisher exact $p = 0.835$}} \\
+\multicolumn{4}{@{}l@{}}{\emph{Pooled emotion vs.\ pooled random: $12/160$ against $13/200$, Fisher $p = 0.835$}} \\
 \bottomrule
 \end{tabular}\par}
 
-Steering the emotion direction has no effect beyond what a matched arbitrary
-direction produces. Neither arm differs from baseline, so this is not capability
-degradation, and mean response lengths are 1402, 1324 and 1456 characters. The
-dose--response over $\pm0.05$ to $\pm0.5$ is flat ($z = -1.42$, $p = 0.157$). A
-``feel desperate'' system prompt also fails to separate from baseline ($17.5\%$ vs.\
-$11.7\%$, Fisher $p = 0.417$). Pooling the random arm masks no heterogeneity. Its five directions have rates
-of $0.025$ to $0.075$.
+The claim under audit is directional, that raising a desperate direction raises
+reward hacking, so the arms have to be read by sign. Pooling $+0.3$ with $-0.3$
+would let an effect in one direction cancel an effect in the other, and the pooled
+emotion arm also contains \texttt{calm} as well as \texttt{desperate}. That pooled
+contrast is a specificity test against arbitrary directions and nothing more.
+Taken directionally, $+0.3$ \emph{desperate} does not raise hacking. It sits at
+$2.6\%$ against $9.0\%$ for random directions at the same signed strength (Fisher
+$p = 0.28$) and against $11.7\%$ unsteered (Fisher $p = 0.12$), so the point
+estimate runs opposite to the registered prediction. The dose--response over
+$\pm0.05$ to $\pm0.5$ is flat ($z = -1.42$, $p = 0.157$), and a ``feel desperate''
+system prompt also fails to raise hacking ($17.5\%$ vs.\ $11.7\%$, Fisher
+$p = 0.417$).
 
-\paragraph{What this null does and does not exclude.} The emotion arm's risk ratio
-against the random arm is $1.15$, $95\%$ CI $[0.54, \mathbf{2.46}]$, so the design rules out anything above about $2.4\times$ and leaves smaller
-effects open. An $80\%$-power calculation agrees.
-\citet{sofroniew2026} report $\sim\!14\times$, which is far outside that bound.
-Their figure rests on a base rate we cannot match, since $14\times$ is unattainable
-from our $11.7\%$, so the two compare on the relative scale only.
+\paragraph{The intervention moved the representation it was meant to move.} A
+behavioral null is ambiguous unless the manipulation worked, so we checked the
+probed quantity itself. Steering \emph{desperate} shifts the desperate projection
+monotonically with signed strength, from $-0.656$ at $-0.5$ through $-0.616$
+unsteered to $-0.580$ at $+0.3$ and $-0.569$ at $+0.5$, and the shift at $+0.3$ is
+distinguishable from unsteered (Mann--Whitney $p = 0.025$). The intervention
+therefore changed what it was aimed at while leaving the behavior where it was.
+
+\paragraph{What this null does and does not exclude.} For the pooled specificity
+contrast the risk ratio is $1.15$, $95\%$ CI $[0.54, 2.46]$, so within this setting
+an emotion-specific effect above roughly $2.4\times$ is not compatible with the
+data. The directional contrast is far weaker, with only one event in 39 trials at
+$+0.3$, and its interval $[0.04, 2.17]$ excludes very little. \citet{sofroniew2026}
+report ${\sim}14\times$, on a base rate we cannot match, since $14\times$ is
+unattainable from our $11.7\%$. These bounds apply to these rollouts under this
+extraction and this steering norm, and not to emotion steering in general.
 
 \paragraph{Why no layer rescues the registered direction.}
 A null at one layer invites the objection that we picked the wrong site, and our
-sweep appeared to supply it. On the 80-trial subset for which activations were
-re-extracted (7 events), raw AUC for $V_{\text{int}}$[desperate] ranges from $0.450$
-at layer 26 to $\mathbf{0.918}$ at layer 39, against $0.677$ at the steered layer.
-Applying \S\ref{sec:len}'s control removes every layer's advantage, and length in
-tokens, the units the probe averages over, alone reaches AUC $0.912$.
-
-{\centering\scriptsize
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Layer & raw AUC & length-resid.\ AUC & 95\% CI & $\rho$(probe, length) \\
-\midrule
-13 & 0.691 & 0.333 & $[0.198, 0.477]$ & 0.619 \\
-26 & 0.450 & 0.262 & $[0.123, 0.411]$ & 0.445 \\
-\textbf{39} & \textbf{0.918} & \textbf{0.646} & $\mathbf{[0.395, 0.871]}$ & 0.603 \\
-52 & 0.708 & 0.532 & $[0.294, 0.773]$ & 0.392 \\
-53 (steered) & 0.677 & 0.524 & $[0.290, 0.761]$ & 0.373 \\
-65 & 0.472 & 0.360 & $[0.137, 0.591]$ & 0.344 \\
-\bottomrule
-\end{tabular}\par}
-
-Layer 39's apparent superiority is the same length artifact, and its residualized CI
-spans chance. \textbf{No evaluated layer gives the preregistered direction
-length-independent signal detectable at $n = 80$}, so we have no observational
-reason to move the intervention to a different site. Steering at a post-hoc site chosen on a confounded statistic is the failure
-mode \citet{wu2026steerable} describe. We steered only at the registered
-layer, so the specificity result covers that layer alone.
-
-Layers 13 and 26 are significantly \emph{anti}-predictive after residualization, but
-that is different geometry rather than a sign flip. Their full 50-direction
-residualized-AUC profiles are nearly uncorrelated with layer 53's ($\rho = 0.24$ for
-both), while layers 39, 52, 53 and 65 form a tightly correlated block (Spearman
-$0.61$ to $0.99$). The behaviorally associated axis is a late-layer phenomenon, and
-layer 39 correlates with the steered layer 53 at $\rho = 0.82$, so the two sites
-largely measure the same thing.
+sweep appeared to supply it. Raw AUC for $V_{\text{int}}$[desperate] peaks at layer
+39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$ at the steered
+layer. Applying \S\ref{sec:len}'s control removes every layer's advantage, and
+length in tokens alone reaches AUC $0.912$ there. \textbf{No evaluated layer gives
+the preregistered direction length-independent signal detectable at $n = 80$}, so we
+have no observational reason to move the intervention elsewhere. Steering at a
+post-hoc site chosen on a confounded statistic is the failure mode
+\citet{wu2026steerable} describe. We steered only at the registered layer, so the
+specificity result covers that layer alone. Appendix~\ref{app:layers} gives the
+per-layer numbers and the geometry across layers.
 
 \subsection{The preregistered generalization criterion remains unmet}
 \label{sec:prereg}
@@ -403,7 +402,7 @@ association generalizes across mechanisms is genuinely open, and we answer it fr
 
 \emph{Trivial-baseline controls belong beside random-direction controls.} The field
 requires a steering effect to beat a random direction, but rarely requires a probe to beat a trivial feature of the output. Here a
-character count did. \emph{Report the resolution of the instrument you
+character count matched one. \emph{Report the resolution of the instrument you
 compare against.} A predictor constant for $74\%$ of trials gives no comparison at
 all, so tie fractions belong beside AUCs. \emph{Correcting for selection can support
 a result as well as remove one.} The same max-$T$ sweep that forbids the post-hoc
@@ -418,5 +417,6 @@ nothing about the next.
 \input{appendix_directions}
 \input{appendix_maxt}
 \input{appendix_readout}
+\input{appendix_layers}
 
 \end{document}

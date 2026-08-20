@@ -14,9 +14,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 J = json.load(open(ROOT / "results/paper_numbers.json"))
 C = json.load(open(ROOT / "results/conditional_null.json"))
-TEX = (ROOT / "paper/interpscience_short.tex").read_text()
+_MAIN = (ROOT / "paper/interpscience_short.tex").read_text()
+# in_tex must see \input'd appendices too, or moving a gated sentence into an
+# appendix would silently drop it from the check.
+TEX = _MAIN + "\n" + "\n".join(
+    (ROOT / f"paper/{m}.tex").read_text()
+    for m in re.findall(r"\\input\{([^}]+)\}", _MAIN)
+    if (ROOT / f"paper/{m}.tex").exists())
 E = json.load(open(ROOT / "results/emobank_baseline.json"))
 RB = json.load(open(ROOT / "results/robustness_controls.json"))
+SD = json.load(open(ROOT / "results/steering_directional.json"))
 
 fails, checks = [], 0
 
@@ -297,6 +304,38 @@ checks += 1
 if (_j["diverse_abstain_on_claude_shortcut"][0] / _j["diverse_abstain_on_claude_shortcut"][1]
         <= _j["diverse_abstain_elsewhere"][0] / _j["diverse_abstain_elsewhere"][1]):
     fails.append("paper says abstention is higher on Claude-SHORTCUT trials; it is not")
+
+# ---- §4.5 directional steering and the manipulation check (added after review)
+# The pooled arm mixes both signs and two emotions, so it cannot test a
+# directional claim. These pin the per-cell numbers the paper now reports.
+chk("desperate +0.3 hacks", 1, SD["cells"]["desperate@+0.30"][0], tol=0)
+chk("desperate +0.3 n", 39, SD["cells"]["desperate@+0.30"][1], tol=0)
+chk("desperate -0.3 hacks", 4, SD["cells"]["desperate@-0.30"][0], tol=0)
+chk("random +0.3 hacks", 9, SD["cells"]["random@+0.30"][0], tol=0)
+chk("random +0.3 n", 100, SD["cells"]["random@+0.30"][1], tol=0)
+chk("desperate +0.3 rate", 0.026, SD["cells"]["desperate@+0.30"][0] / SD["cells"]["desperate@+0.30"][1], tol=1e-3)
+chk("random +0.3 rate", 0.090, SD["cells"]["random@+0.30"][0] / SD["cells"]["random@+0.30"][1], tol=1e-3)
+chk("desperate+ vs random+ p", 0.28, SD["directional"]["desperate_plus_vs_random_plus"]["p"], tol=5e-3)
+chk("desperate+ vs baseline p", 0.12, SD["directional"]["desperate_plus_vs_baseline"]["p"], tol=5e-3)
+# the pooled cells must add up to the pooled arm the table still reports
+checks += 1
+_pool = sum(SD["cells"][k][0] for k in SD["cells"] if not k.startswith("random"))
+if _pool != J["causal"]["emotion_0_3"][0]:
+    fails.append(f"per-cell emotion hacks sum to {_pool}; pooled arm says "
+                 f"{J['causal']['emotion_0_3'][0]}")
+# the manipulation check is what makes the behavioural null interpretable
+_mc = SD["manipulation_check"]
+chk("unsteered desperate projection", -0.616, _mc["unsteered_mean"], tol=5e-4)
+chk("projection at +0.3", -0.580, _mc["by_strength"]["+0.30"]["mean"], tol=5e-4)
+chk("projection at +0.5", -0.569, _mc["by_strength"]["+0.50"]["mean"], tol=5e-4)
+chk("projection at -0.5", -0.656, _mc["by_strength"]["-0.50"]["mean"], tol=5e-4)
+chk("manipulation p at +0.3", 0.025, _mc["by_strength"]["+0.30"]["p_vs_unsteered"], tol=5e-4)
+checks += 1
+if not _mc["monotone_in_strength"]:
+    fails.append("paper says the projection shifts monotonically with signed strength")
+checks += 1
+if not _mc["moved_at_plus_0_3"]:
+    fails.append("paper says the intervention moved the projection at +0.3; it did not")
 
 # ---- §4.1 trivial text baseline (added 2026-08-20 in response to review)
 chk("TF-IDF valence R2", 0.219, E["tfidf_cv_r2"]["V"])
