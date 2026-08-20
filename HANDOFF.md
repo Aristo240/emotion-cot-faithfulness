@@ -1,4 +1,4 @@
-# Handoff — 2026-08-20 (length resolved)
+# Handoff — 2026-08-20 (length resolved; review round applied)
 
 Everything below is committed and pushed to `github.com/Aristo240/emotion-cot-faithfulness`
 (`main`). Working tree clean.
@@ -83,13 +83,84 @@ reviewer from the author pool** — sign up when you submit.
 
 ---
 
+## 2b. Review round, 2026-08-20 (after the cut)
+
+The paper was reviewed as an OpenReview submission. Ten findings; the substantive
+ones are fixed, and two new gated scripts were added to support them.
+
+**Fixed, with new numbers:**
+
+- **Section 4.4 was not like-for-like.** It compared V_text on the 258 non-modal
+  trials against V_int on all 992, then concluded "where it varies it matches the
+  probe". On the same 258 trials V_int is **0.890**, not 0.837. The gap is 0.054,
+  not 0.190. The qualitative conclusion (mostly tie compression) survives; the
+  sentence did not.
+- **"The design excludes the claimed magnitude" was a power claim.** Replaced with
+  the interval it needs: emotion vs random RR **1.15, 95% CI [0.54, 2.46]**. The
+  80%-power MDE of 2.42x agrees and is kept alongside.
+- **The ~14x was never commensurable.** 14x is unattainable from our 11.7% baseline,
+  so the two figures cannot be a like-for-like relative risk. The paper now says so
+  and confines the comparison to the relative scale. It was also removed from the
+  abstract.
+- **The survivor count is softer than claimed.** New nuisance-model sweeps, run with
+  the paper's own max-T machinery: **18** under length only, **14** under a
+  cubic-plus-knots length basis, **11** under fixed effects for the four task
+  variants. Eleven clear all three; what drops out is the positive-affect and
+  high-arousal periphery, not the low-arousal negative core. `desperate` is null in
+  every one (p >= 0.43). This is now in the abstract, section 4.3 and the Limitations.
+- **Single task family was never stated.** Every trial is `fast_sum` in four
+  variants, and events are uneven across them (9/30 against 0/30). Stated in
+  section 3 and the Limitations.
+- **Section 4.1 had no baseline**, in a paper arguing that trivial baselines belong
+  beside every control. Unigram TF-IDF on the same sentences and folds gets
+  0.219/0.092/0.063 against the probe's 0.377/0.180/0.154, so the probe clears it.
+- **Table 2 omitted the diagnostic that convicted `desperate`.** It now carries a
+  rho(len) column. Note the honest version: `desperate` is 3rd of 50 by |rho|, not
+  first (`calm` -0.70 and `amused` -0.62 are higher), and a survivor reaches 0.57.
+  The asymmetry is justified by the nested-LR result, not by rho alone.
+- **An absence-of-evidence claim was bolded.** "No layer gives length-independent
+  signal" now says "detectable at n = 80".
+- **The layer table showed 4 of 6 swept layers.** Layers 52 and 65 restored; they
+  were dropped during the page cut and the text still referred to the block.
+
+**New scripts, both gated:**
+
+```bash
+python scripts/emobank_baseline.py      # ~2 min  -> results/emobank_baseline.json
+python scripts/robustness_controls.py   # ~25 min -> results/robustness_controls.json
+```
+
+`robustness_controls.py` asserts its own length-only sweep reproduces
+`conditional_null.json`'s chi2 exactly (it does, to 0.00e+00), so the three nuisance
+models differ only in the nuisance model. Its p-values differ from
+`conditional_null.py` within Monte Carlo error (0.4307 vs 0.4404 for `desperate`) --
+this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
+bound (p >= 0.43) rather than a point value.
+
+**The gate is now 249 assertions, not 209.** It reads five result files. Re-run it
+after any paper edit; if you add or remove a citation the count changes and the
+manuscript's stated count must change with it.
+
+**Not fixed, and worth doing before submission:**
+
+- No anonymized artifact link, though the abstract promises "a released script".
+- Judge validity is judge *agreement* (120/120 between Qwen and Claude). No
+  human-labelled subset exists. Even 20 human labels would close it.
+- `bored` reaches raw AUC 0.985 on 14 events. It is not task-identity separability
+  (checked: AUC 0.40-0.68 against variant, 0.97-1.00 within variant) and not
+  nonlinear length, but nobody has read the responses to find out what it *is*.
+- Both steering arms move down relative to baseline (11.7% -> 7.5% and 6.5%). A
+  generic perturbation effect is plausible and unaddressed.
+
+---
+
 ## 3. How to verify anything
 
 ```bash
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 209 assertions gating the .tex against all three
+python scripts/check_paper_consistency.py  # 249 assertions gating the .tex against all five
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical

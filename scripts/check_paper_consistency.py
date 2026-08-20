@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parent.parent
 J = json.load(open(ROOT / "results/paper_numbers.json"))
 C = json.load(open(ROOT / "results/conditional_null.json"))
 TEX = (ROOT / "paper/interpscience_short.tex").read_text()
+E = json.load(open(ROOT / "results/emobank_baseline.json"))
+RB = json.load(open(ROOT / "results/robustness_controls.json"))
 
 fails, checks = [], 0
 
@@ -263,6 +265,82 @@ in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
 in_tex("max-$T$ over 50, length-preserving null")
+# ---- §4.1 trivial text baseline (added 2026-08-20 in response to review)
+chk("TF-IDF valence R2", 0.219, E["tfidf_cv_r2"]["V"])
+chk("TF-IDF arousal R2", 0.092, E["tfidf_cv_r2"]["A"])
+chk("TF-IDF dominance R2", 0.063, E["tfidf_cv_r2"]["D"])
+for _d in ("V", "A", "D"):
+    checks += 1
+    if not E["probe_beats_tfidf"][_d]:
+        fails.append(f"paper says the probe clears the text baseline; it does not on {_d}")
+    # the baseline script must reproduce the probe numbers it is compared against
+    chk(f"baseline run reproduces probe {_d}", J["semantic"]["cv_r2"][_d], E["probe_cv_r2"][_d])
+
+# ---- §4.3 survivor count under three nuisance models
+chk("survivors, length only", 18, RB["baseline_length"]["n_survivors"], tol=0)
+chk("survivors, flexible length", 14, RB["flexible_length"]["n_survivors"], tol=0)
+chk("survivors, length + task", 11, RB["task_fixed_effects"]["n_survivors"], tol=0)
+_core = (set(RB["baseline_length"]["survivors"])
+         & set(RB["flexible_length"]["survivors"])
+         & set(RB["task_fixed_effects"]["survivors"]))
+chk("directions clearing all three", 11, len(_core), tol=0)
+checks += 1
+if not {"bored", "lonely", "nostalgic", "melancholy", "compassionate", "proud"} <= _core:
+    fails.append("paper names directions as clearing all three nuisance models that do not")
+# the robustness run must reproduce the sweep it claims to perturb
+checks += 1
+if RB["baseline_matches_conditional_null"] > 1e-6:
+    fails.append(f"robustness baseline chi2 differ from conditional_null.py by "
+                 f"{RB['baseline_matches_conditional_null']:.2e}")
+# `desperate` must stay null under every nuisance model; the paper says p >= 0.44
+for _m in ("baseline_length", "flexible_length", "task_fixed_effects"):
+    checks += 1
+    if RB[_m]["p_maxT"]["desperate"] < 0.43:
+        fails.append(f"paper says desperate p >= 0.43 everywhere; {_m} gives "
+                     f"{RB[_m]['p_maxT']['desperate']:.4f}")
+# the uneven task event rates quoted in §4.3
+_ev = RB["tasks"]["events_per_variant"]
+chk("max events in a variant", 9, max(v[0] for v in _ev.values()), tol=0)
+chk("min events in a variant", 0, min(v[0] for v in _ev.values()), tol=0)
+chk("trials per variant", 30, max(v[1] for v in _ev.values()), tol=0)
+chk("task variants", 4, RB["tasks"]["n_variants"], tol=0)
+checks += 1
+if not RB["tasks"]["single_task_family"]:
+    fails.append("paper says one task family; the data has more than one")
+
+# ---- Table 2's rho(length) column
+for _d, _r in [("bored", 0.33), ("lonely", 0.48), ("nostalgic", 0.34),
+               ("melancholy", 0.39), ("compassionate", -0.25), ("desperate", 0.61)]:
+    chk(f"rho(len) {_d}", _r, RB["rho_length"][_d], tol=5e-3)
+# the caption calls `desperate` 3rd of 50 by |rho| and explicitly not unique
+checks += 1
+_rank = sorted(RB["rho_length"], key=lambda k: -abs(RB["rho_length"][k])).index("desperate") + 1
+if _rank != 3:
+    fails.append(f"caption says desperate is 3rd of 50 by |rho(len)|; it is {_rank}")
+checks += 1
+if RB["rho_length_summary"]["desperate_is_max_over_all"]:
+    fails.append("caption says desperate is not uniquely length-entangled, but it is the max")
+
+# ---- §4.4 like-for-like AUC on the non-modal subset
+_v = RB["vtext_like_for_like"]
+chk("vint AUC on non-modal subset", 0.890, _v["auc_vint_nonmodal"])
+chk("gap on the same trials", 0.054, _v["gap_on_same_trials"], tol=1e-3)
+chk("gap as pooled AUCs suggest", 0.190, _v["gap_as_reported"], tol=1e-3)
+chk("non-modal n (robustness run)", 258, _v["n_nonmodal"], tol=0)
+
+# ---- §4.5 the interval the exclusion claim rests on
+_ci = RB["causal_interval"]["emotion_vs_random"]
+chk("emotion vs random RR", 1.15, _ci["rr"], tol=5e-3)
+chk("RR CI low", 0.54, _ci["ci95"][0], tol=5e-3)
+chk("RR CI high", 2.46, _ci["ci95"][1], tol=5e-3)
+checks += 1
+if not _ci["ci95"][1] < 14:
+    fails.append("paper says 14x is outside the interval; it is not")
+# the paper says 14x is unattainable from an 11.7% base rate
+checks += 1
+if 14 * (J["causal"]["baseline"][0] / J["causal"]["baseline"][1]) <= 1.0:
+    fails.append("paper says 14x is unattainable from our baseline rate; it is attainable")
+
 # the intro tally must match Table 1's verdict column
 checks += 1
 _tab = TEX.split(r"\label{tab:summary}")[0].split(r"\midrule")[-1]
