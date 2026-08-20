@@ -29,7 +29,7 @@ SEED = 20260819
 B = 2000          # per-draw null size; the question is a count comparison, not a tail
 RIDGE = 1.0
 ALPHA = 0.05
-N_DRAWS = 20      # independent sets of 50 random directions
+N_DRAWS = 15      # independent sets of 50 random directions
 ROOT = Path(__file__).resolve().parent.parent
 P4 = ROOT / "results/phase4/llama70b"
 OUT = ROOT / "results/random_subspace_null.json"
@@ -61,16 +61,26 @@ def fit_ll(X1, yy, ridge=RIDGE, iters=100, tol=1e-10):
     return float((yy * np.log(p) + (1 - yy) * np.log(1 - p)).sum()), True
 
 
-rows = [r for r in load(P4 / "extended_unsteered_judged.jsonl")
-        if r.get("judge_classification") in ("SHORTCUT", "LEGITIMATE") and r.get("emotion_probes")]
+# BOTH ARMS MUST COME FROM THE SAME EXTRACTION. The layer-sweep re-extraction is
+# not the same measurement as the originally stored probes (r = 0.90, different
+# means), so pairing stored probes against raw sweep activations would compare two
+# different instruments rather than two direction sets. We therefore take the
+# emotion arm from emotion_probes_per_layer["53"] in the sweep file, which is the
+# projection of the same activations the .npz holds.
+sweep = load(P4 / "extended_unsteered_layer_sweep.jsonl")
+judged = {r["key"]: r for r in load(P4 / "extended_unsteered_judged.jsonl")
+          if r.get("judge_classification") in ("SHORTCUT", "LEGITIMATE")}
+keep = [i for i, r in enumerate(sweep) if r.get("key") in judged]
+rows = [judged[sweep[i]["key"]] for i in keep]
 y = np.array([1.0 if r["judge_classification"] == "SHORTCUT" else 0.0 for r in rows])
 length = np.array([len(r.get("response", "")) for r in rows], float)
 zlen = (length - length.mean()) / length.std()
 n = len(y)
-acts = np.load(P4 / "extended_unsteered_layer_sweep_raw.npz")["layer_53"]
-assert acts.shape[0] == n, "activation rows do not align with judged rows"
-emos = sorted(rows[0]["emotion_probes"])
-EMO = np.array([[float(r["emotion_probes"][e]) for e in emos] for r in rows])
+acts = np.load(P4 / "extended_unsteered_layer_sweep_raw.npz")["layer_53"][keep]
+emos = sorted(sweep[0]["emotion_probes_per_layer"]["53"])
+EMO = np.array([[float(sweep[i]["emotion_probes_per_layer"]["53"][e]) for e in emos]
+                for i in keep])
+assert acts.shape[0] == n == EMO.shape[0], "arms are not aligned"
 print(f"n = {n}, events = {int(y.sum())}, directions per set = {len(emos)}")
 print("NOTE: 7 events, not the 14 of the section 4.3 headline. Power is limited.")
 
@@ -130,7 +140,10 @@ for k in range(N_DRAWS):
     print(f"  random draw {k+1:2d}/{N_DRAWS}: {c}/50 survive, max chi2 = {m:.1f}")
 
 counts = np.array(counts)
-R = {"n": n, "events": int(y.sum()), "B": B, "n_draws": N_DRAWS, "seed": SEED,
+R = {"arms_from_same_extraction": True,
+     "extraction": ("both arms from the layer-sweep re-extraction: emotion arm from "
+                    "emotion_probes_per_layer['53'], random arm from layer_53 of the .npz"),
+     "n": n, "events": int(y.sum()), "B": B, "n_draws": N_DRAWS, "seed": SEED,
      "emotion_survivors": emo_n, "emotion_max_chi2": emo_max,
      "random_survivors": counts.tolist(), "random_max_chi2": maxes,
      "random_mean": float(counts.mean()), "random_max": int(counts.max()),

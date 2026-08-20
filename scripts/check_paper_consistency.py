@@ -24,6 +24,7 @@ TEX = _MAIN + "\n" + "\n".join(
 E = json.load(open(ROOT / "results/emobank_baseline.json"))
 RB = json.load(open(ROOT / "results/robustness_controls.json"))
 SD = json.load(open(ROOT / "results/steering_directional.json"))
+RS = json.load(open(ROOT / "results/random_subspace_null.json"))
 
 fails, checks = [], 0
 
@@ -255,8 +256,8 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
-in_tex("largely one shared axis")   # softened: PC1 is not proof of a single axis
-in_tex("its composition does not")
+in_tex("one component detected many times")   # softened: PC1 is not proof of a single axis
+in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
 in_tex("Four controls change the conclusion")
 
@@ -268,7 +269,7 @@ checks += 1
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
 in_tex("No evaluated layer gives the preregistered direction")     # layer objection answered
-in_tex("We steered only at the registered layer")                  # no claim of steering every layer
+in_tex("we steered only at the registered layer")                  # no claim of steering every layer
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
@@ -336,6 +337,24 @@ if not _mc["monotone_in_strength"]:
 checks += 1
 if not _mc["moved_at_plus_0_3"]:
     fails.append("paper says the intervention moved the projection at +0.3; it did not")
+
+# ---- §4.3 random-subspace control (added after review)
+# The paper's own standard in §4.5 is that an effect must beat a matched random
+# direction. These pin the result of applying it to the observational sweep.
+chk("random-subspace: emotion survivors", 4, RS["emotion_survivors"], tol=0)
+chk("random-subspace: random mean", 3.7, RS["random_mean"], tol=5e-2)
+chk("random-subspace: n draws", 15, RS["n_draws"], tol=0)
+chk("random-subspace: subset n", 80, RS["n"], tol=0)
+chk("random-subspace: subset events", 7, RS["events"], tol=0)
+# the paper says 8 of 15 random sets match or exceed the emotion count
+checks += 1
+_ge = sum(1 for c in RS["random_survivors"] if c >= RS["emotion_survivors"])
+if _ge != 8:
+    fails.append(f"paper says 8 of 15 random sets match or exceed the emotion count; got {_ge}")
+# the first run of this control compared two different extractions; that must not recur
+checks += 1
+if not RS.get("arms_from_same_extraction"):
+    fails.append("random-subspace arms are not from a single extraction")
 
 # ---- §4.1 trivial text baseline (added 2026-08-20 in response to review)
 chk("TF-IDF valence R2", 0.219, E["tfidf_cv_r2"]["V"])

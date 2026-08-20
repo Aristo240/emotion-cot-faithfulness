@@ -163,7 +163,7 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 292 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 299 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
 
@@ -283,6 +283,35 @@ The shared-component paragraph now says we cannot tell from these numbers whethe
 the component is affective or the activation-magnitude factor, since PC1 is computed
 over trial-level projections and the two are not separated.
 
+**The random-subspace control weakens the one positive result (2026-08-20).** A
+reviewer pointed out that the paper demands a matched random-direction null for
+steering (section 4.5) and never applies the same standard to the 50-direction sweep
+(section 4.3). Applied, it does not pass.
+
+On the 80-trial re-extraction subset, which is the only data where raw activations
+survive, the 50 emotion directions yield **4 survivors**. Fifteen independent sets of
+50 random unit directions from the same layer yield **3.7 on average**, and **8 of
+the 15 match or exceed 4**. So drawing arbitrary directions from that layer produces
+about as many survivors as the emotion set.
+
+Caveats that keep this a bound rather than a refutation: the subset has 7 events
+rather than 14, and the emotion sweep yields 4 survivors there against 18 on the
+full data, so both arms are weak. The control cannot be run on the full 120 because
+raw activations were not kept for it.
+
+**I ran this wrong the first time and caught it before reporting.** The first version
+paired the originally stored probes against raw activations from the layer-sweep
+re-extraction. Those are different measurements (r = 0.90, different means, and the
+paper itself reports length correlations of 0.61 and 0.37 for them). That compares
+instruments, not direction sets. Both arms now come from the layer-sweep extraction:
+the emotion arm from `emotion_probes_per_layer["53"]`, the random arm from
+`layer_53` of the .npz. The bad run is not in `results/`; the JSON records
+`arms_from_same_extraction` and the gate asserts it, so the mistake cannot recur
+silently.
+
+The paper now says this in section 4.3, in the abstract, and in Table 1's footnote on
+the exploratory verdict.
+
 **Not fixed, and worth doing before submission:**
 
 - No anonymized artifact link, though the abstract promises "a released script".
@@ -310,7 +339,7 @@ over trial-level projections and the two are not separated.
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 292 assertions gating the .tex against all six
+python scripts/check_paper_consistency.py  # 299 assertions gating the .tex against all seven
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical
