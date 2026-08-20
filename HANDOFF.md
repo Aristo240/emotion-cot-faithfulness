@@ -163,7 +163,7 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 263 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 267 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
 
@@ -222,7 +222,7 @@ reason and now reads "rather than from a subset our judge selected".
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 263 assertions gating the .tex against all five
+python scripts/check_paper_consistency.py  # 267 assertions gating the .tex against all five
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical

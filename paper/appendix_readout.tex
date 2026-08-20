@@ -1,0 +1,25 @@
+\section{The magnitude-removed readout}
+\label{app:readout}
+
+$V_{\text{int}}$ is a scalar projection and therefore scales with activation
+magnitude, which \S\ref{sec:sem} and \S\ref{sec:dirs} both depend on. To separate
+magnitude from direction we normalized each trial's 50-vector to unit length, which
+cancels the shared $\lVert \bar a \rVert$ factor exactly, and repeated the sweep of
+\S\ref{sec:dirs} unchanged in every other respect.
+
+An association remains under this readout. Fifteen of 50 directions are significant
+against $18$ under the scalar readout, and \texttt{desperate} is more clearly null
+($\chi^2 = 0.25$, $p = 1.000$ against $\chi^2 = 3.3$, $p = 0.44$). What is not stable
+is which directions carry the association. Only 8 of the 18 scalar-readout survivors
+are also significant here, and nearly all of those 8 are low-arousal negative. The
+scalar readout adds a positive-valence pole that the direction-only readout does not,
+and the direction-only readout adds high-arousal negative directions that the scalar
+one does not.
+
+Two consequences follow. Whether the surviving axis is described as valence or as
+negative affect depends on a measurement choice, and our preregistration specified
+that choice incorrectly by calling the quantity a cosine similarity. Separately,
+normalization does not remove the length dependence, since
+$\rho(V_{\text{int}}[\text{desperate}], \text{length})$ moves from $0.61$ to $0.66$,
+so activation magnitude and response length are distinct nuisances rather than the
+same one seen twice.

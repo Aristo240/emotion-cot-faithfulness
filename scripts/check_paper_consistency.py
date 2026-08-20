@@ -392,6 +392,7 @@ except Exception as _e:                                    # noqa: BLE001
 # the appendix must actually be included, or it is not in the submission
 in_tex(r"\input{appendix_directions}")
 in_tex(r"\input{appendix_maxt}")
+in_tex(r"\input{appendix_readout}")
 # and it must cover every direction the sweep ran on
 checks += 1
 _napp = (ROOT / "paper/appendix_directions.tex").read_text().count("\\texttt{") - 1

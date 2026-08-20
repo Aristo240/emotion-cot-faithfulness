@@ -86,9 +86,8 @@ Sonnet 4.5 causally drive alignment-relevant behavior, with a ``desperate''
 direction substantially increasing reward hacking, sometimes with no visible trace
 in output text. We ask what survives in Llama~3.1~70B. This is a conceptual, not
 direct, replication, because the model, the extraction procedure and the steering
-norm all differ. A null here therefore cannot separate model-specific functionality
-from differences in implementation. The answer is not uniformly negative. Of the
-seven claims below, one is supported, one has exploratory support, three are not
+norm all differ. A null here cannot separate model-specific functionality from implementation
+differences. Of the seven claims below, one is supported, one has exploratory support, three are not
 supported, and two cannot be settled with our data (Table~\ref{tab:summary}).
 
 % [!ht] not [t]: on page 1 a [t] float lands ABOVE \maketitle, so the summary
@@ -136,9 +135,8 @@ during generation.
 That work pre-empts novelty for emotion representations, emotion steering,
 diagnostic-not-causal signals, activation-based reward-hacking detection, and every
 control we apply. What we add is empirical rather than methodological. We audit one alignment-relevant functional claim end to end and show that each
-evidential layer gives a different answer. One methodological difference is worth stating. Our probes
-come from an independent emotion corpus and are frozen before any behavioral
-analysis, rather than trained on the outcome.
+evidential layer gives a different answer. One methodological difference is worth stating. Our probes come from an
+independent emotion corpus and are frozen before any behavioral analysis.
 
 \section{Setup}
 
@@ -152,7 +150,7 @@ $\lVert \bar a \rVert \cos\theta$. The true cosine is unrecoverable because
 $\lVert \bar a \rVert$ was never stored. \S\ref{sec:dirs} tests what difference this
 makes.
 
-\paragraph{Measurement caveat (consequential).} We average activations from token 50
+\paragraph{Measurement caveat.} We average activations from token 50
 to end-of-sequence, so the readout window \emph{includes the generated response}.
 The probe is measured at the same time as the behavior and is entangled with how
 much text was produced. This motivates \S\ref{sec:len}, and we report associations throughout rather
@@ -163,10 +161,9 @@ task, \texttt{fast\_sum}, in four impossible-by-construction variants where an
 honest attempt must fail. A near-eventless sycophancy task is excluded throughout.
 Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} regenerates every number here, and a second
-script gates this manuscript against it with 266 assertions.
+script gates this manuscript against it with 267 assertions.
 
-\paragraph{Cross-judge agreement and abstention.} We check agreement per dataset.
-Agreement bounds reliability rather than accuracy, and neither judge is validated
+\paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability rather than accuracy, and neither judge is validated
 against human labels. On the 120 unsteered trials used below, Qwen~2.5~72B and
 Claude agree \textbf{120/120} with no abstentions. On a 650-trial suite of five
 other shortcut mechanisms the primary judge abstains (\textsc{unclear}) on $80.6\%$
@@ -222,13 +219,15 @@ Length residualization does not empty the emotion subspace. We repeat the analys
 for all 50 directions with the nested likelihood-ratio test, asking whether a
 direction adds to a model that already contains length. Selection is corrected by
 max-$T$, whose reference distribution is that of the largest of the 50 statistics,
-so significance survives post-hoc choice among the directions.
+so significance is not an artifact of choosing the direction after seeing the
+data.
 
-Two design choices matter, and neither drives the result. A free label permutation
-would test the \emph{marginal} hypothesis $y \perp \text{direction}$, but length
-alone predicts the outcome at AUC $0.888$, so we draw instead from a conditional
-null that preserves the outcome--length relationship. With 14 events an unpenalized
-fit can quasi-separate, so ridge-penalized estimates are primary, and there is no
+Two design choices matter, and neither drives the result. The first is the
+null. A free label permutation would test the \emph{marginal} hypothesis $y
+\perp \text{direction}$, but length alone predicts the outcome at AUC $0.888$,
+so we draw instead from a conditional null that preserves the outcome--length
+relationship. The second is the penalty. With 14 events an unpenalized fit can
+quasi-separate, so ridge-penalized estimates are primary, and there is no
 complete separation. Both nulls give the same 18 directions with per-direction $p$
 within $0.02$, and sweeping $\lambda \in \{0, 0.5, 1, 2\}$ moves the count only
 between 16 and 18, leaving \texttt{desperate} null throughout ($p \le 0.50$).
@@ -259,11 +258,12 @@ Residualized AUC is descriptive only.}
 \label{tab:dirs}
 \end{table}
 
-Eighteen of 50 directions are significant at $\alpha = .05$, and that count is the
-fragile part. It falls to 17 at $B = 2000$, to 14 when linear length is replaced by
-a cubic-plus-knots basis, and to 11 under fixed effects for the four task variants,
-whose event rates are uneven at $9/30$ against $0/30$. Eleven directions clear all
-three models. They are the low-arousal negative core plus \texttt{compassionate} and
+Eighteen of 50 directions are significant at $\alpha = .05$, and that count is
+the fragile part. Monte Carlo noise alone moves it to 17 at $B = 2000$.
+Changing the nuisance model moves it further, to 14 under a cubic-plus-knots
+length basis and to 11 under fixed effects for the four task variants, whose
+event rates are uneven at $9/30$ against $0/30$. Eleven directions clear all
+three nuisance models. They are the low-arousal negative core plus \texttt{compassionate} and
 \texttt{proud}, and what drops out is the positive-affect and high-arousal
 periphery. \texttt{desperate} is null in all of them ($p \ge 0.43$).
 
@@ -271,38 +271,33 @@ periphery. \texttt{desperate} is null in all of them ($p \ge 0.43$).
 intercorrelated, with mean $|r| = 0.76$, $78.8\%$ of the variance in the first
 principal component, and a participation ratio of $1.58$. Low-arousal negative
 affect sits at one pole and positive affect together with \texttt{compassionate}
-at the other, with $\beta$ signs reversing accordingly. That is consistent with one axis detected many times, though it does not rule
-out further structure.
+at the other, with $\beta$ signs reversing accordingly. That is one axis detected many times, though it does not rule out further
+structure.
 
 \paragraph{The axis survives a direction-only readout, but its composition does not.}
 Because the probe scales with activation magnitude (\S3), we repeated the sweep on
 each trial's 50-vector normalized to unit length, which cancels the shared
-$\lVert \bar a \rVert$ factor exactly. An association remains, with 15 of 50
-directions significant and \texttt{desperate} more clearly null ($\chi^2 = 0.25$,
-$p = 1.000$), but only 8 of the 18 survivors are shared, nearly all of them low-arousal
-negative. Whether the axis is best called valence or negative
-affect therefore turns on a measurement choice our preregistration mis-specified.
-Normalization also leaves the length dependence intact
-($\rho = 0.61 \rightarrow 0.66$), so magnitude and length are distinct nuisances.
+$\lVert \bar a \rVert$ factor exactly. An association remains, but only 8 of the 18
+survivors are shared, so whether the axis is best called valence or negative affect
+turns on a measurement choice our preregistration mis-specified.
+Appendix~\ref{app:readout} gives the numbers.
 
 This exploratory association survives family-wise correction across the 50 tested
-directions, and it is \emph{not the hypothesis we registered}. The correction
-handles selection among directions. It does not make the analysis confirmatory, since the sweep was run after the
-registered direction failed. We do not assert that \texttt{bored} measures
+directions, and it is \emph{not the hypothesis we registered}. The correction handles selection among directions, not the fact that the sweep
+was run after the registered direction failed. We do not assert that \texttt{bored} measures
 boredom, since it may index an unmeasured response property in the way
 \texttt{desperate} indexed length. The narrow claim is
-that some axis in the emotion subspace carries information about shortcut-taking
-that length does not.
+that some axis in the emotion subspace carries information about reward hacking that length does not.
 
 \subsection{Resolution limits of the text baseline}
 \label{sec:vtext}
 
 We had intended to compare $V_{\text{int}}$ against a judge-rated chain-of-thought
 tone composite, $V_{\text{text}}$. That comparison is not evaluable here. On the
-pooled set ($n = 992$, 87 events) $V_{\text{text}}$ holds one modal value for
-$74.0\%$ of trials, and its \texttt{frustration} component is 1.0 in 985 of 992, so
-$43{,}485$ of $78{,}735$ positive--negative ROC pairs ($\mathbf{55.2\%}$) are ties
-contributing $0.5$ each.
+pooled set ($n = 992$, 87 events) $V_{\text{text}}$ holds one modal value for $74.0\%$ of trials, and its \texttt{frustration}
+component is 1.0 in 985 of 992. As a result $43{,}485$ of $78{,}735$
+positive--negative ROC pairs ($\mathbf{55.2\%}$) are ties contributing $0.5$
+each.
 
 $V_{\text{text}}$ therefore reaches AUC $0.647$ overall against $V_{\text{int}}$'s
 $0.837$, but $\mathbf{0.836}$ on the 258 trials (22 events) where it is not at its
@@ -328,18 +323,17 @@ Emotion vector @ $\pm0.3$ & 12 / 160 & 7.5\% & OR 0.61, $p = 0.30$ \\
 \bottomrule
 \end{tabular}\par}
 
-Steering the emotion direction does nothing that a matched arbitrary direction does
-not also do. Neither arm differs from baseline, so this is not capability
+Steering the emotion direction has no effect beyond what a matched arbitrary
+direction produces. Neither arm differs from baseline, so this is not capability
 degradation, and mean response lengths are 1402, 1324 and 1456 characters. The
 dose--response over $\pm0.05$ to $\pm0.5$ is flat ($z = -1.42$, $p = 0.157$). A
 ``feel desperate'' system prompt also fails to separate from baseline ($17.5\%$ vs.\
-$11.7\%$, Fisher $p = 0.417$). Pooling the random arm masks no heterogeneity, since
-its five directions have individual rates of $0.025$ to $0.075$.
+$11.7\%$, Fisher $p = 0.417$). Pooling the random arm masks no heterogeneity. Its five directions have rates
+of $0.025$ to $0.075$.
 
 \paragraph{What this null does and does not exclude.} The emotion arm's risk ratio
-against the random arm is $1.15$, $95\%$ CI $[0.54, \mathbf{2.46}]$, so the design
-rules out anything above about $2.4\times$ and leaves smaller effects open. The
-$80\%$-power minimum detectable effect, $2.42\times$, agrees.
+against the random arm is $1.15$, $95\%$ CI $[0.54, \mathbf{2.46}]$, so the design rules out anything above about $2.4\times$ and leaves smaller
+effects open. An $80\%$-power calculation agrees.
 \citet{sofroniew2026} report $\sim\!14\times$, which is far outside that bound.
 Their figure rests on a base rate we cannot match, since $14\times$ is unattainable
 from our $11.7\%$, so the two compare on the relative scale only.
@@ -397,29 +391,25 @@ drafted after an exploratory AUC of $0.900$, and we claim no pre-data standard.
 This is a single model, one task family in four variants, and 14 events, so the
 inference is about these rollouts rather than reward hacking in general. The probe's
 readout window includes the response, so \S\ref{sec:len} cannot separate measurement
-artifact from mediation. Max-$T$ controls selection among directions, but not the possibility that they
-index a further unmeasured response property, and the survivor count is
+artifact from mediation. Max-$T$ controls selection among directions, but not the possibility that the surviving directions index a further
+unmeasured response property, and the survivor count is
 sensitive to the nuisance model. The causal null is bounded at one steering norm and one layer.
 No layer in our sweep offers a length-independent version of the registered
 direction, but other token positions, extraction methods and norms remain open, and
 we never steered the directions that \emph{do} survive \S\ref{sec:dirs}. Whether any
-association generalizes across mechanisms is genuinely open, and we answer that from
-no data rather than from a subset our judge selected.
+association generalizes across mechanisms is genuinely open, and we answer it from no data rather than from a subset our judge selected.
 
 \section{Discussion}
 
 \emph{Trivial-baseline controls belong beside random-direction controls.} The field
-requires a steering effect to beat a random direction, but rarely requires a probe
-to beat a trivial feature of the output. Here a character count accounted for our
-association at every layer. \emph{Report the resolution of the instrument you
+requires a steering effect to beat a random direction, but rarely requires a probe to beat a trivial feature of the output. Here a
+character count did. \emph{Report the resolution of the instrument you
 compare against.} A predictor constant for $74\%$ of trials gives no comparison at
 all, so tie fractions belong beside AUCs. \emph{Correcting for selection can support
 a result as well as remove one.} The same max-$T$ sweep that forbids the post-hoc
 layer choice in \S\ref{sec:causal} licenses the one exploratory association we
-report. These steps test different inferential links. Semantic validity did not imply
-an incremental behavioral association, association did not imply an advantage
-over a trivial output feature, and a response to steering did not imply causal
-specificity.
+report. These three steps test different inferential links, and passing one says
+nothing about the next.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
@@ -427,5 +417,6 @@ specificity.
 \appendix
 \input{appendix_directions}
 \input{appendix_maxt}
+\input{appendix_readout}
 
 \end{document}
