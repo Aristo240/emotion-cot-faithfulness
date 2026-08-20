@@ -1,441 +1,255 @@
-# Handoff — 2026-08-20 (length resolved; review round applied)
+# Handoff — 2026-08-20, end of day
 
 Everything below is committed and pushed to `github.com/Aristo240/emotion-cot-faithfulness`
 (`main`). Working tree clean.
 
----
-
-## 1. Where this stands in one paragraph
-
-The project was reframed from "emotion probes predict reward hacking and steering
-works" into a **validity audit** of Sofroniew et al.'s causal emotion→reward-hacking
-claim, targeting the **Interpretability as a Science** workshop at NeurIPS 2026
-(Sydney). Every headline number in the April README turned out not to survive the
-controls that were run in April–May, and several claims added in early August did
-not survive controls added later the same day. The paper now reports what does
-survive, what does not, and which control killed which claim. It is scientifically
-finished, and as of 2026-08-20 it also **fits the 5-page limit** (§2). What remains
-is mechanical: the official style file, and submitting.
+**Deadline: 2026-08-28 AoE, seven days away.** Non-archival, 5-page short paper,
+OpenReview at `NeurIPS.cc/2026/Workshop/InterpScience`.
 
 ---
 
-## 2. Length: resolved
+## 1. State in one paragraph
 
-**The paper now fits.** Body ends inside page 5 with about two lines to spare;
-references start on page 5 and run to page 7. No overfull boxes.
-
-How this was measured, because the estimate in the previous handoff was wrong in
-the reader's favour and then wrong in the other direction:
-
-- There is still no `pdflatex` here. Use the tectonic binary:
-  `/home/gamir/naamarozen/bin/tectonic -X compile interpscience_short.tex`.
-- `NeurIPS2026/Styles.zip` is **404** at media.neurips.cc — not published yet.
-  Measurement used `neurips_2025.sty` (from `NeurIPS2025/Styles.zip`) as the proxy;
-  the geometry has been stable for years.
-- The previous handoff guessed ~5.6pp and said the NeurIPS style "is more compact
-  than the `article` class currently in the preamble, so it may already fit."
-  **That is backwards.** NeurIPS is 5.5in x 9in against the current article +
-  1in margins at 6.5in x ~8.6in — about 11% *less* area per page. The as-committed
-  `article` build always looks about a page shorter than the submission will be,
-  so **never judge length from it**.
-- Starting point was **6.0 pages of body** under the NeurIPS geometry. The cut took
-  the body from 3119 to 2392 words (-23%) plus layout work.
-
-**What was cut**, so nothing gets restored by accident:
-
-- Related work: two paragraphs merged into one. Every citation key was kept, so the
-  assertion count is unchanged.
-- The Conclusion was removed; its content is the Discussion's closing sentence.
-  Limitations now precedes Discussion, so the paper ends on the takeaway.
-- The Discussion's three lessons became one paragraph with italic run-in leads.
-- Two inline tables (the section 4.2 AUC pair, the section 4.4 V_text rows) became prose.
-- The layer-sweep table dropped layers 52 and 65; the "late layers form a correlated
-  block" claim is now stated without naming them.
-- Section 4.3's null-design and ridge paragraphs merged into one "two design choices"
-  paragraph. The stratified-permutation aside is gone.
-- The section 4.5 early-layer geometry paragraph lost its own header and shrank to
-  three sentences.
-- Table 1 was rewritten to fit the 5.5in text block — it was **110pt overfull** under
-  the NeurIPS geometry and nobody had ever seen it. It is now `\scriptsize` with
-  `\tabcolsep` 4pt and shorter cells, and the row-3 verdict moved to a dagger
-  footnote. The three verdict counts (2 / 3 / 2) that the gate checks are unchanged.
-- All four data tables are now `\scriptsize`/`\footnotesize` and the inline ones no
-  longer use `center` (which added ~20pt of skip each).
-- `\setlength{\parskip}{2pt}` was removed from the preamble; NeurIPS templates set
-  their own.
-
-**Nothing scientific was weakened.** The gate still passes at 209/209, every verdict
-in section 4 is unchanged, and the section 4.5 power statement and both numbered tables are
-intact. Two things were *improved* while cutting: the residualized-AUC interval in
-section 4.2 is now explicitly labelled "a descriptive interval rather than a test" (this
-closes the open item that used to be section 7), and Table 1's last row says
-"Generalizes across mechanisms", matching section 4.6 and the Limitations instead of
-saying "tasks".
-
-**The official template is now in, and the length constraint was looser than we
-thought (2026-08-20).** Two things the earlier handoff got wrong:
-
-- `neurips_2026.sty` **does** exist. It is not at `Styles.zip`; the CFP's "Paper
-  template" link points at
-  `https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip`.
-  Its geometry is identical to 2025 (5.5in x 9in), so every measurement taken
-  against the proxy held. The file is committed at `paper/neurips_2026.sty` and the
-  preamble now uses `\usepackage[dblblindworkshop]{neurips_2026}` with
-  `\workshoptitle{Interpretability as a Science}`.
-- **References AND appendices are excluded from the 5-page limit**
-  (interpscience.github.io/cfp), and appendix length is unlimited. The body now ends
-  part way down page 5 with room to spare, so the cuts made under the earlier,
-  tighter budget were partly unnecessary. Restored: the random-arm heterogeneity
-  control, the `frustration` constancy evidence in section 4.4, the rationale for the
-  preregistered >= 6-of-9 rule, and the "distinct nuisances" conclusion in section 4.3.
-
-Two further facts worth having: the CFP and FAQ **never state whether review is
-blind**, so the paper submits anonymously on the principle that anonymous is the safe
-direction to be wrong in -- worth one email to `interpscience@gmail.com` to confirm.
-And in submission mode the footnote always reads "Submitted to 40th Conference ... Do
-not distribute"; the workshop title only appears once `final` is added for
-camera-ready. That is the style file's behaviour, not a bug.
-
-**Appendix A is generated, not written.** `scripts/make_appendix_table.py` emits
-`paper/appendix_directions.tex` -- all 50 directions with chi2, family-wise p,
-rho(len), residualized AUC, and check marks for surviving the flexible-length and
-task-fixed-effect nuisance models. The gate regenerates it and requires
-byte-equality, so a stale or hand-edited appendix fails instead of shipping
-(verified by tampering with it and watching the gate catch it).
-
-**Deadline: 2026-08-28 AoE.** Non-archival, 5pg short paper, double-blind, OpenReview
-(`NeurIPS.cc/2026/Workshop/InterpScience`). The CFP requires **at least one reciprocal
-reviewer from the author pool** — sign up when you submit.
+The paper is a validity audit of Sofroniew et al.'s causal emotion-to-reward-hacking
+claim, conceptually replicated on Llama 3.1 70B. It compiles on the official
+`neurips_2026.sty`, the body ends inside page 5, and 299 assertions gate every
+number against the released scripts. It went through four rounds of external review
+today. Nothing is blocking submission and no GPU work is needed. What remains is
+administrative plus one optional measurement.
 
 ---
 
-## 2b. Review round, 2026-08-20 (after the cut)
+## 2. What to do tomorrow, in priority order
 
-The paper was reviewed as an OpenReview submission. Ten findings; the substantive
-ones are fixed, and two new gated scripts were added to support them.
+1. **Get an anonymized artifact link** (Anonymous GitHub or OSF, about 30 minutes).
+   The abstract and the conclusion both promise "every number regenerated by a
+   released script" and there is no link. This is the largest remaining gap between
+   what the paper claims and what a reviewer can check.
+2. **Email `interpscience@gmail.com` about the review policy.** Neither the CFP nor
+   the FAQ says whether review is blind. The paper submits anonymously via
+   `dblblindworkshop` because that is the safe direction to be wrong in, but that
+   option also suppresses acknowledgements and any visible repo link, which matters
+   for a paper whose selling point is reproducibility.
+3. **Sign up as a reciprocal reviewer** when submitting. The CFP requires at least
+   one author from the submission to serve.
+4. **Optional but cheap: human-label the 14 reward-hacking events** plus a sample of
+   negatives. Criterion validity is the one validity type the paper cannot claim at
+   all. Two LLM judges agree 120/120, which bounds reliability and not accuracy. The
+   stake is bounded: flipping one of the 14 moves `bored` chi2 from 38.7 to 27.4 and
+   the two worst flips together to 18.9, against a family-wise threshold near 12 to
+   14. So this buys credibility, not correctness. Skipping it is defensible, but say
+   so in the Limitations rather than leaving it silent.
+5. **Camera-ready only:** add `final` to the `neurips_2026` option list. The
+   workshop title from `\workshoptitle` appears only in that build. In submission
+   mode the footnote always reads "Submitted to 40th Conference ... Do not
+   distribute". That is the style file's behaviour, not a misconfiguration.
 
-**Fixed, with new numbers:**
+---
 
-- **Section 4.4 was not like-for-like.** It compared V_text on the 258 non-modal
-  trials against V_int on all 992, then concluded "where it varies it matches the
-  probe". On the same 258 trials V_int is **0.890**, not 0.837. The gap is 0.054,
-  not 0.190. The qualitative conclusion (mostly tie compression) survives; the
-  sentence did not.
-- **"The design excludes the claimed magnitude" was a power claim.** Replaced with
-  the interval it needs: emotion vs random RR **1.15, 95% CI [0.54, 2.46]**. The
-  80%-power MDE of 2.42x agrees and is kept alongside.
-- **The ~14x was never commensurable.** 14x is unattainable from our 11.7% baseline,
-  so the two figures cannot be a like-for-like relative risk. The paper now says so
-  and confines the comparison to the relative scale. It was also removed from the
-  abstract.
-- **The survivor count is softer than claimed.** New nuisance-model sweeps, run with
-  the paper's own max-T machinery: **18** under length only, **14** under a
-  cubic-plus-knots length basis, **11** under fixed effects for the four task
-  variants. Eleven clear all three; what drops out is the positive-affect and
-  high-arousal periphery, not the low-arousal negative core. `desperate` is null in
-  every one (p >= 0.43). This is now in the abstract, section 4.3 and the Limitations.
-- **Single task family was never stated.** Every trial is `fast_sum` in four
-  variants, and events are uneven across them (9/30 against 0/30). Stated in
-  section 3 and the Limitations.
-- **Section 4.1 had no baseline**, in a paper arguing that trivial baselines belong
-  beside every control. Unigram TF-IDF on the same sentences and folds gets
-  0.219/0.092/0.063 against the probe's 0.377/0.180/0.154, so the probe clears it.
-- **Table 2 omitted the diagnostic that convicted `desperate`.** It now carries a
-  rho(len) column. Note the honest version: `desperate` is 3rd of 50 by |rho|, not
-  first (`calm` -0.70 and `amused` -0.62 are higher), and a survivor reaches 0.57.
-  The asymmetry is justified by the nested-LR result, not by rho alone.
-- **An absence-of-evidence claim was bolded.** "No layer gives length-independent
-  signal" now says "detectable at n = 80".
-- **The layer table showed 4 of 6 swept layers.** Layers 52 and 65 restored; they
-  were dropped during the page cut and the text still referred to the block.
+## 3. What the paper claims now
 
-**New scripts, both gated:**
+Table 1 uses five distinct verdicts on purpose. Do not collapse them.
 
-```bash
-python scripts/emobank_baseline.py      # ~2 min  -> results/emobank_baseline.json
-python scripts/robustness_controls.py   # ~25 min -> results/robustness_controls.json
-```
-
-`robustness_controls.py` asserts its own length-only sweep reproduces
-`conditional_null.json`'s chi2 exactly (it does, to 0.00e+00), so the three nuisance
-models differ only in the nuisance model. Its p-values differ from
-`conditional_null.py` within Monte Carlo error (0.4307 vs 0.4404 for `desperate`) --
-this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
-bound (p >= 0.43) rather than a point value.
-
-**The gate is now 299 assertions, not 209.** It reads five result files. Re-run it
-after any paper edit; if you add or remove a citation the count changes and the
-manuscript's stated count must change with it.
-
-**Judge validity was mischaracterised (fixed 2026-08-20).** Section 3 used to quote raw
-agreement on the diverse suite, `165/650 = 25.4%`, which reads as the two judges
-*contradicting* each other. They never do:
-
-| Qwen \ Claude | LEGITIMATE | SHORTCUT | UNCLEAR |
-|---|---|---|---|
-| **LEGITIMATE** | 124 | **0** | 0 |
-| **SHORTCUT** | **0** | 2 | 0 |
-| **UNCLEAR** | 293 | 192 | 39 |
-
-Every one of the 485 disagreements is Qwen abstaining while Claude commits; where Qwen
-commits, agreement is **126/126** (95% upper bound on the contradiction rate: 2.4%).
-Three further facts, now in the paper:
-
-- The abstention is **informative**: 99% on trials Claude calls SHORTCUT against 73%
-  elsewhere, Fisher p = 4.2e-19, OR 35.9. The committed subset is therefore a biased
-  sample and the suite cannot be rescued by analysing what remains. That is *why*
-  excluding it is right, and it is a stronger reason than "the judges disagree".
-- It is **mechanism-specific**, not diffuse: 100% / 100% / 100% / 98% abstention on
-  four mechanisms and **5%** on `tight_budget_v1`. The judge labels one of the five.
-  That is what blocks the preregistered rule, which needs >= 6 of 9 variants to
-  produce outcome variance, and it is now section 4.6's stated reason.
-- On the in-distribution 120 there are **zero** abstentions. What fails to transfer is
-  willingness to label, not agreement.
-
-The Limitations line "rather than from unreliable labels" was wrong for the same
-reason and now reads "rather than from a subset our judge selected".
-
-**A second external review found a real defect in section 4.5 (fixed 2026-08-20).**
-The arm reported as "Emotion vector @ +-0.3" pooled **both signs and two different
-emotions**. It was `desperate` and `calm` at +0.30 and -0.30 together, 12/160. The
-claim under audit is directional, so pooling could have cancelled a real effect, and
-`calm` is not the registered direction at all. The per-cell numbers:
-
-| cell | hacks / n | rate |
+| Claim | Control | Verdict |
 |---|---|---|
-| `desperate` @ +0.3 | 1 / 39 | 2.6% |
-| `desperate` @ -0.3 | 4 / 40 | 10.0% |
-| `calm` @ +-0.3 | 7 / 79 | 8.9% |
-| random @ +0.3 | 9 / 100 | 9.0% |
-| random @ -0.3 | 4 / 100 | 4.0% |
-| unsteered | 14 / 120 | 11.7% |
+| Emotion subspace carries affect | EmoBank vs. TF-IDF | Supported (valence) |
+| `desperate` tracks hacking | Response length | **Not identifiable** |
+| *Some* direction tracks it | max-T over 50, length-preserving null | **Exploratory**, and not shown to beat a random subspace |
+| Probe-text gap shows unfaithfulness | ROC tie structure | **Not identifiable** |
+| Steering causes hacking | Matched-norm random null | **No effect detected** (underpowered) |
+| Layer 39 is a better site | Length, per layer | Not supported |
+| Generalizes across mechanisms | Preregistered rule | Inconclusive |
 
-Disaggregating does not overturn the conclusion, it sharpens it. `+0.3 desperate`
-sits at 2.6% against 9.0% for random directions at the same signed strength
-(Fisher p = 0.28) and 11.7% unsteered (p = 0.12), so the point estimate runs
-**opposite** to the registered prediction rather than merely failing to reach it.
-
-**The manipulation check that review asked for exists in the stored data and is
-favourable.** Steering `desperate` shifts the desperate projection monotonically
-with signed strength, -0.656 at -0.5, -0.616 unsteered, -0.580 at +0.3, -0.569 at
-+0.5, with the +0.3 shift distinguishable from unsteered (Mann-Whitney p = 0.025).
-So the intervention moved what it targeted and the behaviour did not follow. That
-converts the paper's most vulnerable null into one of its stronger results, and it
-is now a labelled paragraph in section 4.5. `scripts/steering_directional.py`
-computes all of it and the gate pins it.
-
-The 2.42x bound belongs to the pooled contrast only. The directional interval is
-[0.04, 2.17] on one event in 39 trials and excludes very little, which the paper
-now says. Table 1's verdict no longer carries the 2.42x figure.
-
-**Other review fixes:** Table 1 said "EmoBank, zero-shot" while section 4.1 says
-out-of-fold, which was a contradiction; the ridge sweep bound was written
-`p <= 0.50` when a null claim needs the lower bound `p >= 0.38`; "we read this as a
-measurement artifact" asserted the reading the same paragraph says cannot be
-identified; the Discussion said a character count beat the probe when the paired
-bootstrap says it did not; and section 4.4 claimed the non-modal subset shows "most of
-the gap is tie compression" when that subset is selected on the predictor's own
-values.
-
-**Appendices are now A to D**, all reachable through `\input`, and
-`check_paper_consistency.py` reads them so a gated sentence cannot be hidden by
-moving it out of the body.
-
-**Third review round, 2026-08-20.** Two more real defects in section 4.5, plus a set
-of overclaims.
-
-- **The manipulation check is not circular, and the code proves it.**
-  `src/model.py:435` clears the steering hooks *before* the extraction forward
-  pass, so the projection is read from a clean re-encoding of the generated text
-  rather than from the steered residual stream. Three reviewers independently
-  worried it was mechanically induced by adding the vector. It is not, and the
-  paper now says so explicitly. Scale added too: the shift at +0.3 is **0.48 SD**
-  of the unsteered projection against a **1.12 SD** gap between hacking and
-  non-hacking trials, so it is roughly half the separation that produced AUC
-  0.832.
-- **The steering arms are not balanced across task variants.** The `desperate`
-  arm at +0.3 covers all four `fast_sum` variants. The random arm covers only
-  variants 1 and 2, which are the two *lower*-rate ones (4/30 and 0/30 against
-  9/30 and 1/30). The pooled contrast therefore confounds direction with task
-  mix, in the direction that flatters the random arm. Matching both arms to the
-  shared variants gives 0/20 for `desperate` against 9/100 random, so the sign is
-  unchanged but the power is nearly gone (Fisher p = 0.35). Both are now
-  reported, in Appendix E.
-- The random arm is **five directions, not 100 draws**. Per-direction rates at
-  +0.3 are 2/20, 3/20, 2/20, 0/20, 2/20, homogeneous enough that pooling hides
-  nothing, but the specificity claim is now scoped to these five directions.
-- The **11.7% base rate caps any attainable increase near 8.5x**, below the ~14x
-  the original reports. That is a design-level limit, not a result, and it is now
-  stated as one.
-
-**Overclaims corrected.** The abstract led with the family-wise p = 0.44 for
-`desperate`, which is a correction across 50 post-hoc directions applied to the one
-direction that was registered. It now leads with the direction's own test,
-p = 0.069, and keeps 0.44 as the family-wise figure. "The probe carries nothing
-else", "adds nothing", "does not raise reward hacking", "one axis detected many
-times" and "gives no comparison at all" are all softened to what the analyses
-support. Table 1's semantic row is now "Emotion subspace carries affect" rather than
-"Probes track emotion", and the text-baseline verdict is "Not identifiable" rather
-than "Not evaluable", since the AUC comparison is perfectly evaluable and it is the
-faithfulness reading that is not.
-
-The shared-component paragraph now says we cannot tell from these numbers whether
-the component is affective or the activation-magnitude factor, since PC1 is computed
-over trial-level projections and the two are not separated.
-
-**The random-subspace control weakens the one positive result (2026-08-20).** A
-reviewer pointed out that the paper demands a matched random-direction null for
-steering (section 4.5) and never applies the same standard to the 50-direction sweep
-(section 4.3). Applied, it does not pass.
-
-On the 80-trial re-extraction subset, which is the only data where raw activations
-survive, the 50 emotion directions yield **4 survivors**. Fifteen independent sets of
-50 random unit directions from the same layer yield **3.7 on average**, and **8 of
-the 15 match or exceed 4**. So drawing arbitrary directions from that layer produces
-about as many survivors as the emotion set.
-
-Caveats that keep this a bound rather than a refutation: the subset has 7 events
-rather than 14, and the emotion sweep yields 4 survivors there against 18 on the
-full data, so both arms are weak. The control cannot be run on the full 120 because
-raw activations were not kept for it.
-
-**I ran this wrong the first time and caught it before reporting.** The first version
-paired the originally stored probes against raw activations from the layer-sweep
-re-extraction. Those are different measurements (r = 0.90, different means, and the
-paper itself reports length correlations of 0.61 and 0.37 for them). That compares
-instruments, not direction sets. Both arms now come from the layer-sweep extraction:
-the emotion arm from `emotion_probes_per_layer["53"]`, the random arm from
-`layer_53` of the .npz. The bad run is not in `results/`; the JSON records
-`arms_from_same_extraction` and the gate asserts it, so the mistake cannot recur
-silently.
-
-The paper now says this in section 4.3, in the abstract, and in Table 1's footnote on
-the exploratory verdict.
-
-**Not fixed, and worth doing before submission:**
-
-- No anonymized artifact link, though the abstract promises "a released script".
-- **No human labels exist anywhere in this project**, and none were ever promised --
-  the preregistration does not mention them and `docs/methods.md` documents only
-  LLM-judge reliability. (`gfs/human_val.log` belongs to the other project.) Two
-  subsets are worth labelling: all 14 SHORTCUT plus ~26 LEGITIMATE from the unsteered
-  120 -- the outcome variable for sections 4.2-4.3, where both judges agree 120/120 so
-  agreement proves nothing -- and the 192 diverse-suite trials in the UNCLEAR/SHORTCUT
-  cell, which decide section 4.6. The stake on the first is bounded: flipping one of
-  the 14 events moves `bored` chi2 from 38.7 to 27.4, and the two worst flips together
-  to 18.9, against a family-wise threshold near 12-14. The headline tolerates one or
-  two label errors, so this is a credibility gap rather than a live threat.
-- `bored` reaches raw AUC 0.985 on 14 events. It is not task-identity separability
-  (checked: AUC 0.40-0.68 against variant, 0.97-1.00 within variant) and not
-  nonlinear length, but nobody has read the responses to find out what it *is*.
-- Both steering arms move down relative to baseline (11.7% -> 7.5% and 6.5%). A
-  generic perturbation effect is plausible and unaddressed.
+"Not identifiable" means the association exists but cannot be separated from the
+nuisance variable. "No effect detected" means an underpowered null. Neither is "we
+showed there is nothing there", and the intro tally is one supported, one
+exploratory, one not supported, four unresolved.
 
 ---
 
-## 3. How to verify anything
+## 4. How to verify anything
 
 ```bash
-python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
-python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
-python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 299 assertions gating the .tex against all seven
+python scripts/paper_numbers.py            # every number -> results/paper_numbers.json   (~9 s)
+python scripts/conditional_null.py         # family-wise nulls                            (~8 min)
+python scripts/ridge_sensitivity.py        # penalty sweep                                (~2 min)
+python scripts/emobank_baseline.py         # trivial text baseline                        (~2 min)
+python scripts/robustness_controls.py      # nuisance-model sweeps                        (~25 min)
+python scripts/steering_directional.py     # directional steering + manipulation check    (<1 min)
+python scripts/random_subspace_null.py     # random-subspace control                      (~30 min)
+python scripts/make_appendix_table.py      # regenerates paper/appendix_directions.tex    (<1 s)
+python scripts/check_paper_consistency.py  # 299 assertions gating the .tex against all of it
 ```
 
-All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical
-across repeated runs. **If you edit the paper, re-run the gate.** It checks numbers,
-method names, the intro tally against Table 1's verdict column, its own stated
-assertion count, and that retired keys have not reappeared.
+All analysis-only. No GPU, no network, seeded `20260819`. **Re-run the gate after any
+paper edit.** It also reads the appendices, so moving a checked sentence out of the
+body no longer hides it. If you add or remove a citation the assertion count changes
+and the manuscript's stated count must change with it.
+
+Build with the tectonic binary, since there is no system LaTeX:
+
+```bash
+/home/gamir/naamarozen/bin/tectonic -X compile paper/interpscience_short.tex
+```
+
+Length is measured against the real NeurIPS geometry, 5.5in by 9in. That is about
+11% tighter per page than an article class with 1in margins, so never judge length
+from anything but the committed preamble. References and appendices do not count
+toward the 5 pages, and appendix length is unlimited.
 
 ---
 
-## 4. What the paper claims (do not weaken or strengthen these accidentally)
+## 5. Today's four review rounds, and what each changed
 
-| Claim | Verdict |
-|---|---|
-| Probes track human emotion (EmoBank valence CV R² = 0.377, n = 10,062) | Supported |
-| `desperate` tracks reward hacking | **Not supported** — length artifact (χ²=3.3, family-wise p=0.44) |
-| *Some* direction tracks it | Supported — 18/50 significant, but one axis (PC1 78.8%), not the registered one |
-| Probe beats CoT text | **Not evaluable** — 55.2% of ROC pairs are ties |
-| Steering causes the behavior | **Not supported** at ≥2.42× (original reports ~14×) |
-| Layer 39 is a better site | **Not supported** — same length artifact |
-| Association generalizes across mechanisms | Inconclusive — preregistered rule returns INSUFFICIENT-DATA |
+**Round 1 — length.** The paper had never been compiled. It ran 6.0 pages of body
+against a 5-page limit, and Table 1 was 110pt overfull under the NeurIPS geometry.
+Cut to 5 pages.
+
+**Round 2 — three overstated claims.** Section 4.4 compared V_text on 258 trials
+against V_int on all 992; like-for-like V_int is 0.890, not 0.837. "The design
+excludes the claimed magnitude" was a power calculation doing an interval's job. The
+survivor count is nuisance-model-dependent: 18, then 14 under a flexible length
+basis, then 11 under task fixed effects.
+
+**Round 3 — the steering arm was not what it looked like.** The arm reported as
+"Emotion vector @ +-0.3" pooled **both signs and two emotions**, `desperate` and
+`calm`. The claim under audit is directional, so pooling could have cancelled a real
+effect. Disaggregated, `desperate` at +0.3 is 1/39 = 2.6% against 14/120 = 11.7%
+unsteered, so the point estimate runs opposite to the prediction. The arms are also
+not balanced across task variants: the random arm covers only two of four, and the
+two lower-rate ones. The manipulation check turned out sound for a reason the paper
+had not stated: `src/model.py:435` clears the steering hooks before extraction, so
+the projection is read from a clean re-encoding of the generated text and the shift
+is not the arithmetic of adding the vector.
+
+**Round 4 — the paper's own standard, applied to its own positive result.** See
+section 6.
 
 ---
 
-## 5. Retracted — do not resurrect
+## 6. The random-subspace control, and why it matters most
 
-These appear in old notes, old commits, and `CONTINUATION_NOTES.md`. They are wrong.
+Section 4.5 requires a steering effect to beat a matched random direction. Section
+4.3 never applied the same standard to the 50-direction sweep. Applied, it does not
+pass.
 
-- "CV AUC 0.997 / LOTO 0.992" — pooled AUC inflated by task-identity separability
-- "Steering p = 0.005" — uncorrected over 40+ tests; judged trend is z=−1.42, p=0.157
+On the 80-trial re-extraction subset, the only data where raw activations survive,
+the 50 emotion directions yield **4 survivors**. Fifteen independent sets of 50
+random unit directions from the same layer yield **3.7 on average**, and **8 of the
+15 match or exceed 4**. Arbitrary directions from that layer produce about as many
+survivors as the emotion set, so max-T controls selection within the family without
+showing the family is special.
+
+This bounds rather than refutes. The subset carries 7 events rather than 14, and the
+emotion sweep yields 4 survivors there against 18 on the full data, so both arms are
+weak. The control cannot be run on the full 120 because raw activations were not
+kept for it.
+
+**I ran it wrong the first time.** The first version paired the originally stored
+probes against raw activations from the layer-sweep re-extraction. Those are
+different measurements: they correlate at 0.90 with different means, and the paper
+itself reports length correlations of 0.61 and 0.37 for them. That compares
+instruments, not direction sets, and it reported 6/50 for the emotion arm. Both arms
+now come from the layer-sweep extraction, the emotion arm from
+`emotion_probes_per_layer["53"]` and the random arm from `layer_53` of the `.npz`.
+The bad run never entered `results/`, the JSON records `arms_from_same_extraction`,
+and the gate asserts it.
+
+---
+
+## 7. Retracted — do not resurrect
+
+These appear in old notes, old commits and `CONTINUATION_NOTES.md`. They are wrong.
+
+- "CV AUC 0.997 / LOTO 0.992" — pooled AUC inflated by task-identity separability.
+- "Steering p = 0.005" — uncorrected over 40+ tests; the judged trend is z = -1.42,
+  p = 0.157.
 - "Desperate steering decreases shortcuts, novel finding" — indistinguishable from a
-  random direction (Fisher p = 0.835)
-- "H5 confirmed at 0.955 / 0.901" — the preregistered rule returns INSUFFICIENT-DATA
-- "Faithfulness gap Δ = 0.189" and the "HIDDEN quadrant" — tie artifacts of a
-  near-constant V_text (74% of trials share one value)
-- "Tier 2 holds, AUC 0.832" — the association is accounted for by response length
-- "The conditional null is stricter (42/50)" — Monte Carlo noise at B=2000; at
-  B=10,000 both nulls agree (9/50, max |Δp| = 0.015)
-- Any survivor count of **7** or **12** — those came from a retired residualized-AUC
-  inference removed in `14955e0`. The number is **18**.
+  random direction.
+- "H5 confirmed at 0.955 / 0.901" — the preregistered rule returns INSUFFICIENT-DATA.
+- "Faithfulness gap 0.189" and the "HIDDEN quadrant" — tie artifacts of a
+  near-constant V_text.
+- "Tier 2 holds, AUC 0.832" — not separable from response length.
+- "The conditional null is stricter (42/50)" — Monte Carlo noise at B = 2000.
+- Any survivor count of **7** or **12** — from a retired residualized-AUC inference.
+- **"The emotion arm is 12/160 emotion vectors"** — it is `desperate` and `calm`,
+  both signs pooled. Report by cell.
+- **"The 8.5x ceiling means the design could not test the original effect"** — wrong.
+  A 14x risk ratio is not portable to an 11.7% base rate because it implies a
+  probability above one, but an absolute increase of the size reported, roughly 5% to
+  70%, would have been plainly visible here.
+- **"The emotion subspace beats random directions"** — never shown, and section 6 is
+  evidence against it at the sample size we can test.
 
 ---
 
-## 6. Known limitations, already written into the paper
+## 8. Gotchas
 
-1. **14 events at n=120.** Binding constraint on everything.
-2. The probe's readout window includes the response, so associations are concurrent,
-   never predictive. `compute_emotion_probes` averages tokens 50→end-of-sequence.
-3. The probe is a **scalar projection** (`‖ā‖·cos θ`), *not* a cosine similarity —
-   `docs/preregistration.md` says cosine and is wrong. Disclosed in §3 rather than
-   silently fixed. True cosine is unrecoverable: `‖ā‖` was never stored.
-4. Length residualization is linear; a nonlinear dependence would survive it.
-5. The survivor count is MC-approximate at the α boundary (18 at B=10,000, 17 at
-   B=2,000). The leading directions are stable; the boundary is not.
-6. The surviving axis is real but its **composition is readout-dependent** — only 8
-   of 18 recur under a magnitude-removed readout.
-7. The diverse-mechanism dataset is unusable (Qwen/Claude agree on 165/650 = 25.4%).
-8. `phaseB/` has scripts and no results; never run.
-
----
-
-## 7. Open, non-blocking
-
-- ~~§4.2 / Table 2 residualized-AUC CI could be mistaken for a significance claim.~~
-  Closed 2026-08-20: §4.2 now calls it "a descriptive interval rather than a test"
-  and Table 2's caption says "descriptive only".
-- **`data/phase1/` is not in the repo** and the scratch path baked into the result
-  files (`/specific/scratches/scratch/naamarozen/emotion-cot-faithfulness`) was not
-  reachable from the machine I worked on. If you want to run *any* new GPU
-  experiment, you need those emotion vectors first.
-- **Steering the directions that actually survive** (`bored`, `lonely`, …) is the
-  natural next experiment and is not in this paper. It tests a hypothesis that was
-  never registered, and if it worked you would have a different, larger paper.
-  Explicitly listed as future work.
-
----
-
-## 8. Gotchas for whoever picks this up
-
+- **No `Co-Authored-By: Claude` trailer on commits.** Two commits had to be rewritten
+  and force-pushed today to strip it. Check before committing, not after.
 - **Three classification fields** live in the judged `.jsonl` rows. `classification`
-  is a stale regex heuristic (`unclear` for all 650 diverse rows) — **never use it**.
-  Analysis uses `judge_classification` (Qwen); `claude_classification` is the
-  cross-family check. Existing older scripts are not uniform about this.
-- **Inference for the direction sweep lives only in `results/conditional_null.json`.**
-  `paper_numbers.json` carries `_inference_lives_in` pointing there. Residualized AUC
-  in `paper_numbers.json` is descriptive and has no p-value by design.
-- ~~Outer repo `.gitignore` addition uncommitted.~~ Committed; `gfs` is clean.
-- Two scripts consume different RNG streams, so **p-values across scripts agree only
-  within Monte Carlo error**; the χ² statistics agree exactly (asserted, = 0.0).
+  is a stale regex heuristic and must never be used. Analysis uses
+  `judge_classification` (Qwen); `claude_classification` is the cross-family check.
+- **Trials labelled `UNCLEAR` are dropped**, which is why one steering cell has 39
+  trials rather than 40.
+- **The layer-sweep re-extraction is not the same measurement as the stored probes.**
+  Correlation 0.90, different means, different length correlations. Never mix them in
+  one comparison. This caused the error in section 6.
+- **p-values across scripts agree only within Monte Carlo error** because they consume
+  different RNG streams. The chi2 statistics agree exactly and the gate asserts it.
+  This is why the paper quotes `p >= 0.43` for `desperate` rather than a point value.
+- **Appendices are `\input` files.** The gate reads them, but a reviewer sent only the
+  `.tex` cannot see them. Two reviewers said so today.
+- `data/phase1/` (the 50 emotion vectors) is **not on this machine**, and the scratch
+  path baked into the result files is not mounted. Any GPU experiment needs them, and
+  regenerating them produces a different instrument from the one all 299 gated
+  numbers rest on. This is why no GPU work is scheduled.
+- `phaseB/` has scripts and no results. Never run.
 
 ---
 
-## 9. Honest status on rigor
+## 9. Known limitations, already in the paper
 
-Every round of checking so far has found something — including rounds I expected to
-be formalities. The last three findings were: the instrument was misdescribed in both
-the paper and the preregistration; a "stricter null" claim was Monte Carlo noise; and
-a retired second inference was still shipping numbers that contradicted the paper.
-All are fixed. That is a reason to trust the current numbers more than the previous
-ones, and a reason not to treat them as final.
+1. **14 events at n = 120.** Binding constraint on everything.
+2. Single model, one task family (`fast_sum`) in four variants, with base rates from
+   0/30 to 9/30.
+3. The readout window spans the response, so associations are concurrent and never
+   predictive.
+4. The probe is a scalar projection, not the cosine similarity the preregistration
+   describes. True cosine is unrecoverable.
+5. The survivor count is nuisance-model-sensitive and not shown to be
+   emotion-specific.
+6. The causal null is one layer, one norm, 39 trials, one event.
+7. The analysis plan was written after an exploratory AUC of 0.900 was seen. Stated
+   in Setup at first mention of "registered".
+8. Neither judge is checked against human labels.
+
+---
+
+## 10. Open, not blocking
+
+- **Steering the directions that actually survive** (`bored`, `lonely`) is the
+  natural next experiment and is not in this paper. It tests a hypothesis that was
+  never registered, and it would be a different, larger paper.
+- **A prompt-only or fixed-window readout** would break the length entanglement by
+  construction rather than by regression. Every reviewer asked for it. It needs the
+  phase-1 vectors, which are gone from this machine.
+- **A random 50-dimensional subspace baseline for EmoBank** would establish whether
+  the emotion subspace is special for affect, or whether any residual-stream subspace
+  predicts valence comparably. Same blocker.
+- **No figures.** One panel of raw against length-residualized AUC across all 50
+  directions would carry sections 4.2 and 4.3 faster than the tables do.
+
+---
+
+## 11. Honest status
+
+Every review round today found something, including rounds that looked like
+formalities. Round 4 found that the paper's one positive result does not clear the
+paper's own bar. That is a reason to trust the current numbers more than yesterday's
+and a reason not to treat them as final.
+
+The paper is weaker in findings than it was this morning and better as a paper. What
+it demonstrates is that four routine controls each move the verdict at a different
+link in one mechanistic story, and the sharpest example is now the control that
+undercuts its own positive result.
