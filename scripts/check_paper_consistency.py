@@ -432,6 +432,20 @@ except Exception as _e:                                    # noqa: BLE001
 in_tex(r"\input{appendix_directions}")
 in_tex(r"\input{appendix_maxt}")
 in_tex(r"\input{appendix_readout}")
+in_tex(r"\input{appendix_layers}")
+in_tex(r"\input{appendix_steering}")
+# the manipulation check is only meaningful if it is not mechanically induced
+checks += 1
+if not SD["manipulation_check"].get("measured_on_clean_reencode"):
+    fails.append("paper says the projection is read from a clean re-encoding; the run says otherwise")
+chk("manipulation shift in SD", 0.48, SD["manipulation_check"]["shift_in_sd"]["+0.30"], tol=5e-3)
+chk("natural hack gap in SD", 1.12, SD["manipulation_check"]["natural_hack_gap_sd"], tol=5e-3)
+# the arms are not variant-balanced; the paper must not imply they are
+checks += 1
+if set(SD["arm_balance"]["random_variants"]) == set(SD["arm_balance"]["desperate_variants"]):
+    fails.append("paper says the arms cover different task variants; they now match")
+chk("matched desperate hacks", 0, SD["arm_balance"]["matched"]["desperate_plus"][0], tol=0)
+chk("matched desperate n", 20, SD["arm_balance"]["matched"]["desperate_plus"][1], tol=0)
 # and it must cover every direction the sweep ran on
 checks += 1
 _napp = (ROOT / "paper/appendix_directions.tex").read_text().count("\\texttt{") - 1
@@ -445,7 +459,7 @@ _tab = TEX.split(r"\label{tab:summary}")[0].split(r"\midrule")[-1]
 _rows = [r for r in _tab.split(r"\\") if r.strip() and "bottomrule" not in r]
 _sup = sum("Supported" in r for r in _rows)
 _not = sum("Not supported" in r for r in _rows)
-_oth = sum(("Not evaluable" in r or "Inconclusive" in r) for r in _rows)
+_oth = sum(("Not evaluable" in r or "Not identifiable" in r or "Inconclusive" in r) for r in _rows)
 _exp = sum("Exploratory" in r for r in _rows)
 if not (len(_rows) == 7 and _sup == 1 and _not == 3 and _exp == 1 and _oth == 2):
     fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not, "

@@ -125,5 +125,55 @@ R_["manipulation_check"] = man
 print(f"  monotone in strength: {man['monotone_in_strength']};"
       f" moved at +0.3: {man['moved_at_plus_0_3']}")
 
+# ------------------------------------------------ effect size of the manipulation
+# "Significant" is not the useful question. The useful question is how the
+# steering-induced shift compares with the natural between-trial variation that
+# produced the observed association in the first place.
+U = load(P4 / "extended_unsteered_judged.jsonl") + \
+    [t for t in load(P2 / "task_a_judged.jsonl") if float(t.get("strength", 0)) == 0.0]
+U = [r for r in U if r.get("judge_classification") in LABELS and r.get("emotion_probes")]
+d = np.array([float(r["emotion_probes"]["desperate"]) for r in U])
+y = np.array([r["judge_classification"] == "SHORTCUT" for r in U])
+sd = float(un.std(ddof=1))
+nat = float((d[y].mean() - d[~y].mean()) / d.std(ddof=1))
+man["unsteered_sd"] = sd
+man["shift_in_sd"] = {k: (v["mean"] - un.mean()) / sd for k, v in man["by_strength"].items()}
+man["natural_hack_gap_sd"] = nat
+man["measured_on_clean_reencode"] = True   # src/model.py clears steering hooks first
+print(f"\neffect sizes: unsteered SD {sd:.4f};"
+      f" shift at +0.3 = {man['shift_in_sd']['+0.30']:+.2f} SD;"
+      f" natural hacker/non-hacker gap = {nat:+.2f} SD")
+
+# ------------------------------------------- arm balance over the task variants
+# The random arm does not cover the same variants as the emotion arm, and the
+# variants differ sharply in base rate, so the pooled contrast confounds
+# direction with task mix. Report the coverage and the matched contrast.
+dp_all = [r for r in A if r.get("emotion") == "desperate"
+          and abs(float(r.get("strength", 0)) - 0.30) < 1e-9]
+rp_all = [r for r in R if abs(float(r.get("strength", 0)) - 0.30) < 1e-9]
+cov_d = sorted({r["task_id"] for r in dp_all})
+cov_r = sorted({r["task_id"] for r in rp_all})
+shared = set(cov_d) & set(cov_r)
+def c2(rows): return (sum(r["judge_classification"] == "SHORTCUT" for r in rows), len(rows))
+dm_, rm_ = c2([r for r in dp_all if r["task_id"] in shared]), c2([r for r in rp_all if r["task_id"] in shared])
+um_ = c2([r for r in U if r["task_id"] in shared])
+R_["arm_balance"] = {
+    "desperate_variants": cov_d, "random_variants": cov_r,
+    "shared_variants": sorted(shared),
+    "matched": {"desperate_plus": list(dm_), "random_plus": list(rm_), "unsteered": list(um_),
+                **fisher(dm_, rm_)},
+    "baseline_rate_by_variant": {v: c2([r for r in U if r["task_id"] == v]) for v in
+                                 sorted({r["task_id"] for r in U})},
+}
+print(f"\narm coverage: desperate {cov_d}\n              random    {cov_r}")
+print(f"  matched to {sorted(shared)}: desperate {dm_[0]}/{dm_[1]}, random {rm_[0]}/{rm_[1]}, "
+      f"unsteered {um_[0]}/{um_[1]}, Fisher p={fisher(dm_, rm_)['p']:.3f}")
+
+# per-random-direction rates at +0.3, since the random arm is 5 directions not 100 draws
+R_["random_per_direction_plus"] = {
+    dname: list(c2([r for r in rp_all if r.get("emotion") == dname]))
+    for dname in sorted({r.get("emotion") for r in rp_all})}
+print(f"  per random direction at +0.3: {R_['random_per_direction_plus']}")
+
 OUT.write_text(json.dumps(R_, indent=1, sort_keys=True))
 print(f"\nwrote {OUT.relative_to(ROOT)}")

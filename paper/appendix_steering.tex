@@ -1,0 +1,30 @@
+\section{Steering arms, balance and power}
+\label{app:steering}
+
+\paragraph{The arms are not balanced across task variants.} Base rates differ
+sharply across the four \texttt{fast\_sum} variants, at $4/30$, $0/30$, $9/30$ and
+$1/30$ unsteered. The \emph{desperate} arm at $+0.3$ covers all four. The random arm
+at $+0.3$ covers only variants 1 and 2, which are the two lower-rate ones. The
+pooled contrast therefore confounds the direction being steered with the mix of
+tasks it was steered on, and it does so in the direction that flatters the random
+arm rather than \emph{desperate}.
+
+Restricting both arms to the two shared variants gives $0/20$ for \emph{desperate}
+at $+0.3$ against $9/100$ for random directions and $4/60$ unsteered. The direction
+of the result is unchanged, but with zero events in 20 trials the comparison is
+almost uninformative (Fisher $p = 0.35$). We report both, and we do not claim the
+matched contrast as evidence for anything beyond consistency with the unmatched one.
+
+\paragraph{The random arm is five directions, not 100 draws.} Rollouts are nested
+within five sampled directions, so treating the 100 trials as independent draws
+overstates the precision of the random-direction null. The per-direction rates at
+$+0.3$ are $2/20$, $3/20$, $2/20$, $0/20$ and $2/20$, which is homogeneous enough
+that pooling does not hide a direction behaving like \emph{desperate}. The
+specificity claim should still be read as applying to these five matched directions
+rather than to arbitrary directions in general.
+
+\paragraph{The base rate caps what could have been detected.} Our unsteered rate is
+$11.7\%$, so no multiplicative increase above about $8.5\times$ is attainable in this
+design at all. \citet{sofroniew2026} report ${\sim}14\times$. The elicitation setting
+therefore cannot test an effect of the reported magnitude, only much smaller ones,
+and this is a property of the design rather than a result.

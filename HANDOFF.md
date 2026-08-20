@@ -163,7 +163,7 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 284 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 292 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
 
@@ -241,6 +241,48 @@ values.
 `check_paper_consistency.py` reads them so a gated sentence cannot be hidden by
 moving it out of the body.
 
+**Third review round, 2026-08-20.** Two more real defects in section 4.5, plus a set
+of overclaims.
+
+- **The manipulation check is not circular, and the code proves it.**
+  `src/model.py:435` clears the steering hooks *before* the extraction forward
+  pass, so the projection is read from a clean re-encoding of the generated text
+  rather than from the steered residual stream. Three reviewers independently
+  worried it was mechanically induced by adding the vector. It is not, and the
+  paper now says so explicitly. Scale added too: the shift at +0.3 is **0.48 SD**
+  of the unsteered projection against a **1.12 SD** gap between hacking and
+  non-hacking trials, so it is roughly half the separation that produced AUC
+  0.832.
+- **The steering arms are not balanced across task variants.** The `desperate`
+  arm at +0.3 covers all four `fast_sum` variants. The random arm covers only
+  variants 1 and 2, which are the two *lower*-rate ones (4/30 and 0/30 against
+  9/30 and 1/30). The pooled contrast therefore confounds direction with task
+  mix, in the direction that flatters the random arm. Matching both arms to the
+  shared variants gives 0/20 for `desperate` against 9/100 random, so the sign is
+  unchanged but the power is nearly gone (Fisher p = 0.35). Both are now
+  reported, in Appendix E.
+- The random arm is **five directions, not 100 draws**. Per-direction rates at
+  +0.3 are 2/20, 3/20, 2/20, 0/20, 2/20, homogeneous enough that pooling hides
+  nothing, but the specificity claim is now scoped to these five directions.
+- The **11.7% base rate caps any attainable increase near 8.5x**, below the ~14x
+  the original reports. That is a design-level limit, not a result, and it is now
+  stated as one.
+
+**Overclaims corrected.** The abstract led with the family-wise p = 0.44 for
+`desperate`, which is a correction across 50 post-hoc directions applied to the one
+direction that was registered. It now leads with the direction's own test,
+p = 0.069, and keeps 0.44 as the family-wise figure. "The probe carries nothing
+else", "adds nothing", "does not raise reward hacking", "one axis detected many
+times" and "gives no comparison at all" are all softened to what the analyses
+support. Table 1's semantic row is now "Emotion subspace carries affect" rather than
+"Probes track emotion", and the text-baseline verdict is "Not identifiable" rather
+than "Not evaluable", since the AUC comparison is perfectly evaluable and it is the
+faithfulness reading that is not.
+
+The shared-component paragraph now says we cannot tell from these numbers whether
+the component is affective or the activation-magnitude factor, since PC1 is computed
+over trial-level projections and the two are not separated.
+
 **Not fixed, and worth doing before submission:**
 
 - No anonymized artifact link, though the abstract promises "a released script".
@@ -268,7 +310,7 @@ moving it out of the body.
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 284 assertions gating the .tex against all six
+python scripts/check_paper_consistency.py  # 292 assertions gating the .tex against all six
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical
