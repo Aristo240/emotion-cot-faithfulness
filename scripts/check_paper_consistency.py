@@ -226,7 +226,7 @@ for lay in ("39", "52", "53", "65"):
     checks += 1
     if J["layers"]["per_layer"][lay]["resid_ci_excludes_half"]:
         fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
-in_tex("no layer in our sweep offers a length-independent version")
+in_tex("layer in our sweep offers a length-independent version")
 
 # ---- §4.6b layer profile correlations
 sp = J["layer_profiles"]["spearman"]
@@ -248,7 +248,7 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
-in_tex("a single axis detected many times")
+in_tex("largely one shared axis")   # softened: PC1 is not proof of a single axis
 in_tex("its composition does not")
 in_tex("preregistration describes this quantity as a")
 in_tex("Four controls change the conclusion")
@@ -260,7 +260,8 @@ checks += 1
 
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
-in_tex("No layer in the sweep gives the preregistered direction")  # layer objection answered
+in_tex("No evaluated layer gives the preregistered direction")     # layer objection answered
+in_tex("We steered only at the registered layer")                  # no claim of steering every layer
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
@@ -390,6 +391,7 @@ except Exception as _e:                                    # noqa: BLE001
     fails.append(f"could not regenerate the appendix table: {_e}")
 # the appendix must actually be included, or it is not in the submission
 in_tex(r"\input{appendix_directions}")
+in_tex(r"\input{appendix_maxt}")
 # and it must cover every direction the sweep ran on
 checks += 1
 _napp = (ROOT / "paper/appendix_directions.tex").read_text().count("\\texttt{") - 1
@@ -404,9 +406,14 @@ _rows = [r for r in _tab.split(r"\\") if r.strip() and "bottomrule" not in r]
 _sup = sum("Supported" in r for r in _rows)
 _not = sum("Not supported" in r for r in _rows)
 _oth = sum(("Not evaluable" in r or "Inconclusive" in r) for r in _rows)
-if not (len(_rows) == 7 and _sup == 2 and _not == 3 and _oth == 2):
+_exp = sum("Exploratory" in r for r in _rows)
+if not (len(_rows) == 7 and _sup == 1 and _not == 3 and _exp == 1 and _oth == 2):
     fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not, "
-                 f"{_oth} other) contradict the intro tally of 7/2/3/2")
+                 f"{_exp} exploratory, {_oth} other) contradict the intro tally")
+# the 50-direction sweep is post hoc, so the paper must not call it a supported finding
+checks += 1
+if "selection-corrected finding" in TEX_FLAT:
+    fails.append("the post-hoc 50-direction result is described as a supported finding")
 checks += 1
 if "Permutation max-$T$ over 50" in TEX:
     fails.append("Table 1 still names the free-permutation null, which is not primary")

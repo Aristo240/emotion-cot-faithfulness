@@ -1,0 +1,33 @@
+\section{The max-$T$ resampling procedure}
+\label{app:maxt}
+
+The statistic is the nested likelihood-ratio $\chi^2(1)$ for adding one direction to
+a model that already contains response length. The family is all 50 directions, and
+the family-wise $p$ for a direction is the fraction of null draws whose \emph{maximum}
+statistic over the 50 equals or exceeds the observed value for that direction.
+
+Two nulls are used. The free null permutes the outcome labels, which tests
+$y \perp \text{direction}$ marginally. The conditional null fits
+$\text{logit}(p) = a + b \cdot \text{length}$ by unpenalized maximum likelihood and
+draws $y^* \sim \text{Bernoulli}(\hat p)$, which preserves the outcome--length
+relationship that the statistic conditions on. The generating model is deliberately
+unpenalized, since shrinking it would make the simulated data less length-dependent
+than the observed data and weaken the conditioning. Both use $B = 10{,}000$ draws,
+so the resolution floor is $1/(B+1) \approx 10^{-4}$ and no claim is made below
+$\alpha = .05$.
+
+Four details affect calibration and are all handled the same way in both nulls.
+First, the length-only model and all 50 alternatives are refit inside every draw by
+the same routine used on the observed data, so nothing is held fixed across
+replicates. Second, the ridge penalty is fixed at $\lambda = 1$ before any
+resampling and is never selected from the data, with the intercept left unpenalized.
+Third, a draw whose fits fail to converge is discarded before the maximum is taken
+rather than contributing a truncated statistic, and the number discarded is
+recorded. Fourth, the same seed and draw order are used for both nulls, so the
+comparison between them isolates the null and nothing else.
+
+At $B = 2000$ the conditional null appeared appreciably stricter than the free null.
+At $B = 10{,}000$ the two agree, which is why the earlier impression is reported here
+as Monte Carlo noise rather than a property of the null. The same machinery, with
+only the nuisance model changed, produces the flexible-length and task-fixed-effect
+counts in \S\ref{sec:dirs}.
