@@ -1,7 +1,7 @@
-# Handoff — 2026-08-19 evening
+# Handoff — 2026-08-20 (length resolved)
 
 Everything below is committed and pushed to `github.com/Aristo240/emotion-cot-faithfulness`
-(`main`, HEAD = `14955e0`). Working tree clean.
+(`main`). Working tree clean.
 
 ---
 
@@ -14,35 +14,72 @@ claim, targeting the **Interpretability as a Science** workshop at NeurIPS 2026
 controls that were run in April–May, and several claims added in early August did
 not survive controls added later the same day. The paper now reports what does
 survive, what does not, and which control killed which claim. It is scientifically
-finished. **The only blocking task is length.**
+finished, and as of 2026-08-20 it also **fits the 5-page limit** (§2). What remains
+is mechanical: the official style file, and submitting.
 
 ---
 
-## 2. Tomorrow's first task (blocking)
+## 2. Length: resolved
 
-**Compile the paper and get it under 5 pages.**
+**The paper now fits.** Body ends inside page 5 with about two lines to spare;
+references start on page 5 and run to page 7. No overfull boxes.
 
-```bash
-cd emotion-cot/paper
-pdflatex interpscience_short.tex && bibtex interpscience_short && \
-  pdflatex interpscience_short.tex && pdflatex interpscience_short.tex
-```
+How this was measured, because the estimate in the previous handoff was wrong in
+the reader's favour and then wrong in the other direction:
 
-- There was no `pdflatex` on the machine I was working on, so **the paper has never
-  been compiled**. This is the single largest unknown.
-- My crude estimator (words/650 + 0.16/float) says **~5.6pp against a 5pp limit**.
-  The estimator has maybe ±0.7pp of error and the NeurIPS style file is more compact
-  than the `article` class currently in the preamble, so it may already fit. Do not
-  trim before you have a real page count.
-- If it runs over, trim in this order: (1) the two Related Work paragraphs,
-  (2) §4.6's prose (keep both tables), (3) the Discussion's second paragraph.
-  Do **not** cut Table 1, Table 2, or the §4.5 power statement.
-- To switch to the official template: download `neurips_2026.sty` and replace the
-  preamble block per the comment at the top of the `.tex`. The body needs no changes.
+- There is still no `pdflatex` here. Use the tectonic binary:
+  `/home/gamir/naamarozen/bin/tectonic -X compile interpscience_short.tex`.
+- `NeurIPS2026/Styles.zip` is **404** at media.neurips.cc — not published yet.
+  Measurement used `neurips_2025.sty` (from `NeurIPS2025/Styles.zip`) as the proxy;
+  the geometry has been stable for years.
+- The previous handoff guessed ~5.6pp and said the NeurIPS style "is more compact
+  than the `article` class currently in the preamble, so it may already fit."
+  **That is backwards.** NeurIPS is 5.5in x 9in against the current article +
+  1in margins at 6.5in x ~8.6in — about 11% *less* area per page. The as-committed
+  `article` build always looks about a page shorter than the submission will be,
+  so **never judge length from it**.
+- Starting point was **6.0 pages of body** under the NeurIPS geometry. The cut took
+  the body from 3119 to 2392 words (-23%) plus layout work.
 
-**Deadline: 2026-08-28 AoE.** Nine days. Non-archival, 5pg short paper, double-blind,
-OpenReview (`NeurIPS.cc/2026/Workshop/InterpScience`). Note the CFP requires **at
-least one reciprocal reviewer from the author pool** — sign up when you submit.
+**What was cut**, so nothing gets restored by accident:
+
+- Related work: two paragraphs merged into one. Every citation key was kept, so the
+  assertion count is unchanged.
+- The Conclusion was removed; its content is the Discussion's closing sentence.
+  Limitations now precedes Discussion, so the paper ends on the takeaway.
+- The Discussion's three lessons became one paragraph with italic run-in leads.
+- Two inline tables (the section 4.2 AUC pair, the section 4.4 V_text rows) became prose.
+- The layer-sweep table dropped layers 52 and 65; the "late layers form a correlated
+  block" claim is now stated without naming them.
+- Section 4.3's null-design and ridge paragraphs merged into one "two design choices"
+  paragraph. The stratified-permutation aside is gone.
+- The section 4.5 early-layer geometry paragraph lost its own header and shrank to
+  three sentences.
+- Table 1 was rewritten to fit the 5.5in text block — it was **110pt overfull** under
+  the NeurIPS geometry and nobody had ever seen it. It is now `\scriptsize` with
+  `\tabcolsep` 4pt and shorter cells, and the row-3 verdict moved to a dagger
+  footnote. The three verdict counts (2 / 3 / 2) that the gate checks are unchanged.
+- All four data tables are now `\scriptsize`/`\footnotesize` and the inline ones no
+  longer use `center` (which added ~20pt of skip each).
+- `\setlength{\parskip}{2pt}` was removed from the preamble; NeurIPS templates set
+  their own.
+
+**Nothing scientific was weakened.** The gate still passes at 209/209, every verdict
+in section 4 is unchanged, and the section 4.5 power statement and both numbered tables are
+intact. Two things were *improved* while cutting: the residualized-AUC interval in
+section 4.2 is now explicitly labelled "a descriptive interval rather than a test" (this
+closes the open item that used to be section 7), and Table 1's last row says
+"Generalizes across mechanisms", matching section 4.6 and the Limitations instead of
+saying "tasks".
+
+**Before submitting:** drop in the real `neurips_2026.sty` when it appears, swap the
+preamble per the comment at the top of the `.tex`, and re-measure. There are only
+about two lines of slack, so if the 2026 style differs at all, re-check before adding
+anything back.
+
+**Deadline: 2026-08-28 AoE.** Non-archival, 5pg short paper, double-blind, OpenReview
+(`NeurIPS.cc/2026/Workshop/InterpScience`). The CFP requires **at least one reciprocal
+reviewer from the author pool** — sign up when you submit.
 
 ---
 
@@ -115,9 +152,9 @@ These appear in old notes, old commits, and `CONTINUATION_NOTES.md`. They are wr
 
 ## 7. Open, non-blocking
 
-- **§4.2 / Table 2 quote the `desperate` residualized-AUC CI `[0.412, 0.756]`.**
-  Legitimate as a descriptive interval, but it is the last place a reader could
-  mistake a CI for a significance claim. One clarifying clause would close it.
+- ~~§4.2 / Table 2 residualized-AUC CI could be mistaken for a significance claim.~~
+  Closed 2026-08-20: §4.2 now calls it "a descriptive interval rather than a test"
+  and Table 2's caption says "descriptive only".
 - **`data/phase1/` is not in the repo** and the scratch path baked into the result
   files (`/specific/scratches/scratch/naamarozen/emotion-cot-faithfulness`) was not
   reachable from the machine I worked on. If you want to run *any* new GPU
@@ -138,10 +175,7 @@ These appear in old notes, old commits, and `CONTINUATION_NOTES.md`. They are wr
 - **Inference for the direction sweep lives only in `results/conditional_null.json`.**
   `paper_numbers.json` carries `_inference_lives_in` pointing there. Residualized AUC
   in `paper_numbers.json` is descriptive and has no p-value by design.
-- **Outer repo:** `gfs/.gitignore` has an uncommitted one-line addition
-  (`emotion-cot/`) that keeps the parent repo from swallowing this one as a gitlink.
-  I left it uncommitted because an autopush loop is running on `gfs` and I did not
-  want to interleave with it. Commit it when that loop is idle.
+- ~~Outer repo `.gitignore` addition uncommitted.~~ Committed; `gfs` is clean.
 - Two scripts consume different RNG streams, so **p-values across scripts agree only
   within Monte Carlo error**; the χ² statistics agree exactly (asserted, = 0.0).
 
