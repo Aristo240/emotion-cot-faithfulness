@@ -373,6 +373,30 @@ checks += 1
 if 14 * (J["causal"]["baseline"][0] / J["causal"]["baseline"][1]) <= 1.0:
     fails.append("paper says 14x is unattainable from our baseline rate; it is attainable")
 
+# ---- Appendix A is generated, not written: regenerate and require byte-equality,
+# so a stale or hand-edited appendix fails here instead of shipping.
+checks += 1
+try:
+    import importlib.util as _il
+    _spec = _il.spec_from_file_location("_mkapp", ROOT / "scripts/make_appendix_table.py")
+    _m = _il.module_from_spec(_spec)
+    _spec.loader.exec_module(_m)
+    _want = _m.render()
+    _have = (ROOT / "paper/appendix_directions.tex").read_text()
+    if _want != _have:
+        fails.append("paper/appendix_directions.tex is stale or hand-edited; "
+                     "re-run scripts/make_appendix_table.py")
+except Exception as _e:                                    # noqa: BLE001
+    fails.append(f"could not regenerate the appendix table: {_e}")
+# the appendix must actually be included, or it is not in the submission
+in_tex(r"\input{appendix_directions}")
+# and it must cover every direction the sweep ran on
+checks += 1
+_napp = (ROOT / "paper/appendix_directions.tex").read_text().count("\\texttt{") - 1
+if _napp != J["directions"]["n_directions"]:
+    fails.append(f"appendix lists {_napp} directions; the sweep ran on "
+                 f"{J['directions']['n_directions']}")
+
 # the intro tally must match Table 1's verdict column
 checks += 1
 _tab = TEX.split(r"\label{tab:summary}")[0].split(r"\midrule")[-1]

@@ -62,3 +62,11 @@ docs/
 !docs/judge_prompts.md
 *.tar.gz
 .lambda_instance_id
+
+# build products
+paper/*.pdf
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out

@@ -72,10 +72,36 @@ closes the open item that used to be section 7), and Table 1's last row says
 "Generalizes across mechanisms", matching section 4.6 and the Limitations instead of
 saying "tasks".
 
-**Before submitting:** drop in the real `neurips_2026.sty` when it appears, swap the
-preamble per the comment at the top of the `.tex`, and re-measure. There are only
-about two lines of slack, so if the 2026 style differs at all, re-check before adding
-anything back.
+**The official template is now in, and the length constraint was looser than we
+thought (2026-08-20).** Two things the earlier handoff got wrong:
+
+- `neurips_2026.sty` **does** exist. It is not at `Styles.zip`; the CFP's "Paper
+  template" link points at
+  `https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip`.
+  Its geometry is identical to 2025 (5.5in x 9in), so every measurement taken
+  against the proxy held. The file is committed at `paper/neurips_2026.sty` and the
+  preamble now uses `\usepackage[dblblindworkshop]{neurips_2026}` with
+  `\workshoptitle{Interpretability as a Science}`.
+- **References AND appendices are excluded from the 5-page limit**
+  (interpscience.github.io/cfp), and appendix length is unlimited. The body now ends
+  part way down page 5 with room to spare, so the cuts made under the earlier,
+  tighter budget were partly unnecessary. Restored: the random-arm heterogeneity
+  control, the `frustration` constancy evidence in section 4.4, the rationale for the
+  preregistered >= 6-of-9 rule, and the "distinct nuisances" conclusion in section 4.3.
+
+Two further facts worth having: the CFP and FAQ **never state whether review is
+blind**, so the paper submits anonymously on the principle that anonymous is the safe
+direction to be wrong in -- worth one email to `interpscience@gmail.com` to confirm.
+And in submission mode the footnote always reads "Submitted to 40th Conference ... Do
+not distribute"; the workshop title only appears once `final` is added for
+camera-ready. That is the style file's behaviour, not a bug.
+
+**Appendix A is generated, not written.** `scripts/make_appendix_table.py` emits
+`paper/appendix_directions.tex` -- all 50 directions with chi2, family-wise p,
+rho(len), residualized AUC, and check marks for surviving the flexible-length and
+task-fixed-effect nuisance models. The gate regenerates it and requires
+byte-equality, so a stale or hand-edited appendix fails instead of shipping
+(verified by tampering with it and watching the gate catch it).
 
 **Deadline: 2026-08-28 AoE.** Non-archival, 5pg short paper, double-blind, OpenReview
 (`NeurIPS.cc/2026/Workshop/InterpScience`). The CFP requires **at least one reciprocal
@@ -137,7 +163,7 @@ models differ only in the nuisance model. Its p-values differ from
 this is the same cross-script RNG caveat as section 8, and it is why the paper quotes a
 bound (p >= 0.43) rather than a point value.
 
-**The gate is now 260 assertions, not 209.** It reads five result files. Re-run it
+**The gate is now 263 assertions, not 209.** It reads five result files. Re-run it
 after any paper edit; if you add or remove a citation the count changes and the
 manuscript's stated count must change with it.
 
@@ -196,7 +222,7 @@ reason and now reads "rather than from a subset our judge selected".
 python scripts/paper_numbers.py            # every number → results/paper_numbers.json   (~9 s)
 python scripts/conditional_null.py         # family-wise nulls → results/conditional_null.json (~8 min)
 python scripts/ridge_sensitivity.py        # penalty sweep → results/ridge_sensitivity.json (~2 min)
-python scripts/check_paper_consistency.py  # 260 assertions gating the .tex against all five
+python scripts/check_paper_consistency.py  # 263 assertions gating the .tex against all five
 ```
 
 All analysis-only: no GPU, no network, seeded `20260819`, verified byte-identical
