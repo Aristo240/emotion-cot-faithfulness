@@ -55,23 +55,22 @@
 functional: steering a ``desperate'' direction increases reward hacking. We test
 each claim that interpretation rests on in Llama~3.1~70B. \textbf{Our own
 registered criterion is met, and \texttt{len(response)} meets every one of its
-thresholds too.} That is the paper in one line: five standard controls each break a
-different link in the chain from decodable to associated to causal, including the
-link we registered ourselves.
+thresholds too.} Four further standard controls each break a different link
+in the chain from decodable to associated to causal, and the remedy that would
+repair the first is unavailable in designs like ours.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ but
 correlates with length at $\rho = 0.61$; residualized it falls to $0.592$ and adds
 nothing detectable to a length-only model ($T = 3.3$, resampling $p = 0.060$;
 $p = 0.44$ corrected over all 50 directions).
-(ii)~\emph{Multiplicity.} A family-wise-corrected sweep of all 50 directions leaves
-18 significant, but they are one shared component ($78.8\%$ of variance in PC1) and
-not the one we registered; where we can test it, 50 random directions produce as
-many survivors.
+(ii)~\emph{Multiplicity.} A corrected sweep of all 50 directions leaves 18
+significant, but they are one shared component ($78.8\%$ of variance in PC1) and not
+the one we registered; where we can test it, 50 random directions do as well.
 (iii)~\emph{Specificity.} Steering the registered direction at $+0.3$ produces no
-detected increase, $1/39$ against $14/120$ unsteered, though it does shift the
-targeted projection by $0.48$ SD on a clean re-encoding.
+detected increase, $1/39$ against $14/120$ unsteered on a wide interval, though it
+does shift the targeted projection by $0.48$ SD on a clean re-encoding.
 (iv)~\emph{Instrument resolution.} $55\%$ of the chain-of-thought text baseline's
 ROC pairs are ties, so the pooled $0.19$ AUC gap cannot separate a real
-hidden-versus-text dissociation from an instrument too coarse to register one.
+dissociation from an instrument too coarse to register one.
 (v)~\emph{Identifiability of the fix.} The pre-generation readout that would settle
 (i) cannot be evaluated in an elicitation design that samples many rollouts from few
 prompts. Every number comes from a released script.
@@ -115,7 +114,7 @@ Layer 39 is a better site & Length, per layer & Not supported &
 \ref{sec:causal} \\
 Registered rule licenses the claim & Same rule on \texttt{len(response)} & Met, uninformative$^\ddagger$ &
 \ref{sec:prereg} \\
-Generalizes across mechanisms & Preregistered rule & Untested & \ref{sec:prereg} \\
+Generalizes across mechanisms & Registered rule & Untested & \ref{sec:prereg} \\
 \bottomrule
 \end{tabular}
 \caption{Each control breaks the claim at a different evidential layer, and the verdicts are deliberately distinct. \emph{Not identifiable} means the
@@ -181,7 +180,7 @@ is \emph{not identifiable in this design}: the activation is a function of the
 prompt alone, so across four prompts it takes four values, constant within prompt.
 Any suite sampling many rollouts from few prompts inherits this and cannot test a
 pre-action probe at all \textemdash{} the tie degeneracy of \S\ref{sec:vtext},
-reappearing in the experiment a reviewer would most want.
+reappearing in the one experiment that would otherwise settle \S\ref{sec:len}.
 
 \paragraph{Registration, behavior and labels.} Our analysis plan was written after
 an exploratory AUC of $0.900$, so ``registered'' below marks planned rather than
@@ -194,7 +193,7 @@ generations. Bootstraps are stratified on prompt to match the design, so every
 interval below is conditional on these four prompts and says nothing about
 variation across others. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} regenerates every number here, and a second
-script gates this manuscript against it with 396 assertions.
+script gates this manuscript against it with 398 assertions.
 
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability, not
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
@@ -224,11 +223,11 @@ by $+0.074$, $+0.083$ and $+0.087$ paired across folds and positive in every fol
 (Appendix~\ref{app:extract}), supporting construct validity for an affect-related
 axis but not the label on any individual vector.
 
-\subsection{The preregistered association is not separable from response
+\subsection{The registered association is not separable from response
 length}
 \label{sec:len}
 
-On unsteered trials ($n = 120$, 14 events) the preregistered predictor performs
+On unsteered trials ($n = 120$, 14 events) the registered predictor performs
 well, and so does character count. $V_{\text{int}}$[desperate] reaches AUC
 $\mathbf{0.832}$ (bootstrap 95\% CI $[0.742, 0.911]$) and \texttt{len(response)}, in
 characters, reaches $\mathbf{0.888}$ $[0.781, 0.968]$.
@@ -245,7 +244,7 @@ response, length changes which activations enter the average and with what
 weight, a direct route for length-associated features to reach the probe that
 would produce this pattern with no emotional content at all. Length could instead
 mediate a genuine effect, in which case residualizing over-adjusts; this design
-cannot separate the two. The preregistered association is not identifiable
+cannot separate the two. The registered association is not identifiable
 independently of response length.
 
 \subsection{A corrected sweep over all 50 directions}
@@ -274,7 +273,7 @@ Direction & $T$ & $\beta$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC \\
 \texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4404} & $+0.61$ & 0.592 \\
 \bottomrule
 \end{tabular}
-\caption{Unsteered trials ($n = 120$, 14 events). Three of the 18 survivors are shown plus the preregistered direction ($^*$),
+\caption{Unsteered trials ($n = 120$, 14 events). Three of the 18 survivors are shown plus the registered direction ($^*$),
 and all 50 are in Appendix~\ref{app:dirs}
 with their survival under each nuisance model. $p$ is family-wise under the
 conditional null ($B = 10{,}000$, floor $0.0001$). $\rho$(len) is the Spearman
@@ -377,13 +376,13 @@ $11.7\%$ base rate, though an increase of that absolute size would have shown.
 that we picked the wrong site, and our sweep appeared to supply it. Raw AUC for $V_{\text{int}}$[desperate] peaks
 at layer 39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$
 at the steered layer. Applying \S\ref{sec:len}'s control removes every layer's
-advantage. \textbf{No evaluated layer gives the preregistered direction
+advantage. \textbf{No evaluated layer gives the registered direction
 length-independent signal detectable at $n = 80$}, so we have no observational
 reason to move the intervention. Steering at a post-hoc site chosen on a confounded
 statistic is the failure mode \citet{wu2026steerable} describe, and we steered only
 at the registered layer (Appendix~\ref{app:layers}).
 
-\subsection{The preregistered criterion is met, and a character count meets it too}
+\subsection{The registered criterion is met, and a character count meets it too}
 \label{sec:prereg}
 
 The registration makes the leave-one-task-out (LOTO) mean load-bearing and requires

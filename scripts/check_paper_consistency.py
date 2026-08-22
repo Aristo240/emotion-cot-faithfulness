@@ -301,7 +301,7 @@ in_tex("better described as one shared axis")   # softened: PC1 is not proof of 
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
 in_tex("meets every one of its\nthresholds too")
-in_tex("break a\ndifferent link in the chain")
+in_tex("each break a different\nlink in the chain")
 in_tex("meets every one of its thresholds too")
 
 # ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
@@ -425,7 +425,7 @@ if "raw AUC" not in TEX_FLAT:
 
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
-in_tex("No evaluated layer gives the preregistered direction")     # layer objection answered
+in_tex("No evaluated layer gives the registered direction")     # layer objection answered
 in_tex("we steered only at the registered layer")                  # no claim of steering every layer
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("the position \\citet{sofroniew2026} found")   # token-position deviation stated
@@ -675,11 +675,28 @@ for key in set(re.findall(r"\\cite[tp]?\{([^}]*)\}", TEX)):
         if f"{{{k}," not in bib:
             fails.append(f"citation {k!r} not in refs.bib")
 
+# section 3 defines "registered" as planned-not-pre-data; using "preregistered"
+# for a timing claim contradicts that disclosure
+checks += 1
+_pre = re.findall(r"[Pp]reregistrat\w+|[Pp]reregistered", _MAIN)
+_doc = _MAIN.count("Our preregistration")
+if len(_pre) > _doc:
+    fails.append(f"{len(_pre) - _doc} timing claim(s) still say 'preregistered'; "
+                 f"section 3 defines the term as 'registered'")
+
+# the abstract's control count must match the numbered items it lists
+checks += 1
+_n_items = len(re.findall(r"\((?:i{1,3}|iv|v)\)~\\emph", _MAIN))
+if "Four further standard controls" in TEX_FLAT and _n_items != 5:
+    fails.append(f"abstract promises four controls plus the opening result, "
+                 f"but lists {_n_items} numbered items")
+
 _m = re.search(r"with (\d+) assertions", TEX)
 if not _m:
     fails.append("manuscript no longer states an assertion count")
 elif int(_m.group(1)) != checks:
     fails.append(f"manuscript says {_m.group(1)} assertions; this run made {checks}")
+
 
 print(f"ran {checks} checks against results/paper_numbers.json")
 if fails:
