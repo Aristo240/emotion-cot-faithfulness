@@ -202,7 +202,7 @@ in_tex("The pool is $96\\%$ steered")
 in_tex("not identifiable in this design")
 in_tex("cannot test a pre-action probe at all")
 in_tex("constant within\nprompt")
-in_tex("The full dose--response grid")
+in_tex("The coarse dose--response grid")
 in_tex("leave-one-task-out (LOTO)")
 checks += 1
 if "LOGO" in TEX_FLAT:
@@ -275,7 +275,7 @@ for lay in ("39", "52", "53", "65"):
     checks += 1
     if J["layers"]["per_layer"][lay]["resid_ci_excludes_half"]:
         fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
-in_tex("we never steered the surviving directions")
+in_tex("we never steered the survivors")
 
 # ---- §4.6b layer profile correlations
 sp = J["layer_profiles"]["spearman"]
@@ -301,7 +301,7 @@ in_tex("better described as one shared axis")   # softened: PC1 is not proof of 
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
 in_tex("meets every one of its\nthresholds too")
-in_tex("each break a different\nlink in the chain")
+in_tex("semantic validity, association, selection, and intervention")
 in_tex("meets every one of its thresholds too")
 
 # ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
@@ -332,7 +332,7 @@ checks += 1
 if not _lc["logo_mean_auc"] > _mg["logo_mean_auc"]:
     fails.append("paper says the character count clears the bar by MORE than the probe")
 in_tex("The registered rule\nis met")
-in_tex("\\texttt{len(response)} \\emph{also} passes every threshold")
+in_tex("\\texttt{len(response)} \\emph{also} passes all three")
 in_tex("We do not claim the count beats the probe")
 in_tex("Neither reading supports")
 
@@ -358,7 +358,21 @@ chk("reported CI is the prompt arm (lo)", J["association"]["ci_desperate"][0],
     BD["desperate"]["prompt"]["lo"])
 chk("reported CI is the prompt arm (hi)", J["association"]["ci_desperate"][1],
     BD["desperate"]["prompt"]["hi"])
-in_tex("No endpoint moves by more than $0.006$")
+in_tex("No endpoint moves\nby as much as $0.01$")
+# the stated endpoint bound must actually cover the printed endpoints
+checks += 1
+_bd = BD["delta_length_minus_desperate"]
+_shift = max(abs(_bd["prompt"][k] - _bd["outcome"][k]) for k in ("lo", "hi"))
+if _shift >= 0.01:
+    fails.append(f"paired-difference endpoints move {_shift:.4f}, at least the 0.01 the paper claims they stay under")
+# the random arm sits on the LOWER-rate variants, so the imbalance favours desperate
+checks += 1
+_ab = SD["arm_balance"]["baseline_rate_by_variant"]
+_sh = SD["arm_balance"]["shared_variants"]
+_r = sum(_ab[k][0] for k in _sh) / sum(_ab[k][1] for k in _sh)
+_a = sum(v[0] for v in _ab.values()) / sum(v[1] for v in _ab.values())
+if not _r < _a:
+    fails.append("appendix says the task mix favours desperate; the rates disagree")
 in_tex("within each prompt stratum")
 in_tex("we do not label $T$ a")
 in_tex("does not validate the labels")

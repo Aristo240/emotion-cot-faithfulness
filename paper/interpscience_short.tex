@@ -55,16 +55,17 @@
 functional: steering a ``desperate'' direction increases reward hacking. We test
 each claim that interpretation rests on in Llama~3.1~70B. \textbf{Our own
 registered criterion is met, and \texttt{len(response)} meets every one of its
-thresholds too.} Four further standard controls each break a different link
-in the chain from decodable to associated to causal, and the remedy that would
-repair the first is unavailable in designs like ours.
+thresholds too.} Four further standard controls each break a different
+step: semantic validity, association, selection, and intervention. The remedy that
+would repair the first is unavailable in designs like ours.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ but
 correlates with length at $\rho = 0.61$; residualized it falls to $0.592$ and adds
 nothing detectable to a length-only model ($T = 3.3$, resampling $p = 0.060$;
 $p = 0.44$ corrected over all 50 directions).
 (ii)~\emph{Multiplicity.} A corrected sweep of all 50 directions leaves 18
 significant, but they are one shared component ($78.8\%$ of variance in PC1) and not
-the one we registered; where we can test it, 50 random directions do as well.
+the one we registered; where we can test it, we cannot tell the emotion set apart
+from 50 random ones.
 (iii)~\emph{Specificity.} Steering the registered direction at $+0.3$ produces no
 detected increase, $1/39$ against $14/120$ unsteered on a wide interval, though it
 does shift the targeted projection by $0.48$ SD on a clean re-encoding.
@@ -108,18 +109,19 @@ Emotion subspace carries affect & EmoBank vs.\ TF-IDF & Supported &
 \emph{Some} direction tracks it & max-$T$ over 50, length-preserving null & Exploratory$^\dagger$ & \ref{sec:dirs} \\
 Probe-text gap shows unfaithfulness & ROC tie structure & Not identifiable &
 \ref{sec:vtext} \\
-Steering causes hacking & Matched-norm random null & No effect detected &
+Steering causes hacking & Unsteered baseline & No effect detected &
 \ref{sec:causal} \\
 Layer 39 is a better site & Length, per layer & Not supported &
 \ref{sec:causal} \\
-Registered rule licenses the claim & Same rule on \texttt{len(response)} & Met, uninformative$^\ddagger$ &
+Registered criterion is met & Same rule on \texttt{len(response)} & Met, uninformative$^\ddagger$ &
 \ref{sec:prereg} \\
 Generalizes across mechanisms & Registered rule & Untested & \ref{sec:prereg} \\
 \bottomrule
 \end{tabular}
-\caption{Each control breaks the claim at a different evidential layer, and the verdicts are deliberately distinct. \emph{Not identifiable} means the
-association exists but cannot be separated from the nuisance variable.
-\emph{No effect detected} means an underpowered null. $^\dagger$A post-hoc analysis, for a different direction than the registered
+\caption{Each control tests a different link. The verdicts are not synonyms:
+\emph{not identifiable} means the association exists but cannot be separated from a
+measurement nuisance, \emph{no effect detected} means an underpowered null, and
+\emph{untested} means no usable data. $^\dagger$A post-hoc analysis, for a different direction than the registered
 one, and not shown to beat a random subspace (\S\ref{sec:dirs}). $^\ddagger$The registered rule is met,
 and \texttt{len(response)} meets it too (\S\ref{sec:prereg}).}
 \label{tab:summary}
@@ -193,7 +195,7 @@ generations. Bootstraps are stratified on prompt to match the design, so every
 interval below is conditional on these four prompts and says nothing about
 variation across others. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} regenerates every number here, and a second
-script gates this manuscript against it with 398 assertions.
+script gates this manuscript against it with 400 assertions.
 
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability, not
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
@@ -235,8 +237,8 @@ characters, reaches $\mathbf{0.888}$ $[0.781, 0.968]$.
 Length does not \emph{beat} the probe (paired bootstrap, length minus probe,
 $+0.055$ $[-0.088, +0.184]$); what we cannot show is that the probe adds to it.
 $\rho(V_{\text{int}}[\text{desperate}], \text{length}) = 0.606$
-($p = 2.2\times10^{-13}$), adding the probe to a length-only logistic model improves
-the log-likelihood by $T = 3.31$, at $p = 0.060$ under the conditional null,
+($p = 2.2\times10^{-13}$), adding the probe to a length-only logistic model gives $T = 3.31$, twice the
+log-likelihood improvement, at $p = 0.060$ under the conditional null,
 and residualizing leaves AUC $\mathbf{0.592}$
 $[0.419, 0.766]$, an interval wide enough to admit a real effect. The direction
 ranks only 8th of 50 by raw AUC. Because the readout averages over the generated
@@ -321,12 +323,13 @@ $\mathbf{55.2\%}$ of positive--negative ROC pairs are ties contributing $0.5$
 each. It reaches AUC $0.647$ overall against $V_{\text{int}}$'s $0.837$, but
 $\mathbf{0.836}$ against $0.890$ on the 258 trials (22 events) off its mode, a
 subset selected on the predictor's own values. The pool is $96\%$ steered and $V_{\text{int}}$ is the
-manipulated coordinate, but splitting it, or adding the unsteered extension, leaves
-every figure within $0.02$ (Appendix~\ref{app:steering}). The pooled gap cannot
+manipulated coordinate. The steered subset and the wider pool agree within $0.02$;
+the 40 unsteered trials differ more but are too few to compare
+(Appendix~\ref{app:steering}). The pooled gap cannot
 separate a real hidden-versus-text dissociation from an instrument too coarse to
 register one, so we withdraw any faithfulness-gap claim.
 
-\subsection{Causal specificity against a matched-norm random null}
+\subsection{Steering produces no detected increase}
 \label{sec:causal}
 
 \begin{table}[!ht] \centering\scriptsize \begin{tabular}{@{}lccl@{}} \toprule
@@ -365,18 +368,17 @@ $p = 0.157$), and a ``feel desperate'' system prompt also does nothing
 ambiguous unless the manipulation worked. Measured on a clean re-encoding after the
 hooks are removed, steering \emph{desperate} shifts the desperate projection by
 $0.48$ SD at $+0.3$ ($p = 0.025$), against $1.12$ SD between hacking and non-hacking
-trials (Appendix~\ref{app:steering}). It does not show the named state was induced.
+trials. It does not show the named state was induced.
 
-\paragraph{What this null excludes.} One event in 39 trials, with an interval
-$[0.04, 2.17]$, excludes very little: an undetected effect, not a demonstrated
-absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
+\paragraph{What this null excludes.} One event in 39 trials, on an odds-ratio interval of
+$[0.04, 2.17]$: an undetected effect, not a demonstrated absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
 $11.7\%$ base rate, though an increase of that absolute size would have shown.
 
 \paragraph{No layer rescues it either.} A null at one layer invites the objection
 that we picked the wrong site, and our sweep appeared to supply it. Raw AUC for $V_{\text{int}}$[desperate] peaks
 at layer 39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$
-at the steered layer. Applying \S\ref{sec:len}'s control removes every layer's
-advantage. \textbf{No evaluated layer gives the registered direction
+at the steered layer. Applying \S\ref{sec:len}'s control removes any detectable
+advantage, though layer 39 keeps the largest point estimate. \textbf{No evaluated layer gives the registered direction
 length-independent signal detectable at $n = 80$}, so we have no observational
 reason to move the intervention. Steering at a post-hoc site chosen on a confounded
 statistic is the failure mode \citet{wu2026steerable} describe, and we steered only
@@ -391,8 +393,9 @@ resolves to $3$ for four variants. On the merged $n = 120$ set $3$ of $4$ produc
 events, so the rule is evaluable: LOTO mean AUC $\mathbf{0.754}$ against a $0.70$
 bar, label-shuffle $p = 10^{-4}$ against $.01$. \textbf{The registered rule is
 met.} That is the finding rather than a vindication, because
-\texttt{len(response)} \emph{also} passes every threshold, at LOTO
-$\mathbf{0.880}$ and pooled AUC $0.888$ against the probe's $0.754$ and $0.832$.
+\texttt{len(response)} \emph{also} passes all three: LOTO $\mathbf{0.880}$,
+label-shuffle $p = 10^{-4}$, pooled AUC $0.888$, against the probe's $0.754$ and
+$0.832$.
 We do not claim the count beats the probe, since \S\ref{sec:len} shows that gap is
 not resolvable here; a criterion a character count clears cannot license a claim
 about affect. Under the stricter reading, where the suite is all $9$ registered
@@ -406,13 +409,12 @@ generalization across \emph{mechanisms} is untested.
 \label{sec:disc}
 
 One model, one task family in four variants, 14 events, so the inference is about
-these rollouts rather than reward hacking in general. The readout window includes
-the response, so \S\ref{sec:len} cannot separate artifact from mediation, and
-max-$T$ controls selection among directions but not what the survivors index. The
-causal null is bounded at one norm and one layer, on 39 trials with one event, and
-we never steered the surviving directions. Two lessons generalize. Probe evaluations should carry a simple output baseline
-beside the usual random-direction control; and \emph{registration does not rescue a
-criterion an uncontrolled nuisance can satisfy}, as ours was, by a character count.
+these rollouts, not reward hacking in general. The readout window includes the
+response, so \S\ref{sec:len} cannot separate artifact from mediation, and max-$T$
+controls selection among directions but not what the survivors index. The causal
+null rests on 39 trials with one event, and we never steered the survivors. Two lessons generalize. Probe evaluations should carry a simple output baseline
+beside the usual random-direction control, and \emph{registration does not rescue a
+criterion a nuisance can satisfy} \textemdash{} ours was, by a character count.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
