@@ -199,8 +199,9 @@ if not v["by_steering"]["steered"]["auc_vint"] > v["by_steering"]["steered"]["au
     fails.append("the V_int > V_text ordering does not hold on steered trials")
 in_tex("The pool is $96\\%$ steered")
 # the readers both asked for these; keep them from drifting out again
-in_tex("pre-generation and so cannot be length-entangled")
-in_tex("the single\nexperiment that would most improve this audit")
+in_tex("not identifiable in this design")
+in_tex("cannot test a pre-action probe at all")
+in_tex("constant within\nprompt")
 in_tex("The full dose--response grid")
 in_tex("leave-one-task-out (LOTO)")
 checks += 1
@@ -299,7 +300,8 @@ in_tex("no complete separation")
 in_tex("better described as one shared axis")   # softened: PC1 is not proof of a single axis
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
-in_tex("at a different link in that chain")
+in_tex("meets every one of its\nthresholds too")
+in_tex("break a\ndifferent link in the chain")
 in_tex("meets every one of its thresholds too")
 
 # ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
