@@ -34,7 +34,7 @@ def render():
     L.append(r"\label{app:dirs}")
     L.append("")
     L.append(r"Table~\ref{tab:appdirs} is the full version of Table~\ref{tab:dirs}: every")
-    L.append(r"direction, its nested likelihood-ratio $\chi^2(1)$ against a length-only model,")
+    L.append(r"direction, its log-likelihood improvement $T$ over a length-only model,")
     L.append(r"the family-wise max-$T$ $p$ under the conditional null, its Spearman correlation")
     L.append(r"with response length, its residualized AUC (below $0.5$ means a negative")
     L.append(r"association), and whether it clears $\alpha = .05$ under each of the three")
@@ -46,7 +46,7 @@ def render():
     L.append(r"\centering\scriptsize\setlength{\tabcolsep}{5pt}")
     L.append(r"\begin{tabular}{@{}lrrrrcc@{}}")
     L.append(r"\toprule")
-    L.append(r"Direction & $\chi^2(1)$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC"
+    L.append(r"Direction & $T$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC"
              r" & +flex.\ len & +task \\")
     L.append(r"\midrule")
     # the survivors are the top of the chi2 ordering only if significance is monotone
@@ -64,7 +64,7 @@ def render():
     L.append(r"\bottomrule")
     L.append(r"\end{tabular}")
     L.append(r"\caption{All 50 directions, unsteered trials ($n = 120$, 14 events), ordered"
-             r" by $\chi^2$. Rows above the second rule are the 18 that clear $\alpha = .05$"
+             r" by $T$. Rows above the second rule are the 18 that clear $\alpha = .05$"
              r" under the length-only nuisance model. The last two columns mark the 14 and 11"
              r" that also clear it under a cubic-plus-knots length basis and under task fixed"
              r" effects. $^*$Preregistered.}")

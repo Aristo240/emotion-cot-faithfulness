@@ -1,0 +1,38 @@
+{
+ "clustering": {
+  "n_distinct_prompts": 4,
+  "n_trials": 120,
+  "note": "the 120 unsteered trials are stochastic rollouts of 4 prompts; all intervals in the paper resample trials, not prompts",
+  "rollouts_per_prompt": {
+   "fast_sum_v1": 30,
+   "fast_sum_v2": 30,
+   "fast_sum_v3": 30,
+   "fast_sum_v4": 30
+  }
+ },
+ "label_robustness": {
+  "chi2_baseline": 38.69798519305448,
+  "chi2_worst_single_flip": 24.521102309271562,
+  "chi2_worst_two_flips": 16.2443427549715,
+  "direction": "bored",
+  "note": "family-wise significance under the conditional null sits near chi2 12-14, so two adversarial label flips leave `bored` significant but close to the boundary",
+  "ridge": 1.0,
+  "worst_single_flip_kind": "legit->event"
+ },
+ "lr_statistic": {
+  "definition": "2 * (l1 - l0) where l0 and l1 are UNPENALISED log-likelihoods evaluated at ridge-penalised estimates (lambda = 1, intercept unpenalised); calibration is from the resampling distribution, not a nominal chi2_1"
+ },
+ "random_directions": {
+  "construction": "iid Gaussian in the residual basis, Gram-Schmidt projected orthogonal to all 50 emotion vectors, then rescaled to the mean norm of the emotion vectors",
+  "matched_on": [
+   "norm",
+   "orthogonality to the emotion subspace"
+  ],
+  "n": 5,
+  "not_matched_on": [
+   "natural activation variance",
+   "logit-lens impact"
+  ],
+  "source": "scripts/run_blockers.py:208"
+ }
+}

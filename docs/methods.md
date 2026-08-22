@@ -23,11 +23,29 @@ a paper Methods section.
 5. The resulting direction `V_internal_e` is **frozen**: it is never
    refit, scaled, or recombined using Phase 2/3/4 behavioural data.
 
-In Phase 2/3/4 we report
-`projection(activation, V_internal_e) = cos(activation, V_internal_e)`
-(`src/vectors.py:243`). This is **not a trained probe** — it is a
-zero-shot dot-product against a fixed direction. There is no train/test
-leakage between the probe construction and downstream evaluation.
+In Phase 2/3/4 we report a **scalar projection**, not a cosine. The code
+that produced every trial value is
+`scripts/phase2_steering.py:187` (`compute_emotion_probes`), which divides
+by `||V_internal_e||` but **not** by `||activation||`:
+
+```python
+probes[emo_name] = float(np.dot(mean_act, vec) / (np.linalg.norm(vec) + 1e-10))
+```
+
+so the reported quantity is `||mean_act|| * cos(theta)` and it scales with
+activation magnitude. **Earlier versions of this file and of
+`docs/preregistration.md` called it a cosine similarity and pointed at
+`src/vectors.py:243`. That was wrong.** `compute_probe_projection` in
+`src/vectors.py` *is* a true cosine, but it is not the function that generated
+the Phase 2/3/4 `emotion_probes` fields, and `||mean_act||` was never stored, so
+the true cosine is unrecoverable after the fact. The paper discloses this in
+section 3 and `paper/appendix_readout.tex` reports a magnitude-removed
+re-analysis (normalising each trial's 50-vector to unit length), under which 15
+of 50 directions survive against 18, sharing only 8.
+
+It remains **not a trained probe** — it is a zero-shot dot-product against a
+fixed direction. There is no train/test leakage between the probe construction
+and downstream evaluation.
 
 This matters for H5 (does natural V_internal predict shortcut?). Because
 the predictor is frozen Phase-1 data and the labels are Phase-2/3 judge
@@ -65,8 +83,10 @@ Activations are averaged over tokens with position index ≥ 50
 (`token_offset` in `extract_mean_activations`). For Phase 2 trial
 projections, we average over the response tokens (after the assistant
 header). Sofroniew et al. find the assistant-header position itself is
-most predictive (r=0.87); we have not yet ablated that choice and report
-it as a known caveat.
+most predictive (r=0.87). **We did not measure there.** This is a deliberate
+deviation from the target and is the most likely implementation source of a
+false negative in our causal null; it is stated in section 3 of the paper, not
+left as a repo-only caveat.
 
 ## V_text and the LLM judge
 
@@ -84,6 +104,15 @@ reliability across items is the meaningful quantity. Reported values
 range 0.78–0.98 across dimensions; two zero-variance dimensions
 (Task A `dominance`, Task B `frustration`) are dropped from the V_text
 composite per `rigor_analyses.py`'s variance screen.
+
+**The instrument is degenerate and V_text claims are withdrawn.** On the 992
+pooled Task A trials, `dominance` takes exactly one value, `arousal` is 99.0%
+modal and `frustration` 99.3% modal. The three-dimension composite actually used,
+`(urgency - composure + frustration)/3`, is 74.0% modal, which makes 55.2% of
+positive-negative ROC pairs ties. Using all eight dimensions does not rescue it:
+the full 8-vector is still 61.8% modal and its first principal component reaches
+only AUC 0.690. Section 4.4 of the paper therefore withdraws the
+faithfulness-gap claim rather than reporting it.
 
 Empirical symmetry check (`scripts/judge_symmetry_check.py`,
 `results/phase3/llama70b/judge_symmetry.json`):

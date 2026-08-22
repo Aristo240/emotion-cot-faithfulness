@@ -43,15 +43,31 @@ def auc(x, y):
     return float((r[y == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
 
 
-def boot_ci(x, y, n_boot=5000, seed=SEED):
-    """Stratified bootstrap CI: resample positives and negatives separately."""
-    rng = np.random.default_rng(seed)
+def boot_idx(rng, y, groups=None):
+    """One bootstrap resample of trial indices.
+
+    PROMPT-STRATIFIED when `groups` is given: the design fixed the number of
+    generations per prompt variant, so the resample redraws that many within each
+    variant and lets the event count vary. This is the design-consistent scheme and
+    is what the paper reports.
+
+    OUTCOME-STRATIFIED otherwise: positives and negatives resampled separately,
+    which conditions on the observed event count -- standard for an AUC, but it
+    conditions on a quantity the design did not fix. Kept as the robustness arm in
+    scripts/bootstrap_design.py.
+    """
+    if groups is not None:
+        return np.concatenate([rng.choice(g, len(g), True) for g in groups])
     pos, neg = np.where(y == 1)[0], np.where(y == 0)[0]
-    v = []
-    for _ in range(n_boot):
-        idx = np.concatenate([rng.choice(pos, len(pos), True),
-                              rng.choice(neg, len(neg), True)])
-        v.append(auc(x[idx], y[idx]))
+    return np.concatenate([rng.choice(pos, len(pos), True),
+                           rng.choice(neg, len(neg), True)])
+
+
+def boot_ci(x, y, n_boot=5000, seed=SEED, groups=None):
+    """Bootstrap AUC interval. Prompt-stratified when `groups` is supplied."""
+    rng = np.random.default_rng(seed)
+    v = [auc(x[i], y[i]) for i in (boot_idx(rng, y, groups) for _ in range(n_boot))]
+    v = np.array([q for q in v if not np.isnan(q)])
     return [float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))]
 
 
@@ -158,8 +174,10 @@ R["semantic"] = {"n": emo["n_sentences"], "cv_r2": emo["cv_r2_mean"]}
 # ============================================ §4.2 association + length control
 hdr("§4.2  Association, and the response-length control")
 desp = np.array([float(t["emotion_probes"]["desperate"]) for t in unsteered])
-a_d, ci_d = auc(desp, y), boot_ci(desp, y)
-a_l, ci_l = auc(length, y), boot_ci(length, y)
+GRP = [np.where(np.array([t["task_id"] for t in unsteered]) == k)[0]
+       for k in sorted({t["task_id"] for t in unsteered})]
+a_d, ci_d = auc(desp, y), boot_ci(desp, y, groups=GRP)
+a_l, ci_l = auc(length, y), boot_ci(length, y, groups=GRP)
 rho, rho_p = spearmanr(desp, length)
 print(f"  n = {len(y)}, events = {int(y.sum())}")
 print(f"  V_int[desperate]  AUC {a_d:.3f}  CI [{ci_d[0]:.3f}, {ci_d[1]:.3f}]   (PREREGISTERED)")
@@ -168,11 +186,12 @@ print(f"  Spearman(V_int[desperate], length) rho = {rho:.3f}, p = {rho_p:.2g}")
 
 # Paired bootstrap of the AUC difference (same resample for both predictors).
 rng = np.random.default_rng(SEED)
-pos, neg = np.where(y == 1)[0], np.where(y == 0)[0]
 d = []
 for _ in range(5000):
-    idx = np.concatenate([rng.choice(pos, len(pos), True), rng.choice(neg, len(neg), True)])
-    d.append(auc(length[idx], y[idx]) - auc(desp[idx], y[idx]))
+    idx = boot_idx(rng, y, GRP)
+    a_, b_ = auc(length[idx], y[idx]), auc(desp[idx], y[idx])
+    if not (np.isnan(a_) or np.isnan(b_)):
+        d.append(a_ - b_)
 d_ci = [float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5))]
 print(f"  paired dAUC (length - desperate) = {np.mean(d):+.3f} CI [{d_ci[0]:+.3f}, {d_ci[1]:+.3f}]"
       f"  -> {'NOT significant' if d_ci[0] < 0 < d_ci[1] else 'significant'}")
@@ -240,11 +259,11 @@ order = sorted(emos, key=lambda e: -abs(obs[e] - 0.5))   # by descriptive effect
 print(f"  {'direction':<15}{'residAUC':>10}{'95% CI':>20}   (descriptive only)")
 rows_out = []
 for e in order[:8]:
-    ci = boot_ci(resid[e], y, 3000)
+    ci = boot_ci(resid[e], y, 3000, groups=GRP)
     print(f"  {e:<15}{obs[e]:>10.3f}{f'[{ci[0]:.3f}, {ci[1]:.3f}]':>20}")
     rows_out.append({"direction": e, "resid_auc": obs[e], "ci95": ci})
 all_dirs = [{"direction": e, "resid_auc": obs[e]} for e in order]
-ci_dr = boot_ci(resid["desperate"], y, 3000)
+ci_dr = boot_ci(resid["desperate"], y, 3000, groups=GRP)
 print(f"  {'desperate*':<15}{obs['desperate']:>10.3f}"
       f"{f'[{ci_dr[0]:.3f}, {ci_dr[1]:.3f}]':>20}   * PREREGISTERED")
 print(f"\n  raw (uncorrected) AUC: best is {raw_order[0]} at {raw_auc[raw_order[0]]:.3f}; "
@@ -349,8 +368,26 @@ print(f"  V_text  AUC non-modal trials  {auc(vt[nm], yp[nm]):.3f}  (n={int(nm.su
 print(f"  V_int   AUC all trials        {auc(vi, yp):.3f}")
 print("  -> where V_text can discriminate at all it matches V_int; the apparent")
 print("     gap is a tie artifact of a non-responsive instrument, not a faithfulness gap.")
+# Composition check: this pool is almost entirely STEERED trials, and V_int is the
+# coordinate the steering manipulates. If steering inflated V_int's apparent
+# discrimination, the V_int-vs-V_text comparison would be structurally unfair.
+# Split the pool and check. (Reported in appendix_steering.tex.)
+_stp = np.array([abs(float(t.get("strength", 0))) > 0 for t in pooled])
+_sub = {}
+for _lab, _m in (("steered", _stp), ("unsteered", ~_stp)):
+    _sub[_lab] = {"n": int(_m.sum()), "events": int(yp[_m].sum()),
+                  "auc_vint": auc(vi[_m], yp[_m]), "auc_vtext": auc(vt[_m], yp[_m])}
+print(f"  pool composition: {_sub['steered']['n']} steered / {_sub['unsteered']['n']} unsteered "
+      f"({100*_sub['steered']['n']/len(yp):.0f}% steered)")
+print(f"    V_int  AUC steered {_sub['steered']['auc_vint']:.3f} | unsteered "
+      f"{_sub['unsteered']['auc_vint']:.3f}")
+print(f"    V_text AUC steered {_sub['steered']['auc_vtext']:.3f} | unsteered "
+      f"{_sub['unsteered']['auc_vtext']:.3f}")
+print("  -> steering does not inflate V_int's discrimination; the tie argument stands")
+
 R["vtext"] = {
     "n": len(yp), "events": n1, "modal_value": mode, "modal_share": tie,
+    "steered_share": float(_stp.mean()), "by_steering": _sub,
     "p33": float(p33), "p66": float(p66), "p33_eq_p66": bool(p33 == p66),
     "tied_roc_pairs": tied_pairs, "total_roc_pairs": n1 * n0,
     "tied_pair_fraction": tied_pairs / (n1 * n0),
@@ -365,12 +402,30 @@ pj = json.load(open(P4 / "analysis_judged/report.json"))
 base = pj["baseline_unsteered"]
 rn = pj["random_null"]
 b_x, b_n = base["hacks"], base["n"]
-e_x, e_n = rn["emotion_at_0_3"]["hacks"], rn["emotion_at_0_3"]["n"]
-r_x, r_n = rn["random"]["hacks"], rn["random"]["n"]
+
+# The pooled arms are recomputed here rather than read from analysis_judged/report.json.
+# That file counts UNCLEAR-judged trials in the denominator (giving 12/160), which
+# contradicts the drop-UNCLEAR rule stated in section 3 and used for every per-arm
+# cell in Table 2 (1/39, 4/40, 7/79). Dropping them gives 12/158 and makes the
+# pooled row add up to the rows above it.
+def _labelled(rs):
+    return [t for t in rs if t.get("judge_classification") in ("SHORTCUT", "LEGITIMATE")]
+
+
+def _hacks(rs):
+    return sum(1 for t in rs if t["judge_classification"] == "SHORTCUT"), len(rs)
+
+
+_p2a = _labelled(load(P2 / "task_a_judged.jsonl"))
+e_x, e_n = _hacks([t for t in _p2a
+                   if t.get("emotion") in ("desperate", "calm")
+                   and abs(abs(float(t.get("strength", 0))) - 0.3) < 1e-6])
+r_x, r_n = _hacks(_labelled(load(P4 / "random_directions_judged.jsonl")))
+_or_er, p_emo_vs_rnd = fisher_exact([[e_x, e_n - e_x], [r_x, r_n - r_x]])
 print(f"  unsteered baseline  {b_x}/{b_n} = {b_x/b_n:.3f}")
-print(f"  emotion @+-0.3      {e_x}/{e_n} = {e_x/e_n:.3f}")
+print(f"  emotion @+-0.3      {e_x}/{e_n} = {e_x/e_n:.3f}   (UNCLEAR dropped, per section 3)")
 print(f"  random  @+-0.3      {r_x}/{r_n} = {r_x/r_n:.3f}   (5 directions orthogonal to the emotion subspace)")
-print(f"  emotion vs random   Fisher p = {rn['fisher_emotion_vs_random_p']:.4f}")
+print(f"  emotion vs random   Fisher p = {p_emo_vs_rnd:.4f}")
 vs_base = {}
 for lab, xx, nn in (("emotion", e_x, e_n), ("random", r_x, r_n)):
     orr, pp = fisher_exact([[xx, nn - xx], [b_x, b_n - b_x]])
@@ -410,7 +465,7 @@ print(f"  text injection 'feel desperate': {ti['desperate_inject']['hacks']}/{ti
       f"vs baseline, Fisher p={pp:.3f}")
 R["causal"] = {
     "baseline": [b_x, b_n], "emotion_0_3": [e_x, e_n], "random_0_3": [r_x, r_n],
-    "fisher_emotion_vs_random": rn["fisher_emotion_vs_random_p"],
+    "fisher_emotion_vs_random": float(p_emo_vs_rnd),
     "vs_baseline": vs_base,
     "mean_response_length": {"unsteered": len_unst, "emotion_abs_ge_0.3": len_emo,
                              "random": len_rnd},
@@ -434,6 +489,8 @@ sw = [t for t in load(P4 / "extended_unsteered_layer_sweep.jsonl")
 ysw = np.array([1 if t["judge_classification"] == "SHORTCUT" else 0 for t in sw])
 Lsw = np.array([t["seq_len"] - t["prompt_token_count"] for t in sw], float)
 zsw = (Lsw - Lsw.mean()) / Lsw.std()
+GRPSW = [np.where(np.array([t["task_id"] for t in sw]) == k)[0]
+         for k in sorted({t["task_id"] for t in sw})]
 print(f"  response length in tokens, alone: AUC {auc(Lsw, ysw):.3f}")
 print(f"  {'layer':>6}{'raw':>9}{'resid':>9}{'resid 95% CI':>20}{'rho(len)':>10}")
 per_layer = {}
@@ -441,7 +498,7 @@ for Lk in sorted(sw[0]["emotion_probes_per_layer"], key=int):
     x = np.array([float(t["emotion_probes_per_layer"][Lk]["desperate"]) for t in sw])
     z = (x - x.mean()) / x.std()
     res = z - np.polyval(np.polyfit(zsw, z, 1), zsw)
-    ci = boot_ci(res, ysw, 4000)
+    ci = boot_ci(res, ysw, 4000, groups=GRPSW)
     rr = float(spearmanr(x, Lsw)[0])
     surv = ci[0] > 0.5 or ci[1] < 0.5
     print(f"  {Lk:>6}{auc(x, ysw):>9.3f}{auc(res, ysw):>9.3f}"
@@ -496,14 +553,43 @@ R["layers"] = {"n": ls["n"], "events": ls["events"],
 
 # ============================================================== preregistration
 hdr("§4.7  Preregistered decision rule")
+# The pre-merge run (n=40) lives in results/phase3/llama70b/h5_holdout_report.json
+# and returned INSUFFICIENT-DATA because only 2 of 4 variants had events. That file
+# was never refreshed after Phase 4 (B) landed. On the merged n=120 set 3 of 4
+# variants have events, the ladder in h5_holdout.py:77 requires 3 for a 4-variant
+# suite, and the locked rule becomes evaluable. Both are reported.
 h5 = json.load(open(ROOT / "results/phase3/llama70b/h5_holdout_report.json"))
+h5m = json.load(open(ROOT / "results/h5_holdout_merged.json"))
 print(f"  rule: {h5['(5)_decision']['rule']}")
-print(f"  requires >=6 of 9 task variants with outcome variance (min_tasks_required scales 4->3, 9->6)")
-print(f"  verdict: {h5['(5)_decision']['verdict'][:70]}...")
-print("  The 5 diverse variants that would satisfy it are the ones excluded in §3.")
-R["prereg"] = {"verdict": h5["(5)_decision"]["verdict"],
+print(f"  pre-merge run (n=40):  {h5['(5)_decision']['verdict'][:52]}...")
+lg, dc, lc = h5m["logo"], h5m["decision"], h5m["length_control"]
+print(f"  merged run (n=120): {lg['n_tasks_with_variance']}/{lg['n_tasks_total']} variants "
+      f"with variance, need >= {lg['min_tasks_required']} -> meaningful={lg['logo_meaningful']}")
+print(f"    LOGO mean AUC {lg['mean_auc']:.4f} (>=0.70), permutation p "
+      f"{h5m['permutation']['p_value']:.4g} (<0.01)  -> VERDICT: {dc['verdict']}")
+print(f"  SAME rule on len(response): LOGO mean {lc['logo_mean_auc']:.4f}, "
+      f"pooled AUC {lc['pooled_auc']:.4f}, p {lc['permutation_p']:.4g} "
+      f"-> {'SUPPORTED' if lc['passes_same_registered_rule'] else 'not supported'}")
+print("  -> a character count clears the preregistered bar, and clears it by more,")
+print("     so clearing it is not evidence that the probe measures affect.")
+print("  Generalization across MECHANISMS is still unanswered: the 5 diverse")
+print("  variants that would test it are the ones excluded in §3.")
+R["prereg"] = {"verdict_premerge": h5["(5)_decision"]["verdict"],
                "rule": h5["(5)_decision"]["rule"],
-               "logo_meaningful": h5["(2)_leave_one_task_out"]["logo_meaningful"]}
+               "logo_meaningful_premerge": h5["(2)_leave_one_task_out"]["logo_meaningful"],
+               "merged": {"verdict": dc["verdict"],
+                          "logo_meaningful": lg["logo_meaningful"],
+                          "logo_mean_auc": lg["mean_auc"],
+                          "n_tasks_with_variance": lg["n_tasks_with_variance"],
+                          "n_tasks_total": lg["n_tasks_total"],
+                          "min_tasks_required": lg["min_tasks_required"],
+                          "permutation_p": h5m["permutation"]["p_value"],
+                          "pooled_auc": h5m["pooled_auc"]},
+               "length_passes_same_rule": {
+                   "passes": lc["passes_same_registered_rule"],
+                   "logo_mean_auc": lc["logo_mean_auc"],
+                   "pooled_auc": lc["pooled_auc"],
+                   "permutation_p": lc["permutation_p"]}}
 
 OUT.write_text(json.dumps(R, indent=1))
 print(f"\nwritten: {OUT.relative_to(ROOT)}")

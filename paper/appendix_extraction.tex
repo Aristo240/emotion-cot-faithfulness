@@ -1,0 +1,25 @@
+\section{How the emotion directions were extracted}
+\label{app:extract}
+
+The 50 directions are Phase-1 objects, built before any behavioral data existed and
+never refit afterwards. For each emotion label $e$ we collect roughly 50 short
+stories written to depict a character feeling $e$, run them through Llama~3.1~70B,
+and take the residual-stream activation at layer 53 of 80, averaged over token
+positions $\ge 50$ so the prompt prefix is excluded. The per-emotion mean is
+centred by subtracting the grand mean across all emotions, which removes what the
+story-writing task shares with every label.
+
+The denoising step then removes topic content rather than affect. We compute the
+top-$K$ principal components of activations on neutral dialogues, with $K$ chosen so
+those components explain $50\%$ of neutral variance, and project them out of each
+centred emotion vector. The components come from neutral text, so nothing about the
+emotion contrast enters their estimation. What remains is $V_{\text{int}}$ for that
+emotion, held fixed for the rest of the paper.
+
+Two consequences matter for the readout. The directions are unit-norm, but the
+trial-level quantity divides only by the direction's norm and not by the
+activation's (\S3), so $V_{\text{int}}$ carries activation magnitude;
+Appendix~\ref{app:readout} reports what changes when that magnitude is removed. And
+the labels are inherited from the story prompts, not validated per direction, which
+is why \S\ref{sec:sem} supports an affect-related axis rather than the semantics of
+any individual vector.

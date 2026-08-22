@@ -366,6 +366,11 @@
   "vulnerable": 0.33586641335866413,
   "weary": 0.0012998700129987
  },
+ "desperate_marginal": {
+  "stat": 3.311045127775209,
+  "p_free": 0.07279272072792721,
+  "p_conditional": 0.060193980601939805
+ },
  "n_survivors_free": 18,
  "n_survivors_conditional": 18,
  "survivors_conditional": [

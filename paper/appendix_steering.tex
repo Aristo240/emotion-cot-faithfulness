@@ -22,6 +22,14 @@ of the result is unchanged, but with zero events in 20 trials the comparison is
 almost uninformative (Fisher $p = 0.35$). We report both, and we do not claim the
 matched contrast as evidence for anything beyond consistency with the unmatched one.
 
+\paragraph{How the random directions were built.} Each of the five is drawn iid
+Gaussian in the residual basis, Gram--Schmidt projected orthogonal to all 50
+emotion vectors, then rescaled to the mean norm of those vectors. They are
+therefore matched on norm and on orthogonality to the emotion subspace. They are
+\emph{not} matched on natural activation variance or on logit-lens impact, so they
+bound the effect of an arbitrary equally-large perturbation outside the emotion
+subspace, which is a weaker claim than matching on downstream influence would give.
+
 \paragraph{The random arm is five directions, not 100 draws.} Rollouts are nested
 within five sampled directions, so treating the 100 trials as independent draws
 overstates the precision of the random-direction null. The per-direction rates at
@@ -35,3 +43,27 @@ $11.7\%$, so no multiplicative increase above about $8.5\times$ is attainable in
 design at all. \citet{sofroniew2026} report ${\sim}14\times$. The elicitation setting
 therefore cannot test an effect of the reported magnitude, only much smaller ones,
 and this is a property of the design rather than a result.
+
+\paragraph{Steering did not change how much text was produced.} Response length is
+the nuisance variable of \S\ref{sec:len}, so a steering null would be hard to read
+if the intervention had also shortened the outputs. It did not: mean response length
+is $1402$ characters unsteered, $1324$ in the emotion arm at $|s| \ge 0.3$ and $1456$
+in the random arm. The behavioral null is not an artifact of shorter generations.
+
+\paragraph{The $V_{\text{text}}$ pool is mostly steered trials.} The $n = 992$ set in
+\S\ref{sec:vtext} is $952$ steered and $40$ unsteered, and $V_{\text{int}}$ is the
+coordinate the steering manipulates, so that comparison could in principle be
+flattered by the manipulation. Splitting the pool shows it is not.
+$V_{\text{int}}$ reaches AUC $0.832$ on steered trials against $0.900$ on unsteered,
+and $V_{\text{text}}$ reaches $0.646$ against $0.660$. The ordering and the size of
+the gap are the same in both, so the tie-structure argument does not depend on the
+pool's composition.
+
+\paragraph{How many labels would have to be wrong.} Neither judge is checked
+against humans (\S3) and there are 14 events, so the labels are the least
+validated input to \S\ref{sec:dirs}. Taking the strongest surviving direction,
+\texttt{bored}, and flipping judge labels adversarially: its statistic falls from
+$T = 38.7$ to $24.5$ under the single worst flip and to $16.2$ under the worst two.
+Family-wise significance under the conditional null sits near $T$ 12 to 14, so two wrong labels would leave the direction significant but close to the
+boundary, and a handful more would not. This sensitivity analysis does not validate the labels; it asks
+how many adversarial label changes would be required to overturn the result.

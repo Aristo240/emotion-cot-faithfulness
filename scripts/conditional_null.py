@@ -171,6 +171,29 @@ for b in range(B):
 pA = {e: float((np.sum(maxA >= obs[j]) + 1) / (B + 1)) for j, e in enumerate(emos)}
 pB = {e: float((np.sum(maxB >= obs[j]) + 1) / (B + 1)) for j, e in enumerate(emos)}
 
+# MARGINAL (uncorrected) p from the same resampling distribution. The statistic is
+# an unpenalised log-likelihood improvement evaluated at ridge-penalised estimates,
+# so it has NO nominal chi2_1 reference; section 4.2 must quote a resampling p for
+# the registered direction, not chi2.sf(). Recorded per direction here.
+margA = np.empty(B)
+margB = np.empty(B)
+_jd = emos.index("desperate")
+rng2 = np.random.default_rng(SEED)
+for b in range(B):
+    ya = rng2.permutation(y)
+    sa, _ = lr_stats(ya)
+    margA[b] = sa[_jd] if sa is not None else 0.0
+    yb = (rng2.random(n) < phat).astype(float)
+    sb, _ = lr_stats(yb)
+    margB[b] = sb[_jd] if sb is not None else 0.0
+p_marg_free = float((np.sum(margA >= obs[_jd]) + 1) / (B + 1))
+p_marg_cond = float((np.sum(margB >= obs[_jd]) + 1) / (B + 1))
+print(f"\nMARGINAL resampling p for `desperate` (statistic {obs[_jd]:.3f}):")
+print(f"  free null        p = {p_marg_free:.4f}")
+print(f"  conditional null p = {p_marg_cond:.4f}")
+print(f"  (nominal chi2_1 would give {float(__import__('scipy.stats', fromlist=['chi2']).chi2.sf(obs[_jd],1)):.4f}"
+      f" -- not used)")
+
 # ------------------------------------------------------------------ self-checks
 print("\nSELF-CHECKS")
 print(f"  null calibration: mean simulated events, free {evA.mean():.2f} / "
@@ -300,6 +323,8 @@ json.dump({
     "nonconvergent_draws": {"free": failA, "conditional": failB},
     "chi2": {e: float(obs[j]) for j, e in enumerate(emos)},
     "p_free": pA, "p_conditional": pB,
+    "desperate_marginal": {"stat": float(obs[emos.index("desperate")]),
+                           "p_free": p_marg_free, "p_conditional": p_marg_cond},
     "n_survivors_free": nA, "n_survivors_conditional": nB,
     "survivors_conditional": [e for e in order if pB[e] < .05],
     "n_conditional_ge_free": stricter,

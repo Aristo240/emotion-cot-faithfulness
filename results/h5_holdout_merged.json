@@ -1,0 +1,85 @@
+{
+ "bootstrap": {
+  "auc_mean": 0.8319990566037737,
+  "ci_high": 0.9090296495956873,
+  "ci_low": 0.7412398921832885,
+  "n_boot": 5000
+ },
+ "decision": {
+  "all_pass": true,
+  "logo_mean_auc_pass": true,
+  "logo_meaningful": true,
+  "permutation_pass": true,
+  "rule": "logo_meaningful AND logo_mean_auc >= 0.70 AND permutation_p < 0.01",
+  "verdict": "SUPPORTED"
+ },
+ "events": 14,
+ "length_control": {
+  "logo_mean_auc": 0.879765296431963,
+  "note": "the preregistered decision rule is cleared by a character count, so clearing it is not evidence that the probe measures affect",
+  "passes_same_registered_rule": true,
+  "per_task": {
+   "fast_sum_v1": {
+    "auc": 0.9038461538461539,
+    "events": 4,
+    "n": 30
+   },
+   "fast_sum_v2": {
+    "auc": NaN,
+    "events": 0,
+    "n": 30
+   },
+   "fast_sum_v3": {
+    "auc": 0.7354497354497355,
+    "events": 9,
+    "n": 30
+   },
+   "fast_sum_v4": {
+    "auc": 1.0,
+    "events": 1,
+    "n": 30
+   }
+  },
+  "permutation_p": 9.999000099990002e-05,
+  "pooled_auc": 0.8881401617250674,
+  "predictor": "len(response) in characters"
+ },
+ "logo": {
+  "logo_meaningful": true,
+  "mean_auc": 0.7539045139619852,
+  "min_tasks_required": 3,
+  "n_tasks_total": 4,
+  "n_tasks_with_variance": 3,
+  "per_task": {
+   "fast_sum_v1": {
+    "auc": 0.7596153846153846,
+    "events": 4,
+    "n": 30
+   },
+   "fast_sum_v2": {
+    "auc": NaN,
+    "events": 0,
+    "n": 30
+   },
+   "fast_sum_v3": {
+    "auc": 0.708994708994709,
+    "events": 9,
+    "n": 30
+   },
+   "fast_sum_v4": {
+    "auc": 0.7931034482758621,
+    "events": 1,
+    "n": 30
+   }
+  }
+ },
+ "n": 120,
+ "note": "preregistered protocol re-run on the merged n=120 dataset; results/phase3/llama70b/h5_holdout_report.json is the pre-merge n=40 run",
+ "permutation": {
+  "n_perm": 10000,
+  "observed_auc": 0.8322102425876011,
+  "p_value": 9.999000099990002e-05
+ },
+ "pooled_auc": 0.8322102425876011,
+ "rng_seed": 20260415
+}

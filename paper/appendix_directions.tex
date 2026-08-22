@@ -2,7 +2,7 @@
 \label{app:dirs}
 
 Table~\ref{tab:appdirs} is the full version of Table~\ref{tab:dirs}: every
-direction, its nested likelihood-ratio $\chi^2(1)$ against a length-only model,
+direction, its log-likelihood improvement $T$ over a length-only model,
 the family-wise max-$T$ $p$ under the conditional null, its Spearman correlation
 with response length, its residualized AUC (below $0.5$ means a negative
 association), and whether it clears $\alpha = .05$ under each of the three
@@ -14,7 +14,7 @@ and requires byte-equality, so it cannot drift from the results it reports.
 \centering\scriptsize\setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lrrrrcc@{}}
 \toprule
-Direction & $\chi^2(1)$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC & +flex.\ len & +task \\
+Direction & $T$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC & +flex.\ len & +task \\
 \midrule
 \texttt{bored} & 38.7 & 0.0001 & $+0.33$ & 0.858 & $\checkmark$ & $\checkmark$ \\
 \texttt{lonely} & 29.6 & 0.0001 & $+0.48$ & 0.760 & $\checkmark$ & $\checkmark$ \\
@@ -69,6 +69,6 @@ Direction & $\chi^2(1)$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC & +flex.\ len 
 \texttt{jealous} & -0.0 & 1.0000 & $+0.57$ & 0.469 & -- & -- \\
 \bottomrule
 \end{tabular}
-\caption{All 50 directions, unsteered trials ($n = 120$, 14 events), ordered by $\chi^2$. Rows above the second rule are the 18 that clear $\alpha = .05$ under the length-only nuisance model. The last two columns mark the 14 and 11 that also clear it under a cubic-plus-knots length basis and under task fixed effects. $^*$Preregistered.}
+\caption{All 50 directions, unsteered trials ($n = 120$, 14 events), ordered by $T$. Rows above the second rule are the 18 that clear $\alpha = .05$ under the length-only nuisance model. The last two columns mark the 14 and 11 that also clear it under a cubic-plus-knots length basis and under task fixed effects. $^*$Preregistered.}
 \label{tab:appdirs}
 \end{table}

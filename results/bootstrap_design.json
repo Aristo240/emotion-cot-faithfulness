@@ -1,0 +1,70 @@
+{
+ "delta_length_minus_desperate": {
+  "outcome": {
+   "B": 5000,
+   "hi": 0.18263140161725047,
+   "lo": -0.08018867924528295,
+   "mean": 0.056586792452830194,
+   "usable_draws": 5000
+  },
+  "prompt": {
+   "B": 5000,
+   "hi": 0.18412698412698414,
+   "lo": -0.0882765929530376,
+   "mean": 0.05527103326927418,
+   "usable_draws": 5000
+  }
+ },
+ "desperate": {
+  "outcome": {
+   "B": 5000,
+   "hi": 0.9083557951482479,
+   "lo": 0.7452661725067385,
+   "usable_draws": 5000
+  },
+  "prompt": {
+   "B": 5000,
+   "hi": 0.9111149691358024,
+   "lo": 0.7422213541666667,
+   "usable_draws": 5000
+  }
+ },
+ "length": {
+  "outcome": {
+   "B": 5000,
+   "hi": 0.9669811320754716,
+   "lo": 0.7870619946091644,
+   "usable_draws": 5000
+  },
+  "prompt": {
+   "B": 5000,
+   "hi": 0.9679679679679679,
+   "lo": 0.7814471378504673,
+   "usable_draws": 5000
+  }
+ },
+ "max_ci_shift": 0.0056148567586971065,
+ "note": "outcome = positives and negatives resampled separately (reported in the paper); prompt = 30 drawn with replacement within each of the 4 prompt strata, which is what the design fixed",
+ "per_prompt": {
+  "fast_sum_v1": [
+   4,
+   30
+  ],
+  "fast_sum_v2": [
+   0,
+   30
+  ],
+  "fast_sum_v3": [
+   9,
+   30
+  ],
+  "fast_sum_v4": [
+   1,
+   30
+  ]
+ },
+ "point": {
+  "desperate": 0.8322102425876011,
+  "length": 0.8881401617250674
+ }
+}

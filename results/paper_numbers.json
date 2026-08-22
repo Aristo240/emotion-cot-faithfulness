@@ -65,23 +65,23 @@
  "association": {
   "auc_desperate": 0.8322102425876011,
   "ci_desperate": [
-   0.7452661725067385,
-   0.9083557951482479
+   0.7422213541666667,
+   0.9111149691358024
   ],
   "auc_length": 0.8881401617250674,
   "ci_length": [
-   0.7870619946091644,
-   0.9669811320754716
+   0.7814471378504673,
+   0.9679679679679679
   ],
   "spearman_desp_length": {
    "rho": 0.6060150428303855,
    "p": 2.2340431254187754e-13
   },
   "paired_dauc_length_minus_desperate": {
-   "mean": 0.056586792452830194,
+   "mean": 0.05527103326927418,
    "ci95": [
-    -0.08018867924528295,
-    0.18263140161725047
+    -0.0882765929530376,
+    0.18412698412698414
    ]
   },
   "lr_test_vint_over_length": {
@@ -154,64 +154,64 @@
     "direction": "bored",
     "resid_auc": 0.8584905660377359,
     "ci95": [
-     0.7486522911051213,
-     0.9481132075471698
+     0.7455886533463287,
+     0.9554570707070708
     ]
    },
    {
     "direction": "nostalgic",
     "resid_auc": 0.7971698113207547,
     "ci95": [
-     0.6361017520215634,
-     0.9380222371967656
+     0.62667172582311,
+     0.9400079365079365
     ]
    },
    {
     "direction": "melancholy",
     "resid_auc": 0.7648247978436657,
     "ci95": [
-     0.5788241239892183,
-     0.9177897574123989
+     0.5885207254960694,
+     0.9291244986820294
     ]
    },
    {
     "direction": "gloomy",
     "resid_auc": 0.7607816711590296,
     "ci95": [
-     0.5849056603773585,
-     0.910377358490566
+     0.584575765118218,
+     0.9218203463203464
     ]
    },
    {
     "direction": "lonely",
     "resid_auc": 0.7601078167115903,
     "ci95": [
-     0.56669474393531,
-     0.9278975741239892
+     0.5727046919931704,
+     0.93386641520575
     ]
    },
    {
     "direction": "compassionate",
     "resid_auc": 0.26482479784366575,
     "ci95": [
-     0.10778301886792455,
-     0.44678234501347713
+     0.10267225404312669,
+     0.4393530997304582
     ]
    },
    {
     "direction": "sad",
     "resid_auc": 0.7338274932614556,
     "ci95": [
-     0.5559299191374663,
-     0.8854447439353099
+     0.5587712331915872,
+     0.8942908861863301
     ]
    },
    {
     "direction": "depressed",
     "resid_auc": 0.7284366576819407,
     "ci95": [
-     0.5336421832884097,
-     0.8969002695417789
+     0.5409079982517483,
+     0.9044120645709433
     ]
    }
   ],
@@ -420,8 +420,8 @@
   "desperate": {
    "resid_auc": 0.5916442048517521,
    "ci95": [
-    0.41172506738544473,
-    0.7560646900269542
+    0.4194120072624745,
+    0.7656542056074767
    ]
   }
  },
@@ -518,6 +518,21 @@
   "events": 87,
   "modal_value": -1.0,
   "modal_share": 0.7399193548387096,
+  "steered_share": 0.9596774193548387,
+  "by_steering": {
+   "steered": {
+    "n": 952,
+    "events": 80,
+    "auc_vint": 0.8322391055045871,
+    "auc_vtext": 0.6458930619266054
+   },
+   "unsteered": {
+    "n": 40,
+    "events": 7,
+    "auc_vint": 0.9004329004329005,
+    "auc_vtext": 0.6601731601731602
+   }
+  },
   "p33": -1.0,
   "p66": -1.0,
   "p33_eq_p66": true,
@@ -537,17 +552,17 @@
   ],
   "emotion_0_3": [
    12,
-   160
+   158
   ],
   "random_0_3": [
    13,
    200
   ],
-  "fisher_emotion_vs_random": 0.8352595876392888,
+  "fisher_emotion_vs_random": 0.683039912767212,
   "vs_baseline": {
    "emotion": {
-    "odds_ratio": 0.6138996138996139,
-    "p": 0.2985511629833185
+    "odds_ratio": 0.6223091976516634,
+    "p": 0.29979709598488674
    },
    "random": {
     "odds_ratio": 0.5263559969442322,
@@ -559,8 +574,8 @@
    "emotion_abs_ge_0.3": 1324.196875,
    "random": 1456.08
   },
-  "mde_rate": 0.15732640213899596,
-  "mde_relative_risk": 2.420406186753784,
+  "mde_rate": 0.15766325989644536,
+  "mde_relative_risk": 2.425588613791467,
   "sofroniew_claimed_rr": 14,
   "trend_desperate": {
    "z": -1.4166674647714212,
@@ -668,8 +683,8 @@
     "raw_auc": 0.6908023483365949,
     "resid_auc": 0.33268101761252444,
     "resid_ci95": [
-     0.19765166340508805,
-     0.4774951076320939
+     0.19402955020840415,
+     0.4864864864864865
     ],
     "rho_length": 0.6189354279498478,
     "resid_ci_excludes_half": true
@@ -678,8 +693,8 @@
     "raw_auc": 0.4500978473581213,
     "resid_auc": 0.2622309197651663,
     "resid_ci95": [
-     0.1232876712328767,
-     0.410958904109589
+     0.11842105263157894,
+     0.4189189189189189
     ],
     "rho_length": 0.44505398144766894,
     "resid_ci_excludes_half": true
@@ -688,8 +703,8 @@
     "raw_auc": 0.9178082191780822,
     "resid_auc": 0.6457925636007827,
     "resid_ci95": [
-     0.39525440313111543,
-     0.8708414872798435
+     0.38397604166666666,
+     0.8767809027777778
     ],
     "rho_length": 0.6027475974510268,
     "resid_ci_excludes_half": false
@@ -698,8 +713,8 @@
     "raw_auc": 0.7084148727984344,
     "resid_auc": 0.5322896281800391,
     "resid_ci95": [
-     0.29354207436399216,
-     0.7730430528375736
+     0.28201230076230077,
+     0.7808602739726026
     ],
     "rho_length": 0.3919424246119287,
     "resid_ci_excludes_half": false
@@ -708,8 +723,8 @@
     "raw_auc": 0.6771037181996086,
     "resid_auc": 0.5244618395303327,
     "resid_ci95": [
-     0.2896281800391389,
-     0.7613013698630139
+     0.2792253521126761,
+     0.7729965431558348
     ],
     "rho_length": 0.37287102691346263,
     "resid_ci_excludes_half": false
@@ -718,8 +733,8 @@
     "raw_auc": 0.47162426614481406,
     "resid_auc": 0.36007827788649704,
     "resid_ci95": [
-     0.136986301369863,
-     0.5910469667318984
+     0.11344091948953998,
+     0.6216282894736842
     ],
     "rho_length": 0.34435184399989915,
     "resid_ci_excludes_half": false
@@ -728,8 +743,24 @@
   "note": "80-trial subset; not the 120-trial association set"
  },
  "prereg": {
-  "verdict": "INSUFFICIENT-DATA: cannot make confirmatory H5 claim. Re-run after Phase 4 (B) extended_unsteered.jsonl lands and after diverse Task A variants have been collected.",
+  "verdict_premerge": "INSUFFICIENT-DATA: cannot make confirmatory H5 claim. Re-run after Phase 4 (B) extended_unsteered.jsonl lands and after diverse Task A variants have been collected.",
   "rule": "logo_meaningful AND logo_mean_auc >= 0.70 AND permutation_p < 0.01",
-  "logo_meaningful": false
+  "logo_meaningful_premerge": false,
+  "merged": {
+   "verdict": "SUPPORTED",
+   "logo_meaningful": true,
+   "logo_mean_auc": 0.7539045139619852,
+   "n_tasks_with_variance": 3,
+   "n_tasks_total": 4,
+   "min_tasks_required": 3,
+   "permutation_p": 9.999000099990002e-05,
+   "pooled_auc": 0.8322102425876011
+  },
+  "length_passes_same_rule": {
+   "passes": true,
+   "logo_mean_auc": 0.879765296431963,
+   "pooled_auc": 0.8881401617250674,
+   "permutation_p": 9.999000099990002e-05
+  }
  }
 }

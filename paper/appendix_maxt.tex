@@ -1,10 +1,33 @@
 \section{The max-$T$ resampling procedure}
 \label{app:maxt}
 
-The statistic is the nested likelihood-ratio $\chi^2(1)$ for adding one direction to
-a model that already contains response length. The family is all 50 directions, and
-the family-wise $p$ for a direction is the fraction of null draws whose \emph{maximum}
-statistic over the 50 equals or exceeds the observed value for that direction.
+The statistic for adding one direction to a model that already contains response
+length is
+\[
+T \;=\; 2\bigl\{\ell(\hat\beta_{\text{ridge,full}}) - \ell(\hat\beta_{\text{ridge,null}})\bigr\},
+\]
+where $\ell$ is the \emph{unpenalized} log-likelihood and both $\hat\beta$ are
+ridge-penalized estimates ($\lambda = 1$, intercept unpenalized). Because the log
+likelihoods are evaluated at ridge-penalized estimates, we do not use the usual
+likelihood-ratio $\chi^2$ reference distribution, and we do not label $T$ a
+$\chi^2(1)$ anywhere. All $p$-values are instead obtained from the resampling
+distribution of $T$. We report two, both from the same conditional
+null: a \emph{per-direction} resampling $p$, the fraction of null draws in which
+that direction's own $T$ equals or exceeds the observed value, and a
+\emph{family-wise max-$T$} $p$, which additionally corrects over the 50 tested
+directions. Everything that
+depends on the sample is recomputed inside every draw: the length-only fit, all 50
+alternatives, the ridge penalty and intercept treatment, the nuisance covariates and
+the convergence handling. Nothing is held fixed across replicates.
+
+Both choices are forced by the data rather than preferred. Because length alone
+predicts the outcome at AUC $0.888$, permuting labels freely would test a null the
+statistic does not condition on, so the conditional null preserves the
+outcome--length relationship instead. Because 14 events allow quasi-separation, the
+estimates are ridge-penalized, with no complete separation observed. Neither
+choice drives the result: both nulls give the same 18 directions, and sweeping
+$\lambda$ moves the count only between 16 and 18 with \texttt{desperate} null
+throughout ($p \ge 0.38$).
 
 Two nulls are used. The free null permutes the outcome labels, which tests
 $y \perp \text{direction}$ marginally. The conditional null fits
@@ -31,3 +54,15 @@ At $B = 10{,}000$ the two agree, which is why the earlier impression is reported
 as Monte Carlo noise rather than a property of the null. The same machinery, with
 only the nuisance model changed, produces the flexible-length and task-fixed-effect
 counts in \S\ref{sec:dirs}.
+
+\paragraph{The bootstrap design.} The design fixed 30 generations for each of four
+prompts and did not fix the event count, so every interval we report draws 30 with
+replacement \emph{within each prompt stratum} and lets the event count vary. The
+alternative, resampling positives and negatives separately, is standard for an AUC
+but conditions on the observed 14 events, which the design did not fix. The choice
+could have mattered, since the per-prompt rates are $4/30$, $0/30$, $9/30$ and
+$1/30$. It does not. Under outcome stratification \texttt{desperate} gives
+$[0.745, 0.908]$ against the reported $[0.742, 0.911]$, \texttt{len(response)}
+gives $[0.787, 0.967]$ against $[0.781, 0.968]$, and the paired difference is
+$+0.057$ $[-0.080, +0.183]$ against $+0.055$ $[-0.088, +0.184]$. No endpoint moves
+by more than $0.006$, and no draw is degenerate despite the $0/30$ stratum.

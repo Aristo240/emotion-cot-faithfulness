@@ -4,8 +4,18 @@
   "D": 0.09192961800313701,
   "V": 0.1580509341395777
  },
+ "delta_uncapped": {
+  "A": 0.0826254568407638,
+  "D": 0.0874951094823132,
+  "V": 0.07446260864477783
+ },
  "n": 10062,
  "probe_beats_tfidf": {
+  "A": true,
+  "D": true,
+  "V": true
+ },
+ "probe_beats_tfidf_uncapped": {
   "A": true,
   "D": true,
   "V": true
@@ -15,10 +25,15 @@
   "D": 0.1544758774059852,
   "V": 0.37731932501993193
  },
- "protocol": "RidgeCV alphas [0.1,1,10,100], KFold(5, shuffle, seed 20260510); TF-IDF (top-2000 unigrams) fitted within fold",
+ "protocol": "RidgeCV alphas [0.1,1,10,100], KFold(5, shuffle, seed 20260510); TF-IDF fitted within fold. Capped row: top-2000 unigrams, min_df=2. Uncapped row: top-8000 unigrams, min_df=1 -- the manuscript quotes the uncapped row because capping weakens the baseline and so flatters the probe.",
  "tfidf_cv_r2": {
   "A": 0.09249172437999961,
   "D": 0.06254625940284819,
   "V": 0.21926839088035424
+ },
+ "tfidf_uncapped_cv_r2": {
+  "A": 0.0970476359092152,
+  "D": 0.066980767923672,
+  "V": 0.3028567163751541
  }
 }

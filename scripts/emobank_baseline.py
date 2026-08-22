@@ -12,7 +12,15 @@ Protocol is copied from scripts/run_emobank_validation.py:210-221 -- RidgeCV ove
 alphas [0.1, 1, 10, 100], KFold(5, shuffle=True, random_state=20260510) -- so the
 only thing that differs between the two rows is the feature set.
 
-Analysis-only. Writes results/emobank_baseline.json.  Runtime ~1 min.
+Two TF-IDF rows are reported. The capped row (2000 unigrams, min_df=2) is the
+original. The uncapped row (8000 unigrams, min_df=1) is the one the manuscript
+quotes, because capping the baseline makes it WEAKER and therefore flatters the
+probe; an earlier version of this file called the cap "conservative", which had
+the direction of the bias backwards. A baseline is treated conservatively by
+being given more capacity, not less. On valence the cap costs the baseline about
+0.08 R^2, which is more than half the probe's apparent margin.
+
+Analysis-only. Writes results/emobank_baseline.json.  Runtime ~10 min.
 """
 import json
 from pathlib import Path
@@ -52,25 +60,35 @@ def probe_features(tr, te):
     return Xp[tr], Xp[te]
 
 
-def tfidf_features(tr, te):
-    """Fitted inside the fold: the vocabulary never sees held-out sentences.
-    Capped at the 2000 most frequent unigrams so RidgeCV's exact LOO path stays
-    tractable; this can only make the baseline weaker, i.e. it is conservative."""
-    v = TfidfVectorizer(lowercase=True, ngram_range=(1, 1), min_df=2,
-                        max_features=2000, sublinear_tf=True)
-    return (v.fit_transform([text[i] for i in tr]).toarray(),
-            v.transform([text[i] for i in te]).toarray())
+def make_tfidf(max_features, min_df):
+    """Fitted inside the fold: the vocabulary never sees held-out sentences."""
+    def f(tr, te):
+        v = TfidfVectorizer(lowercase=True, ngram_range=(1, 1), min_df=min_df,
+                            max_features=max_features, sublinear_tf=True)
+        return (v.fit_transform([text[i] for i in tr]).toarray(),
+                v.transform([text[i] for i in te]).toarray())
+    return f
 
 
 probe = cv_r2(probe_features)
-tfidf = cv_r2(tfidf_features)
-print(f"  probe (50-d)      V {probe['V']:.3f}  A {probe['A']:.3f}  D {probe['D']:.3f}")
-print(f"  unigram TF-IDF    V {tfidf['V']:.3f}  A {tfidf['A']:.3f}  D {tfidf['D']:.3f}")
+tfidf = cv_r2(make_tfidf(2000, 2))
+tfidf_unc = cv_r2(make_tfidf(8000, 1))
+print(f"  probe (50-d)          V {probe['V']:.3f}  A {probe['A']:.3f}  D {probe['D']:.3f}")
+print(f"  TF-IDF 2000 (capped)  V {tfidf['V']:.3f}  A {tfidf['A']:.3f}  D {tfidf['D']:.3f}")
+print(f"  TF-IDF 8000 (uncapped) V {tfidf_unc['V']:.3f}  A {tfidf_unc['A']:.3f}"
+      f"  D {tfidf_unc['D']:.3f}   <- quoted in the manuscript")
+print("  capping the baseline flatters the probe; the uncapped row is the fair one")
 
 R = {"n": len(rows), "probe_cv_r2": probe, "tfidf_cv_r2": tfidf,
+     "tfidf_uncapped_cv_r2": tfidf_unc,
      "delta": {d: probe[d] - tfidf[d] for d in DIMS},
+     "delta_uncapped": {d: probe[d] - tfidf_unc[d] for d in DIMS},
      "protocol": "RidgeCV alphas [0.1,1,10,100], KFold(5, shuffle, seed 20260510); "
-                 "TF-IDF (top-2000 unigrams) fitted within fold",
-     "probe_beats_tfidf": {d: bool(probe[d] > tfidf[d]) for d in DIMS}}
+                 "TF-IDF fitted within fold. Capped row: top-2000 unigrams, "
+                 "min_df=2. Uncapped row: top-8000 unigrams, min_df=1 -- the "
+                 "manuscript quotes the uncapped row because capping weakens the "
+                 "baseline and so flatters the probe.",
+     "probe_beats_tfidf": {d: bool(probe[d] > tfidf[d]) for d in DIMS},
+     "probe_beats_tfidf_uncapped": {d: bool(probe[d] > tfidf_unc[d]) for d in DIMS}}
 OUT.write_text(json.dumps(R, indent=1, sort_keys=True))
 print(f"wrote {OUT.relative_to(ROOT)}")

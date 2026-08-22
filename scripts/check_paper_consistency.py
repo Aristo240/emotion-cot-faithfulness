@@ -25,6 +25,8 @@ E = json.load(open(ROOT / "results/emobank_baseline.json"))
 RB = json.load(open(ROOT / "results/robustness_controls.json"))
 SD = json.load(open(ROOT / "results/steering_directional.json"))
 RS = json.load(open(ROOT / "results/random_subspace_null.json"))
+BD = json.load(open(ROOT / "results/bootstrap_design.json"))
+DR = json.load(open(ROOT / "results/design_robustness.json"))
 
 fails, checks = [], 0
 
@@ -70,15 +72,15 @@ chk("diverse claude shortcut", 194, J["judge"]["diverse_claude_shortcut"], tol=0
 # ---- §4.2 length control
 a = J["association"]
 chk("desperate AUC", 0.832, a["auc_desperate"])
-chk("desperate CI lo", 0.745, a["ci_desperate"][0])
-chk("desperate CI hi", 0.908, a["ci_desperate"][1])
+chk("desperate CI lo", 0.742, a["ci_desperate"][0])
+chk("desperate CI hi", 0.911, a["ci_desperate"][1])
 chk("length AUC", 0.888, a["auc_length"])
-chk("length CI lo", 0.787, a["ci_length"][0])
-chk("length CI hi", 0.967, a["ci_length"][1])
+chk("length CI lo", 0.781, a["ci_length"][0])
+chk("length CI hi", 0.968, a["ci_length"][1])
 chk("rho desp-length", 0.606, a["spearman_desp_length"]["rho"])
-chk("paired dAUC", 0.057, a["paired_dauc_length_minus_desperate"]["mean"])
-chk("paired dAUC lo", -0.080, a["paired_dauc_length_minus_desperate"]["ci95"][0], tol=1e-3)
-chk("paired dAUC hi", 0.183, a["paired_dauc_length_minus_desperate"]["ci95"][1], tol=1e-3)
+chk("paired dAUC", 0.055, a["paired_dauc_length_minus_desperate"]["mean"])
+chk("paired dAUC lo", -0.088, a["paired_dauc_length_minus_desperate"]["ci95"][0], tol=1e-3)
+chk("paired dAUC hi", 0.184, a["paired_dauc_length_minus_desperate"]["ci95"][1], tol=1e-3)
 chk("LR chi2", 3.26, a["lr_test_vint_over_length"]["chi2"], tol=5e-3)
 chk("LR p", 0.071, a["lr_test_vint_over_length"]["p"], tol=5e-4)
 
@@ -88,8 +90,8 @@ for name, resid in [("bored", 0.858), ("lonely", 0.760), ("nostalgic", 0.797),
                     ("melancholy", 0.765), ("gloomy", 0.761),
                     ("compassionate", 0.265), ("sad", 0.734), ("desperate", 0.592)]:
     chk(f"{name} residAUC (descriptive)", resid, d[name]["resid_auc"])
-chk("desperate resid CI lo", 0.412, J["directions"]["desperate"]["ci95"][0], tol=1e-3)
-chk("desperate resid CI hi", 0.756, J["directions"]["desperate"]["ci95"][1], tol=1e-3)
+chk("desperate resid CI lo", 0.419, J["directions"]["desperate"]["ci95"][0], tol=1e-3)
+chk("desperate resid CI hi", 0.766, J["directions"]["desperate"]["ci95"][1], tol=1e-3)
 chk("n directions", 50, J["directions"]["n_directions"], tol=0)
 # The residualised-AUC permutation/BH inference was retired: it was a second,
 # looser criterion on a different statistic that disagreed with the reported one.
@@ -183,6 +185,21 @@ chk("total pairs", 78735, v["total_roc_pairs"], tol=0)
 chk("tie fraction", 0.552, v["tied_pair_fraction"], tol=5e-4)
 chk("vtext AUC all", 0.647, v["auc_vtext_all"])
 chk("vtext AUC nonmodal", 0.836, v["auc_vtext_nonmodal"])
+# the pool is 96% steered and V_int is the manipulated coordinate; the paper
+# discloses this and the split must show it does not drive the comparison
+chk("vtext pool steered share", 0.96, v["steered_share"], tol=5e-3)
+chk("vtext pool steered n", 952, v["by_steering"]["steered"]["n"], tol=0)
+chk("vtext pool unsteered n", 40, v["by_steering"]["unsteered"]["n"], tol=0)
+chk("V_int AUC steered", 0.832, v["by_steering"]["steered"]["auc_vint"])
+chk("V_int AUC unsteered", 0.900, v["by_steering"]["unsteered"]["auc_vint"])
+chk("V_text AUC steered", 0.646, v["by_steering"]["steered"]["auc_vtext"])
+chk("V_text AUC unsteered", 0.660, v["by_steering"]["unsteered"]["auc_vtext"])
+checks += 1
+if not v["by_steering"]["steered"]["auc_vint"] > v["by_steering"]["steered"]["auc_vtext"]:
+    fails.append("the V_int > V_text ordering does not hold on steered trials")
+in_tex("That pool is $96\\%$ steered")
+in_tex("At this sample size the emotion directions do not beat an arbitrary set")
+in_tex("mean response length")
 chk("vint AUC all", 0.837, v["auc_vint_all"])
 chk("n nonmodal", 258, v["n_nonmodal"], tol=0)
 chk("events nonmodal", 22, v["events_nonmodal"], tol=0)
@@ -195,18 +212,30 @@ c = J["causal"]
 chk("baseline hacks", 14, c["baseline"][0], tol=0)
 chk("baseline n", 120, c["baseline"][1], tol=0)
 chk("emotion hacks", 12, c["emotion_0_3"][0], tol=0)
-chk("emotion n", 160, c["emotion_0_3"][1], tol=0)
+chk("emotion n", 158, c["emotion_0_3"][1], tol=0)   # UNCLEAR dropped, per section 3
 chk("random hacks", 13, c["random_0_3"][0], tol=0)
 chk("random n", 200, c["random_0_3"][1], tol=0)
-chk("fisher emo vs rnd", 0.835, c["fisher_emotion_vs_random"], tol=5e-4)
-chk("emotion vs base OR", 0.61, c["vs_baseline"]["emotion"]["odds_ratio"], tol=5e-3)
+chk("fisher emo vs rnd", 0.683, c["fisher_emotion_vs_random"], tol=5e-4)
+chk("emotion vs base OR", 0.62, c["vs_baseline"]["emotion"]["odds_ratio"], tol=5e-3)
 chk("emotion vs base p", 0.30, c["vs_baseline"]["emotion"]["p"], tol=5e-3)
 chk("random vs base OR", 0.53, c["vs_baseline"]["random"]["odds_ratio"], tol=5e-3)
 chk("random vs base p", 0.14, c["vs_baseline"]["random"]["p"], tol=5e-3)
-chk("MDE relative risk", 2.42, c["mde_relative_risk"], tol=5e-3)
+checks += 1
+_cells = SD["cells"]
+_pool_n = (_cells["desperate@+0.30"][1] + _cells["desperate@-0.30"][1]
+           + _cells["calm@+0.30"][1] + _cells["calm@-0.30"][1])
+_pool_x = (_cells["desperate@+0.30"][0] + _cells["desperate@-0.30"][0]
+           + _cells["calm@+0.30"][0] + _cells["calm@-0.30"][0])
+if (_pool_x, _pool_n) != tuple(c["emotion_0_3"]):
+    fails.append(f"Table 2 pooled row {tuple(c['emotion_0_3'])} does not equal the "
+                 f"sum of its per-arm cells ({_pool_x}, {_pool_n})")
+chk("MDE relative risk", 2.43, c["mde_relative_risk"], tol=5e-3)
 chk("trend z", -1.42, c["trend_desperate"]["z"], tol=5e-3)
 chk("trend p", 0.157, c["trend_desperate"]["p"], tol=5e-4)
 chk("text inj p", 0.417, c["text_injection_vs_baseline_p"], tol=5e-4)
+chk("unsteered mean length", 1402, c["mean_response_length"]["unsteered"], tol=0.5)
+chk("emotion arm mean length", 1324, c["mean_response_length"]["emotion_abs_ge_0.3"], tol=0.5)
+chk("random arm mean length", 1456, c["mean_response_length"]["random"], tol=0.5)
 ml = c["mean_response_length"]
 chk("len unsteered", 1402, ml["unsteered"], tol=0.5)
 chk("len emotion", 1324, ml["emotion_abs_ge_0.3"], tol=0.5)
@@ -216,12 +245,12 @@ chk("len random", 1456, ml["random"], tol=0.5)
 chk("layer sweep n", 80, J["layers"]["n"], tol=0)
 chk("length AUC tokens", 0.912, J["layers"]["length_auc_tokens"])
 for lay, raw, res, lo, hi, rr in [
-    ("13", 0.691, 0.333, 0.198, 0.477, 0.619),
-    ("26", 0.450, 0.262, 0.123, 0.411, 0.445),
-    ("39", 0.918, 0.646, 0.395, 0.871, 0.603),
-    ("52", 0.708, 0.532, 0.294, 0.773, 0.392),
-    ("53", 0.677, 0.524, 0.290, 0.761, 0.373),
-    ("65", 0.472, 0.360, 0.137, 0.591, 0.344),
+    ("13", 0.691, 0.333, 0.194, 0.486, 0.619),
+    ("26", 0.450, 0.262, 0.118, 0.419, 0.445),
+    ("39", 0.918, 0.646, 0.384, 0.877, 0.603),
+    ("52", 0.708, 0.532, 0.282, 0.781, 0.392),
+    ("53", 0.677, 0.524, 0.279, 0.773, 0.373),
+    ("65", 0.472, 0.360, 0.113, 0.622, 0.344),
 ]:
     L = J["layers"]["per_layer"][lay]
     chk(f"layer {lay} raw", raw, L["raw_auc"])
@@ -234,7 +263,7 @@ for lay in ("39", "52", "53", "65"):
     checks += 1
     if J["layers"]["per_layer"][lay]["resid_ci_excludes_half"]:
         fails.append(f"paper claims layer {lay} spans chance, but its CI excludes 0.5")
-in_tex("layer in our sweep offers a length-independent version")
+in_tex("we never steered the surviving directions")
 
 # ---- §4.6b layer profile correlations
 sp = J["layer_profiles"]["spearman"]
@@ -256,21 +285,111 @@ if rates != sorted([0.075, 0.075, 0.075, 0.025, 0.075]):
 
 in_tex("late-layer phenomenon")
 in_tex("no complete separation")
-in_tex("one component detected many times")   # softened: PC1 is not proof of a single axis
+in_tex("better described as one shared axis")   # softened: PC1 is not proof of a single axis
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
-in_tex("Four controls change the conclusion")
+in_tex("controls change the conclusion")
+in_tex("meets every one of its thresholds too")
 
-# ---- §4.7 prereg
-if "INSUFFICIENT-DATA" not in J["prereg"]["verdict"]:
-    fails.append("prereg verdict is not INSUFFICIENT-DATA")
+# ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
+# provenance only; the paper must not quote its verdict as current)
+_pm = J["prereg"]
 checks += 1
+if "INSUFFICIENT-DATA" not in _pm["verdict_premerge"]:
+    fails.append("pre-merge prereg verdict is no longer INSUFFICIENT-DATA")
+_mg = _pm["merged"]
+checks += 1
+if _mg["verdict"] != "SUPPORTED":
+    fails.append(f"merged prereg verdict is {_mg['verdict']!r}, paper says SUPPORTED")
+chk("merged LOGO mean AUC", 0.754, _mg["logo_mean_auc"])
+chk("merged pooled AUC", 0.832, _mg["pooled_auc"], tol=5e-4)
+chk("merged variants with variance", 3, _mg["n_tasks_with_variance"], tol=0)
+chk("merged variants total", 4, _mg["n_tasks_total"], tol=0)
+chk("merged min tasks required", 3, _mg["min_tasks_required"], tol=0)
+checks += 1
+if not _mg["permutation_p"] < 0.01:
+    fails.append("merged permutation p is not below the preregistered .01 bar")
+_lc = _pm["length_passes_same_rule"]
+checks += 1
+if not _lc["passes"]:
+    fails.append("paper says a character count clears the registered rule; it does not")
+chk("length LOGO mean AUC", 0.880, _lc["logo_mean_auc"])
+chk("length pooled AUC under the rule", 0.888, _lc["pooled_auc"], tol=5e-4)
+checks += 1
+if not _lc["logo_mean_auc"] > _mg["logo_mean_auc"]:
+    fails.append("paper says the character count clears the bar by MORE than the probe")
+in_tex("The registered rule\nis met")
+in_tex("\\texttt{len(response)} \\emph{also} passes every threshold")
+in_tex("We do not claim the count beats the probe")
+in_tex("Neither reading supports")
+
+# ---- bootstrap design: the reported CIs must not depend on the stratification
+chk("prompt-strat desperate lo", 0.742, BD["desperate"]["prompt"]["lo"])
+chk("prompt-strat desperate hi", 0.911, BD["desperate"]["prompt"]["hi"])
+chk("prompt-strat length lo", 0.781, BD["length"]["prompt"]["lo"])
+chk("prompt-strat length hi", 0.968, BD["length"]["prompt"]["hi"])
+chk("prompt-strat delta mean", 0.055, BD["delta_length_minus_desperate"]["prompt"]["mean"])
+chk("prompt-strat delta lo", -0.088, BD["delta_length_minus_desperate"]["prompt"]["lo"])
+chk("prompt-strat delta hi", 0.184, BD["delta_length_minus_desperate"]["prompt"]["hi"])
+checks += 1
+if BD["max_ci_shift"] > 0.006:
+    fails.append(f"bootstrap design shifts a CI endpoint by {BD['max_ci_shift']:.4f}, "
+                 f"more than the 0.006 the paper claims")
+checks += 1
+for _m in ("outcome", "prompt"):
+    if BD["desperate"][_m]["usable_draws"] != BD["desperate"][_m]["B"]:
+        fails.append(f"{_m}-stratified bootstrap produced degenerate draws")
+# the reported CIs must match the PROMPT-stratified arm: that is the design-
+# consistent scheme and what the paper now reports
+chk("reported CI is the prompt arm (lo)", J["association"]["ci_desperate"][0],
+    BD["desperate"]["prompt"]["lo"])
+chk("reported CI is the prompt arm (hi)", J["association"]["ci_desperate"][1],
+    BD["desperate"]["prompt"]["hi"])
+in_tex("No endpoint moves by more than $0.006$")
+in_tex("within each prompt stratum")
+in_tex("we do not label $T$ a")
+in_tex("does not validate the labels")
+
+# ---- design facts and label robustness (results/design_robustness.json)
+chk("clustered trials", 120, DR["clustering"]["n_trials"], tol=0)
+chk("distinct prompts", 4, DR["clustering"]["n_distinct_prompts"], tol=0)
+checks += 1
+if set(DR["clustering"]["rollouts_per_prompt"].values()) != {30}:
+    fails.append("the paper says 30 rollouts per prompt; the data disagree")
+chk("bored chi2 baseline", 38.7, DR["label_robustness"]["chi2_baseline"], tol=5e-2)
+chk("bored chi2 worst 1 flip", 24.5, DR["label_robustness"]["chi2_worst_single_flip"], tol=5e-2)
+chk("bored chi2 worst 2 flips", 16.2, DR["label_robustness"]["chi2_worst_two_flips"], tol=5e-2)
+checks += 1
+if DR["label_robustness"]["chi2_worst_two_flips"] <= 14:
+    fails.append("the paper says two flips leave `bored` above the 12-14 band")
+in_tex("we sampled 30 independent")
+in_tex("conditional on these four prompts")
+# the statistic has no chi2_1 reference; the paper must not label it one
+checks += 1
+if "\\chi^2(1)" in _MAIN:
+    fails.append("the body still labels the ridge statistic a chi^2(1)")
+in_tex("we do not use the usual")
+_dm = C["desperate_marginal"]
+chk("per-direction resampling p (conditional)", 0.060, _dm["p_conditional"], tol=5e-4)
+chk("desperate T", 3.31, _dm["stat"], tol=5e-3)
+checks += 1
+if "0.069" in TEX_FLAT:
+    fails.append("a chi^2-derived p = 0.069 is still in the manuscript")
+in_tex("Bootstraps are stratified on prompt to match the design")
+in_tex("Cochran--Armitage trend test")
+in_tex("\\emph{signed} strength")
+in_tex("unpenalized")
+in_tex("Gram--Schmidt projected orthogonal to all 50")
+in_tex("under the worst")
 
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
 in_tex("No evaluated layer gives the preregistered direction")     # layer objection answered
 in_tex("we steered only at the registered layer")                  # no claim of steering every layer
 in_tex("conceptual, not direct, replication")   # replication scope stated
+in_tex("the position \\citet{sofroniew2026} found")   # token-position deviation stated
+in_tex("the mean residual-stream norm at layer 53")        # steering magnitude stated
+in_tex("capping the baseline at 2000 features")            # baseline handicap disclosed
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
 in_tex("max-$T$ over 50, length-preserving null")
@@ -357,13 +476,15 @@ if not RS.get("arms_from_same_extraction"):
     fails.append("random-subspace arms are not from a single extraction")
 
 # ---- §4.1 trivial text baseline (added 2026-08-20 in response to review)
-chk("TF-IDF valence R2", 0.219, E["tfidf_cv_r2"]["V"])
-chk("TF-IDF arousal R2", 0.092, E["tfidf_cv_r2"]["A"])
-chk("TF-IDF dominance R2", 0.063, E["tfidf_cv_r2"]["D"])
+chk("TF-IDF valence R2 (capped, quoted as the handicap)", 0.219, E["tfidf_cv_r2"]["V"])
+chk("TF-IDF valence R2 (uncapped, quoted in the paper)", 0.303, E["tfidf_uncapped_cv_r2"]["V"])
+chk("TF-IDF arousal R2 (uncapped)", 0.097, E["tfidf_uncapped_cv_r2"]["A"])
+chk("TF-IDF dominance R2 (uncapped)", 0.067, E["tfidf_uncapped_cv_r2"]["D"])
 for _d in ("V", "A", "D"):
     checks += 1
-    if not E["probe_beats_tfidf"][_d]:
-        fails.append(f"paper says the probe clears the text baseline; it does not on {_d}")
+    if not E["probe_beats_tfidf_uncapped"][_d]:
+        fails.append(f"paper says the probe clears the text baseline; it does not on {_d} "
+                     f"once the baseline is uncapped")
     # the baseline script must reproduce the probe numbers it is compared against
     chk(f"baseline run reproduces probe {_d}", J["semantic"]["cv_r2"][_d], E["probe_cv_r2"][_d])
 
@@ -483,12 +604,16 @@ _oth = sum(("Not evaluable" in r or "Not identifiable" in r or "Inconclusive" in
 # 1 supported, 1 exploratory, 1 not supported, and 4 unresolved for four different
 # reasons: not identifiable, no effect detected, not identifiable (text), inconclusive.
 _exp = sum("Exploratory" in r for r in _rows)
+_met = sum("Met, uninformative" in r for r in _rows)
 _unres = sum(("Not identifiable" in r or "No effect detected" in r
               or "Inconclusive" in r or "Not evaluable" in r) for r in _rows)
-if not (len(_rows) == 7 and _sup == 1 and _not == 1 and _exp == 1 and _unres == 4):
+# 1 supported, 1 exploratory, 1 not supported, 1 met-but-uninformative, and 4
+# unresolved for four different reasons.
+if not (len(_rows) == 8 and _sup == 1 and _not == 1 and _exp == 1
+        and _met == 1 and _unres == 4):
     fails.append(f"Table 1 verdicts ({len(_rows)} rows: {_sup} supported, {_not} not "
-                 f"supported, {_exp} exploratory, {_unres} unresolved) contradict the "
-                 f"intro tally of 1/1/1/4")
+                 f"supported, {_exp} exploratory, {_met} met-uninformative, {_unres} "
+                 f"unresolved) contradict the intro tally of 1/1/1/1/4")
 # the 50-direction sweep is post hoc, so the paper must not call it a supported finding
 checks += 1
 if "selection-corrected finding" in TEX_FLAT:
