@@ -393,6 +393,20 @@ in_tex("unpenalized")
 in_tex("Gram--Schmidt projected orthogonal to all 50")
 in_tex("under the worst")
 
+# ---- the one "Supported" verdict must rest on a tested margin
+_pd = E["paired_fold_diff_vs_uncapped"]
+chk("paired fold diff V", 0.074, _pd["V"]["mean_diff"])
+chk("paired fold diff A", 0.083, _pd["A"]["mean_diff"])
+chk("paired fold diff D", 0.087, _pd["D"]["mean_diff"])
+chk("paired fold V lo", 0.036, _pd["V"]["lo"])
+chk("paired fold V hi", 0.113, _pd["V"]["hi"])
+for _d in ("V", "A", "D"):
+    checks += 1
+    if not (_pd[_d]["all_folds_positive"] and _pd[_d]["lo"] > 0):
+        fails.append(f"paper says the EmoBank margin is positive in every fold on {_d}")
+in_tex("positive in\nevery fold")
+in_tex("the usual paired-fold variance estimate is optimistic")
+
 # ---- appendix A: variant description must match config.py, not be invented
 import ast as _ast
 _cfg = (ROOT / "config.py").read_text()
@@ -414,7 +428,7 @@ in_tex("we steered only at the registered layer")                  # no claim of
 in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("the position \\citet{sofroniew2026} found")   # token-position deviation stated
 in_tex("the mean residual-stream norm at layer 53")        # steering magnitude stated
-in_tex("capping the baseline at 2000 features")            # baseline handicap disclosed
+in_tex("baseline at 2000 features would drop it")            # baseline handicap disclosed
 in_tex("Novelty statement")                     # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
 in_tex("max-$T$ over 50, length-preserving null")

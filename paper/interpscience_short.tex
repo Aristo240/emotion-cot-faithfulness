@@ -56,9 +56,9 @@ functional: steering a ``desperate'' direction increases reward hacking. We test
 each claim that interpretation rests on in Llama~3.1~70B. Five controls each change
 the answer at a different link in that chain.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ but
-correlates with response length at $\rho = 0.61$; residualized it falls to $0.592$
-and adds nothing detectable to a length-only model (log-likelihood improvement
-$T = 3.3$, resampling $p = 0.060$; $p = 0.44$ corrected across all 50 directions).
+correlates with length at $\rho = 0.61$; residualized it falls to $0.592$ and adds
+nothing detectable to a length-only model ($T = 3.3$, resampling $p = 0.060$;
+$p = 0.44$ corrected over all 50 directions).
 (ii)~\emph{Multiplicity.} A family-wise-corrected sweep of all 50 directions
 leaves 18 significant, but they are one shared component ($78.8\%$ of variance in
 PC1) and not the one we registered; where we can test it, 50 random directions
@@ -190,7 +190,7 @@ generations. Bootstraps are stratified on prompt to match the design, so every
 interval below is conditional on these four prompts and says nothing about
 variation across others. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} regenerates every number here, and a second
-script gates this manuscript against it with 384 assertions.
+script gates this manuscript against it with 394 assertions.
 
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability, not
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
@@ -213,12 +213,12 @@ human-rated sentences. A ridge readout from the 50 projections to the valence,
 arousal and dominance ratings is fitted inside each cross-validation fold, so the
 reported $R^2$ is out-of-fold, not zero-shot. It reaches $\mathbf{0.377}$ for
 valence, $0.180$ for arousal and $0.154$ for dominance, against $0.303$, $0.097$
-and $0.067$ for unigram TF-IDF under the same folds and estimator. The valence
-margin is capacity-sensitive: capping the baseline at 2000 features drops it to
-$0.219$, so we quote the uncapped row. The probe beats the baseline on all three
-dimensions, proportionally by most on arousal and dominance. This supports
-construct validity for an affect-related axis, not the label on any individual
-vector.
+and $0.067$ for unigram TF-IDF under the same folds and estimator. Capping that
+baseline at 2000 features would drop it to $0.219$ and flatter the probe, so we
+quote the uncapped row. The probe beats it on all three dimensions,
+by $+0.074$, $+0.083$ and $+0.087$ paired across folds and positive in every fold
+(Appendix~\ref{app:extract}), supporting construct validity for an affect-related
+axis but not the label on any individual vector.
 
 \subsection{The preregistered association is not separable from response
 length}
@@ -409,9 +409,8 @@ the response, so \S\ref{sec:len} cannot separate artifact from mediation, and
 max-$T$ controls selection among directions but not what the survivors index. The
 causal null is bounded at one norm and one layer, on 39 trials with one event, and
 we never steered the surviving directions. Two lessons generalize. Probe evaluations should carry a simple output baseline
-beside the usual random-direction control, and \emph{registration does not rescue a
-criterion whose success an uncontrolled nuisance can drive}: ours fixed five things
-and a character count cleared them all.
+beside the usual random-direction control; and \emph{registration does not rescue a
+criterion an uncontrolled nuisance can satisfy}, as ours was, by a character count.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
