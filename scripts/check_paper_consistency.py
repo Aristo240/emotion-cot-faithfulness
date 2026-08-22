@@ -197,8 +197,19 @@ chk("V_text AUC unsteered", 0.660, v["by_steering"]["unsteered"]["auc_vtext"])
 checks += 1
 if not v["by_steering"]["steered"]["auc_vint"] > v["by_steering"]["steered"]["auc_vtext"]:
     fails.append("the V_int > V_text ordering does not hold on steered trials")
-in_tex("That pool is $96\\%$ steered")
-in_tex("At this sample size the emotion directions do not beat an arbitrary set")
+in_tex("The pool is $96\\%$ steered")
+# the readers both asked for these; keep them from drifting out again
+in_tex("pre-generation and so cannot be length-entangled")
+in_tex("the single\nexperiment that would most improve this audit")
+in_tex("The full dose--response grid")
+in_tex("leave-one-task-out (LOTO)")
+checks += 1
+if "LOGO" in TEX_FLAT:
+    fails.append("undefined acronym LOGO is still in the paper")
+checks += 1
+if "H5" in TEX_FLAT:
+    fails.append("undefined label H5 is still in the paper")
+in_tex("a failure to distinguish, not a demonstration of sameness")
 in_tex("mean response length")
 chk("vint AUC all", 0.837, v["auc_vint_all"])
 chk("n nonmodal", 258, v["n_nonmodal"], tol=0)
@@ -288,7 +299,7 @@ in_tex("no complete separation")
 in_tex("better described as one shared axis")   # softened: PC1 is not proof of a single axis
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
-in_tex("controls change the conclusion")
+in_tex("at a different link in that chain")
 in_tex("meets every one of its thresholds too")
 
 # ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
@@ -381,6 +392,20 @@ in_tex("\\emph{signed} strength")
 in_tex("unpenalized")
 in_tex("Gram--Schmidt projected orthogonal to all 50")
 in_tex("under the worst")
+
+# ---- appendix A: variant description must match config.py, not be invented
+import ast as _ast
+_cfg = (ROOT / "config.py").read_text()
+for _fn, _n, _t in (("fast_sum", "10^5", "10^{-4}"), ("sum_list", None, None),
+                    ("total", None, None), ("add_all", None, None)):
+    checks += 1
+    if f'`{_fn}(' not in _cfg and f"`{_fn}`" not in _cfg and f"{_fn}(" not in _cfg:
+        fails.append(f"appendix A names task function {_fn!r}, absent from config.py")
+in_tex("required throughput of roughly")
+in_tex("We do not have an account of that spread")
+checks += 1
+if "raw AUC" not in TEX_FLAT:
+    fails.append("appendix table lost its raw-AUC column")
 
 # ---- structural checks on the paper itself
 in_tex("scripts/paper\\_numbers.py")           # reproducibility pointer present
@@ -599,14 +624,14 @@ _tab = TEX.split(r"\label{tab:summary}")[0].split(r"\midrule")[-1]
 _rows = [r for r in _tab.split(r"\\") if r.strip() and "bottomrule" not in r]
 _sup = sum("Supported" in r for r in _rows)
 _not = sum("Not supported" in r for r in _rows)
-_oth = sum(("Not evaluable" in r or "Not identifiable" in r or "Inconclusive" in r) for r in _rows)
+_oth = sum(("Not evaluable" in r or "Not identifiable" in r or "Untested" in r) for r in _rows)
 # The verdicts are deliberately distinct, so the tally checks each kind separately.
 # 1 supported, 1 exploratory, 1 not supported, and 4 unresolved for four different
 # reasons: not identifiable, no effect detected, not identifiable (text), inconclusive.
 _exp = sum("Exploratory" in r for r in _rows)
 _met = sum("Met, uninformative" in r for r in _rows)
 _unres = sum(("Not identifiable" in r or "No effect detected" in r
-              or "Inconclusive" in r or "Not evaluable" in r) for r in _rows)
+              or "Untested" in r or "Not evaluable" in r) for r in _rows)
 # 1 supported, 1 exploratory, 1 not supported, 1 met-but-uninformative, and 4
 # unresolved for four different reasons.
 if not (len(_rows) == 8 and _sup == 1 and _not == 1 and _exp == 1

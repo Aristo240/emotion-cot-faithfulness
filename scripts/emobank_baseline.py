@@ -92,3 +92,34 @@ R = {"n": len(rows), "probe_cv_r2": probe, "tfidf_cv_r2": tfidf,
      "probe_beats_tfidf_uncapped": {d: bool(probe[d] > tfidf_unc[d]) for d in DIMS}}
 OUT.write_text(json.dumps(R, indent=1, sort_keys=True))
 print(f"wrote {OUT.relative_to(ROOT)}")
+
+# ---------------------------------------------------------------------------
+# Is the probe's margin over the baseline actually distinguishable from zero?
+# Table 1's one "Supported" verdict rests on it, and a paper about untested
+# margins should not leave its own untested. Paired over CV folds.
+# ---------------------------------------------------------------------------
+def fold_scores(make_features):
+    out = {d: [] for d in DIMS}
+    for tr, te in KFold(n_splits=5, shuffle=True, random_state=20260510).split(Y):
+        Xtr, Xte = make_features(tr, te)
+        for j, d in enumerate(DIMS):
+            m = RidgeCV(alphas=[0.1, 1, 10, 100]).fit(Xtr, Y[tr, j])
+            out[d].append(r2_score(Y[te, j], m.predict(Xte)))
+    return out
+
+
+_pf = fold_scores(probe_features)
+_bf = fold_scores(make_tfidf(8000, 1))
+paired = {}
+print("\n  paired over 5 CV folds (probe - uncapped TF-IDF):")
+for d in DIMS:
+    diff = np.array(_pf[d]) - np.array(_bf[d])
+    se = diff.std(ddof=1) / np.sqrt(len(diff))
+    paired[d] = {"mean_diff": float(diff.mean()), "se": float(se),
+                 "lo": float(diff.mean() - 2.776 * se), "hi": float(diff.mean() + 2.776 * se),
+                 "all_folds_positive": bool((diff > 0).all())}
+    print(f"    {d}  diff {diff.mean():+.3f}  95% CI [{paired[d]['lo']:+.3f}, "
+          f"{paired[d]['hi']:+.3f}]  all folds positive: {paired[d]['all_folds_positive']}")
+R = json.loads(OUT.read_text())
+R["paired_fold_diff_vs_uncapped"] = paired
+OUT.write_text(json.dumps(R, indent=1, sort_keys=True))

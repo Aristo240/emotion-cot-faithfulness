@@ -8,6 +8,13 @@ to $-0.580$ at $+0.3$ and $-0.569$ at $+0.5$. The unsteered standard deviation i
 $0.075$, so the $+0.3$ shift is $0.48$ SD. Mann--Whitney against unsteered gives
 $p = 0.019$, $0.30$, $0.025$ and $0.012$ at $-0.5$, $-0.3$, $+0.3$ and $+0.5$.
 
+\paragraph{The full dose--response grid.} Table~\ref{tab:steer} shows the
+$\pm0.3$ arms, which carry the directional claim. The Cochran--Armitage trend test
+in \S\ref{sec:causal} runs over the whole signed grid, whose reward-hacking counts
+are, for \emph{desperate}, $3/40$, $4/40$, $4/40$, $2/39$, $1/39$ and $1/37$ at
+$-0.5$, $-0.3$, $-0.2$, $+0.2$, $+0.3$ and $+0.5$; and for \emph{calm}, $1/40$,
+$4/40$, $2/40$, $7/40$, $3/39$ and $5/40$. Neither arm is monotone in strength.
+
 \paragraph{The arms are not balanced across task variants.} Base rates differ
 sharply across the four \texttt{fast\_sum} variants, at $4/30$, $0/30$, $9/30$ and
 $1/30$ unsteered. The \emph{desperate} arm at $+0.3$ covers all four. The random arm
@@ -55,9 +62,11 @@ in the random arm. The behavioral null is not an artifact of shorter generations
 coordinate the steering manipulates, so that comparison could in principle be
 flattered by the manipulation. Splitting the pool shows it is not.
 $V_{\text{int}}$ reaches AUC $0.832$ on steered trials against $0.900$ on unsteered,
-and $V_{\text{text}}$ reaches $0.646$ against $0.660$. The ordering and the size of
-the gap are the same in both, so the tie-structure argument does not depend on the
-pool's composition.
+and $V_{\text{text}}$ reaches $0.646$ against $0.660$. The ordering holds in both
+and the gap is large in both, though not equal: $0.186$ on steered trials against
+$0.240$ on unsteered, the latter on 40 trials with 7 events. The tie-structure
+argument does not turn on the pool's composition, but that slice is too small to
+compare the gaps.
 
 \paragraph{How many labels would have to be wrong.} Neither judge is checked
 against humans (\S3) and there are 14 events, so the labels are the least

@@ -27,6 +27,7 @@ def render():
             for m in ("baseline_length", "flexible_length", "task_fixed_effects")}
     beta = J["nested_lr"]["penalised"]
     resid = {d["direction"]: d["resid_auc"] for d in J["directions"]["all"]}
+    RAW = json.load(open(ROOT / "results/paper_numbers.json"))["directions"]["raw_auc"]
     dirs = sorted(C["chi2"], key=lambda e: -C["chi2"][e])
 
     L = []
@@ -34,7 +35,7 @@ def render():
     L.append(r"\label{app:dirs}")
     L.append("")
     L.append(r"Table~\ref{tab:appdirs} is the full version of Table~\ref{tab:dirs}: every")
-    L.append(r"direction, its log-likelihood improvement $T$ over a length-only model,")
+    L.append(r"direction, its raw AUC, its log-likelihood improvement $T$ over a length-only model,")
     L.append(r"the family-wise max-$T$ $p$ under the conditional null, its Spearman correlation")
     L.append(r"with response length, its residualized AUC (below $0.5$ means a negative")
     L.append(r"association), and whether it clears $\alpha = .05$ under each of the three")
@@ -44,9 +45,9 @@ def render():
     L.append("")
     L.append(r"\begin{table}[h]")
     L.append(r"\centering\scriptsize\setlength{\tabcolsep}{5pt}")
-    L.append(r"\begin{tabular}{@{}lrrrrcc@{}}")
+    L.append(r"\begin{tabular}{@{}lrrrrrcc@{}}")
     L.append(r"\toprule")
-    L.append(r"Direction & $T$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC"
+    L.append(r"Direction & raw AUC & $T$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC"
              r" & +flex.\ len & +task \\")
     L.append(r"\midrule")
     # the survivors are the top of the chi2 ordering only if significance is monotone
@@ -59,7 +60,7 @@ def render():
         f = r"$\checkmark$" if e in surv["flexible_length"] else "--"
         k = r"$\checkmark$" if e in surv["task_fixed_effects"] else "--"
         name = f"\\texttt{{{e}}}" + ("$^*$" if e == "desperate" else "")
-        L.append(f"{name} & {C['chi2'][e]:.1f} & {C['p_conditional'][e]:.4f} & "
+        L.append(f"{name} & {RAW[e]:.3f} & {C['chi2'][e]:.1f} & {C['p_conditional'][e]:.4f} & "
                  f"${RB['rho_length'][e]:+.2f}$ & {resid[e]:.3f} & {f} & {k} \\\\")
     L.append(r"\bottomrule")
     L.append(r"\end{tabular}")
