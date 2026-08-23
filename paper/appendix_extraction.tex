@@ -19,7 +19,11 @@ emotion, held fixed for the rest of the paper.
 Two consequences matter for the readout. The directions are unit-norm, but the
 trial-level quantity divides only by the direction's norm and not by the
 activation's (\S3), so $V_{\text{int}}$ carries activation magnitude;
-Appendix~\ref{app:readout} reports what changes when that magnitude is removed. And
+Appendix~\ref{app:readout} reports what changes when that magnitude is removed. The
+EmoBank probes of \S\ref{sec:sem} are the exception: that code path divides by the
+activation norm too, so they are cosines and the two settings are not the same
+quantity. Every trial-level value with $\lvert V_{\text{int}}\rvert > 1$ --- $1{,}719$
+of $6{,}000$ --- is one no cosine could take. And
 the labels are inherited from the story prompts, not validated per direction, which
 is why \S\ref{sec:sem} supports an affect-related axis rather than the semantics of
 any individual vector.
@@ -42,10 +46,54 @@ task-fixed-effects nuisance model, and why the bootstrap is stratified on prompt
 
 \paragraph{Is the EmoBank margin distinguishable from zero?} Table~\ref{tab:summary}
 records one \textsc{supported} verdict, and it rested on a difference we had not
-tested. Paired over the five cross-validation folds, the probe beats the uncapped
-unigram baseline by $+0.074$ on valence ($95\%$ CI $[+0.036, +0.113]$), $+0.083$ on
-arousal $[+0.073, +0.093]$ and $+0.087$ on dominance $[+0.068, +0.107]$, positive in
-every fold on every dimension. Two caveats. Five folds give four degrees of freedom,
-so these intervals are wide and coarse. And cross-validation folds share training
-data, so the usual paired-fold variance estimate is optimistic; the intervals should
-be read as a check that the margin is not fold-driven, not as a calibrated test.
+tested against the baseline \S\ref{sec:disc} asks the field to carry. Three things
+had to change before the margin could be read.
+
+\emph{The fold structure leaked.} The 10,062 sentences come from $136$ documents,
+median $30$ sentences each and the largest $11.8\%$ of the corpus, so shuffled
+folds put sentences from one document on both sides of the split. That inflates the
+lexical baseline, which can memorize document vocabulary, far more than the probe:
+grouping folds by document drops TF-IDF from $0.303$ to $0.215$ on valence while
+the probe moves only from $0.377$ to $0.366$. The published $+0.074$ was therefore
+an \emph{under}-statement. All numbers here are document-grouped.
+
+\emph{The baseline was not the one we prescribe.} Adding sentence length and the
+norm of the probe vector to uncapped TF-IDF lifts it to $0.262$, $0.062$ and
+$0.059$. Against that union baseline the probe holds $+0.103$ ($95\%$ CI
+$[+0.063, +0.144]$), $+0.094$ $[+0.041, +0.146]$ and $+0.085$ $[+0.075, +0.096]$,
+positive in all five document groups. Capping the baseline at 2000 features would
+drop it and flatter the probe, so we quote the uncapped row throughout. Length and
+probe-norm \emph{alone} reach only $0.059$, $0.002$ and $0.012$, so on this corpus
+the probe is not a length proxy \textemdash{} the failure it does show in
+\S\ref{sec:len} is a property of the trials, not of the instrument.
+
+\emph{The readout is not the one the rest of the paper uses.} EmoBank probes divide
+by the activation norm as well as the direction's; the trial-level $V_{\text{int}}$
+divides only by the direction's. Under the direction-only readout of
+Appendix~\ref{app:readout}, the one form in which the two settings are the same
+measurement, the margin over the union baseline narrows to $+0.043$, $+0.054$ and
+$+0.064$ and only dominance keeps an interval clear of zero. The scale of the
+50-vector carries real signal --- dropping it costs $0.060$, $0.040$ and $0.021$,
+all intervals excluding zero --- so \S\ref{sec:sem} supports the subspace under a
+readout the behavioral sections do not use.
+
+Two caveats on the intervals themselves. Five folds give four degrees of freedom,
+so they are wide and coarse; and cross-validation folds share training data, so the
+usual paired-fold variance estimate is optimistic. Read them as a check that the
+margin is not fold-driven, not as a calibrated test.
+
+\paragraph{Two validity checks that do not involve a baseline.} Where
+\S\ref{sec:dirs} calls the surviving axis low-arousal negative, that label came
+from the emotion words. In human EmoBank coordinates it also holds: the eight
+directions surviving both readouts average $r = -0.092$ with valence and $-0.106$
+with arousal, against $-0.015$ and $+0.012$ for the other 42. \texttt{grateful} and
+\texttt{nostalgic} are the exceptions, which is why the claim is hedged.
+
+The transport is less comfortable. EmoBank sentences have median length $70$
+characters; the trials the probe is used on have median $1{,}272$, and \emph{no}
+EmoBank sentence falls inside the trials' 5th--95th percentile length band. On the
+direction-only readout the mean probe direction is nearly identical across the two
+settings ($\cos = 0.984$), so the subspace geometry transports; the operating point
+does not. The trial \texttt{desperate} coordinate sits $1.68$ EmoBank SD from the
+validation mean, with $15.8\%$ of trials inside EmoBank's central $90\%$. Semantic
+validity is established at an operating point the behavioral analysis rarely visits.

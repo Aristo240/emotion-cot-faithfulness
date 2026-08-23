@@ -22,6 +22,7 @@ TEX = _MAIN + "\n" + "\n".join(
     for m in re.findall(r"\\input\{([^}]+)\}", _MAIN)
     if (ROOT / f"paper/{m}.tex").exists())
 E = json.load(open(ROOT / "results/emobank_baseline.json"))
+EV = json.load(open(ROOT / "results/emobank_validity.json"))
 RB = json.load(open(ROOT / "results/robustness_controls.json"))
 SD = json.load(open(ROOT / "results/steering_directional.json"))
 RS = json.load(open(ROOT / "results/random_subspace_null.json"))
@@ -409,19 +410,115 @@ in_tex("unpenalized")
 in_tex("Gram--Schmidt projected orthogonal to all 50")
 in_tex("under the worst")
 
-# ---- the one "Supported" verdict must rest on a tested margin
+# ---- the one "Supported" verdict must rest on a tested margin.
+# The random-fold margins stay asserted: they are quoted in the appendix as the
+# leaked comparison the grouped numbers replace, so they must remain reproducible.
 _pd = E["paired_fold_diff_vs_uncapped"]
 chk("paired fold diff V", 0.074, _pd["V"]["mean_diff"])
 chk("paired fold diff A", 0.083, _pd["A"]["mean_diff"])
 chk("paired fold diff D", 0.087, _pd["D"]["mean_diff"])
-chk("paired fold V lo", 0.036, _pd["V"]["lo"])
-chk("paired fold V hi", 0.113, _pd["V"]["hi"])
 for _d in ("V", "A", "D"):
     checks += 1
-    if not (_pd[_d]["all_folds_positive"] and _pd[_d]["lo"] > 0):
-        fails.append(f"paper says the EmoBank margin is positive in every fold on {_d}")
-in_tex("positive in\nevery fold")
+    if not _pd[_d]["all_folds_positive"]:
+        fails.append(f"the random-fold EmoBank margin is not positive in every fold on {_d}")
+
+# ---- §4.1 under document-grouped folds: the estimate the paper now quotes
+_g = EV["cv_r2"]["grouped"]
+_r = EV["cv_r2"]["random"]
+chk("grouped probe V", 0.366, _g["probe"]["V"])
+chk("grouped probe A", 0.156, _g["probe"]["A"])
+chk("grouped probe D", 0.144, _g["probe"]["D"])
+chk("grouped union baseline V", 0.262, _g["tfidf_trivial"]["V"])
+chk("grouped union baseline A", 0.062, _g["tfidf_trivial"]["A"])
+chk("grouped union baseline D", 0.059, _g["tfidf_trivial"]["D"])
+chk("grouped tfidf V (leak demo)", 0.215, _g["tfidf"]["V"])
+chk("random tfidf V (leak demo)", 0.303, _r["tfidf"]["V"])
+chk("random probe V (leak demo)", 0.377, _r["probe"]["V"])
+chk("n documents", 136, EV["n_documents"], tol=0)
+chk("largest doc share", 0.118, EV["internal"]["largest_doc_share"], tol=5e-4)
+
+_u = EV["content"]["probe_vs_tfidf_trivial"]["grouped"]
+chk("grouped margin vs union V", 0.103, _u["V"]["mean_diff"], tol=1e-3)
+chk("grouped margin vs union A", 0.094, _u["A"]["mean_diff"], tol=1e-3)
+chk("grouped margin vs union D", 0.085, _u["D"]["mean_diff"], tol=1e-3)
+chk("grouped margin vs union V lo", 0.063, _u["V"]["lo"], tol=1e-3)
+chk("grouped margin vs union V hi", 0.144, _u["V"]["hi"], tol=1e-3)
+chk("grouped margin vs union A lo", 0.041, _u["A"]["lo"], tol=1e-3)
+chk("grouped margin vs union A hi", 0.146, _u["A"]["hi"], tol=1e-3)
+chk("grouped margin vs union D lo", 0.075, _u["D"]["lo"], tol=1e-3)
+chk("grouped margin vs union D hi", 0.096, _u["D"]["hi"], tol=1e-3)
+for _d in ("V", "A", "D"):
+    checks += 1
+    if not (_u[_d]["lo"] > 0):
+        fails.append(f"paper says the grouped margin over the union baseline "
+                     f"excludes zero on {_d}")
+
+# every document group positive -- the external-validity claim
+for _d in ("V", "A", "D"):
+    checks += 1
+    if not EV["external"]["per_document_group"][_d]["all_groups_positive"]:
+        fails.append(f"paper says the margin is positive in all five document "
+                     f"groups; it is not on {_d}")
+
+# discriminant: length + probe-norm alone
+_t = EV["discriminant"]["trivial_alone"]["grouped"]
+chk("trivial alone V", 0.059, _t["V"])
+chk("trivial alone A", 0.002, _t["A"])
+chk("trivial alone D", 0.012, _t["D"])
+
+# construct: the direction-only readout narrows the margin, and only D clears zero
+_du = EV["content"]["probe_unit_vs_tfidf_trivial"]["grouped"]
+chk("direction-only margin V", 0.043, _du["V"]["mean_diff"], tol=1e-3)
+chk("direction-only margin A", 0.054, _du["A"]["mean_diff"], tol=1e-3)
+chk("direction-only margin D", 0.064, _du["D"]["mean_diff"], tol=1e-3)
+checks += 1
+if not (_du["D"]["lo"] > 0 and _du["V"]["lo"] <= 0 and _du["A"]["lo"] <= 0):
+    fails.append("paper says only dominance keeps an interval clear of zero "
+                 "under the direction-only readout")
+_pu = EV["construct"]["probe_vs_probe_unit"]["grouped"]
+chk("cost of dropping scale V", 0.060, _pu["V"]["mean_diff"], tol=1e-3)
+chk("cost of dropping scale A", 0.040, _pu["A"]["mean_diff"], tol=1e-3)
+chk("cost of dropping scale D", 0.021, _pu["D"]["mean_diff"], tol=1e-3)
+for _d in ("V", "A", "D"):
+    checks += 1
+    if not (_pu[_d]["lo"] > 0):
+        fails.append(f"paper says dropping the 50-vector scale costs a margin "
+                     f"whose interval excludes zero on {_d}")
+
+# readout mismatch: the claim that trial values cannot be cosines
+_rm = EV["ecological"]["readout_mismatch"]
+chk("trial values exceeding |1|", 1719, _rm["trial_values_exceeding_abs_1"], tol=0)
+chk("trial values total", 6000, _rm["trial_values_total"], tol=0)
+checks += 1
+if not _rm["emobank_within_pm1"]:
+    fails.append("paper says EmoBank probes are cosines; some value exceeds |1|")
+
+# convergent: 'low-arousal negative' in human coordinates
+_c = EV["convergent"]
+chk("survivor mean r(V)", -0.092, _c["survivor_mean_V"], tol=1e-3)
+chk("survivor mean r(A)", -0.106, _c["survivor_mean_A"], tol=1e-3)
+chk("non-survivor mean r(V)", -0.015, _c["nonsurvivor_mean_V"], tol=1e-3)
+chk("non-survivor mean r(A)", 0.012, _c["nonsurvivor_mean_A"], tol=1e-3)
+checks += 1
+if len(_c["survivors_checked"]) != 8 or _c["survivors_missing"]:
+    fails.append("the convergent check no longer covers all 8 dual-readout survivors")
+
+# ecological: the operating-point gap
+_e = EV["ecological"]
+chk("EmoBank median chars", 70, _e["emobank_chars"]["median"], tol=0.5)
+chk("trial median chars", 1272, _e["trial_response_chars"]["median"], tol=0.5)
+chk("frac EmoBank in trial length band", 0.0, _e["frac_emobank_inside_trial_p5_p95"], tol=1e-9)
+chk("n trials matched to paper", 120, _e["n_trials_matched_paper"], tol=0)
+_do = _e["direction_only"]
+chk("cos between mean directions", 0.984, _do["cos_between_mean_directions"], tol=1e-3)
+chk("desperate standardized gap", 1.68, _do["desperate"]["standardized_gap_in_emobank_sd"], tol=5e-3)
+chk("desperate frac in EmoBank band", 0.158, _do["desperate"]["trial_frac_inside_emobank_p5_p95"], tol=1e-3)
+
+in_tex("positive in all\nfive document groups")
 in_tex("the usual paired-fold variance estimate is optimistic")
+in_tex("an \\emph{under}-statement")
+in_tex("the two settings are not the same\nquantity")
+in_tex("Semantic\nvalidity is established at an operating point the behavioral analysis rarely visits.")
 
 # ---- appendix A: variant description must match config.py, not be invented
 import ast as _ast
