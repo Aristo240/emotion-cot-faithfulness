@@ -21,7 +21,8 @@ Merge when you're happy: `git checkout main && git merge validity-fixes-2026-08-
     a1ad44b  Act on two cold reads
     747fbe3  Fix two inferential errors; add design controls
 
-Gate: **400 assertions, all passing.** Body fits 5 pages. Build clean, no overfull
+Gate: **455 assertions, all passing** (400 at the 08-22 handoff; see §7). Body
+fits 5 pages. Build clean, no overfull
 boxes, no undefined references. Every numeric literal in body and appendices traces
 to a results file (127 + 338, zero unsourced).
 
@@ -66,7 +67,7 @@ This is now a *result* in §3, not a concession.
   adversarial judge flips, against a 12–14 band.
 - Title: keep. "Audit" already signals scope.
 - Supplementary: a zip is viable. `scripts/make_anonymous_zip.sh` builds it (23 MB,
-  no `.git`, zero identifiers in the payload — verified).
+  no `.git`). **The "zero identifiers — verified" claim was wrong; see §7.**
 
 **Already fixed, don't re-find:** undefined `H5` and `LOGO`; the 12/160 vs 12/158
 denominator; "17 under Monte Carlo noise" (it was the λ=0.5 ridge count); Table 1
@@ -106,7 +107,8 @@ random); the 1.12 SD cross-reference; "within 0.02"; "no endpoint moves by 0.006
     python3 scripts/robustness_controls.py      # nuisance-model sweeps  (~25 min)
     python3 scripts/random_subspace_null.py     # random-subspace control (~30 min)
     python3 scripts/make_appendix_table.py      # regenerates paper/appendix_directions.tex
-    python3 scripts/check_paper_consistency.py  # 400 assertions gating the .tex
+    python3 scripts/emobank_validity.py         # section 4.1 validity audit (~75 min)
+    python3 scripts/check_paper_consistency.py  # 455 assertions gating the .tex
 
 All analysis-only, no GPU, no network, seeded 20260819. **Re-run the gate after any
 paper edit.** If you add or remove an assertion, the count stated in §3 of the paper
