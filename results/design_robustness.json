@@ -15,7 +15,9 @@
   "chi2_worst_single_flip": 24.521102309271562,
   "chi2_worst_two_flips": 16.2443427549715,
   "direction": "bored",
-  "note": "family-wise significance under the conditional null sits near chi2 12-14, so two adversarial label flips leave `bored` significant but close to the boundary",
+  "familywise_boundary_hi": 8.453813378925126,
+  "familywise_boundary_lo": 7.853612263848042,
+  "note": "family-wise significance under the conditional null is bracketed by T = 7.9 and 8.5; two adversarial label flips leave `bored` at 16.2, still clear of it",
   "ridge": 1.0,
   "worst_single_flip_kind": "legit->event"
  },

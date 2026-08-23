@@ -117,6 +117,14 @@ worst2 = min((chi2_bored(_flip2(y0, a, b)), a, b)
 print(f"(2) label robustness for `bored`: chi2 {base:.1f} baseline, "
       f"{worst1[0]:.1f} after the worst single flip, {worst2[0]:.1f} after the worst two")
 
+# --- family-wise alpha = .05 boundary, computed rather than asserted --------
+# Read from robustness_controls.json, which holds the max-T null Table 4 uses.
+_rb = json.load(open(ROOT / "results/robustness_controls.json"))["baseline_length"]
+_pairs = [(_rb["chi2"][k], _rb["p_maxT"][k]) for k in _rb["chi2"]]
+_fw_lo = max(t for t, p in _pairs if p > 0.05)
+_fw_hi = min(t for t, p in _pairs if p <= 0.05)
+print(f"    family-wise alpha=.05 boundary bracketed by T = {_fw_lo:.2f} .. {_fw_hi:.2f}")
+
 R = {
     "clustering": {
         "n_trials": len(trials), "n_distinct_prompts": len(per_task),
@@ -130,9 +138,18 @@ R = {
         "chi2_worst_single_flip": float(worst1[0]),
         "worst_single_flip_kind": worst1[2],
         "chi2_worst_two_flips": float(worst2[0]),
-        "note": ("family-wise significance under the conditional null sits near "
-                 "chi2 12-14, so two adversarial label flips leave `bored` "
-                 "significant but close to the boundary"),
+        # 2026-08-23: this note used to hardcode "chi2 12-14" and was never
+        # computed. The family-wise boundary is read from the same max-T null
+        # that Table 4 is built on: the highest-T direction with p > .05 and the
+        # lowest-T direction with p <= .05 bracket it. It sits near T = 8, not
+        # 12-14, so two flips leave `bored` well inside significance rather than
+        # "close to the boundary". Reported as a bracket, not a point.
+        "familywise_boundary_lo": _fw_lo,
+        "familywise_boundary_hi": _fw_hi,
+        "note": (f"family-wise significance under the conditional null is "
+                 f"bracketed by T = {_fw_lo:.1f} and {_fw_hi:.1f}; two "
+                 f"adversarial label flips leave `bored` at "
+                 f"{worst2[0]:.1f}, still clear of it"),
     },
     "lr_statistic": {
         "definition": ("2 * (l1 - l0) where l0 and l1 are UNPENALISED "

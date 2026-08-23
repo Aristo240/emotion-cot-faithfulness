@@ -22,8 +22,8 @@ activation's (\S3), so $V_{\text{int}}$ carries activation magnitude;
 Appendix~\ref{app:readout} reports what changes when that magnitude is removed. The
 EmoBank probes of \S\ref{sec:sem} are the exception: that code path divides by the
 activation norm too, so they are cosines and the two settings are not the same
-quantity. Every trial-level value with $\lvert V_{\text{int}}\rvert > 1$ --- $1{,}719$
-of $6{,}000$ --- is one no cosine could take. And
+quantity. Every trial-level value with $\lvert V_{\text{int}}\rvert > 1$ --- $1{,}719$ of the
+$6{,}000$ ($120$ trials $\times$ $50$ directions) --- is one no cosine could take. And
 the labels are inherited from the story prompts, not validated per direction, which
 is why \S\ref{sec:sem} supports an affect-related axis rather than the semantics of
 any individual vector.
@@ -45,39 +45,46 @@ the estimand as conditional on these four prompts, why \S\ref{sec:dirs} reports 
 task-fixed-effects nuisance model, and why the bootstrap is stratified on prompt.
 
 \paragraph{Is the EmoBank margin distinguishable from zero?} Table~\ref{tab:summary}
-records one \textsc{supported} verdict, and it rested on a difference we had not
-tested against the baseline \S\ref{sec:disc} asks the field to carry. Three things
-had to change before the margin could be read.
+records one \textsc{supported} verdict. It rests on a difference that has to be
+tested against the baseline \S\ref{sec:disc} asks the field to carry, and three
+things bear on how that difference should be read.
 
 \emph{The fold structure leaked.} The 10,062 sentences come from $136$ documents,
 median $30$ sentences each and the largest $11.8\%$ of the corpus, so shuffled
 folds put sentences from one document on both sides of the split. That inflates the
 lexical baseline, which can memorize document vocabulary, far more than the probe:
 grouping folds by document drops TF-IDF from $0.303$ to $0.215$ on valence while
-the probe moves only from $0.377$ to $0.366$. The published $+0.074$ was therefore
-an \emph{under}-statement. All numbers here are document-grouped.
+the probe moves only from $0.377$ to $0.366$. Shuffled folds therefore
+\emph{under}-state the margin, at $+0.074$ against $+0.151$ grouped. All numbers
+here are document-grouped.
 
 \emph{The baseline was not the one we prescribe.} Adding sentence length and the
 norm of the probe vector to uncapped TF-IDF lifts it to $0.262$, $0.062$ and
 $0.059$. Against that union baseline the probe holds $+0.103$ ($95\%$ CI
 $[+0.063, +0.144]$), $+0.094$ $[+0.041, +0.146]$ and $+0.085$ $[+0.075, +0.096]$,
 positive in all five document groups. Capping the baseline at 2000 features would
-drop it and flatter the probe, so we quote the uncapped row throughout. Length and
-probe-norm \emph{alone} reach only $0.059$, $0.002$ and $0.012$, so the 50 directions
-are not inherently a length proxy. That does not soften \S\ref{sec:len}: there the
-entanglement comes from the readout window, which includes the generated response
-(\S3), whereas EmoBank is read at a single token with no generation at all. The two
-settings do not disagree about the instrument; they use different windows.
+drop it and flatter the probe, so we quote the uncapped row throughout. Length and probe-norm \emph{alone} reach only $0.059$, $0.002$ and $0.012$. That
+alone would not show the probes are length-free --- a weak baseline does not
+constrain the probe --- so we measure the coupling directly: on EmoBank no direction
+correlates with sentence length above $\lvert r\rvert = 0.16$, median $0.06$, and the
+probe-vector norm correlates at $-0.02$. Against $\rho = 0.61$ in the trials
+(\S\ref{sec:len}), the coupling is a property of the readout window, which includes
+the generated response (\S3), not of the directions: EmoBank is read at a single
+token with no generation at all.
 
 \emph{The readout is not the one the rest of the paper uses.} EmoBank probes divide
 by the activation norm as well as the direction's; the trial-level $V_{\text{int}}$
-divides only by the direction's. Under the direction-only readout of
-Appendix~\ref{app:readout}, the one form in which the two settings are the same
-measurement, the margin over the union baseline narrows to $+0.043$, $+0.054$ and
-$+0.064$ and only dominance keeps an interval clear of zero. The scale of the
-50-vector carries real signal --- dropping it costs $0.060$, $0.040$ and $0.021$,
-all intervals excluding zero --- so \S\ref{sec:sem} supports the subspace under a
-readout the behavioral sections do not use.
+divides only by the direction's. Unit-normalizing the 50-vector is the one form in which the two settings are the
+same measurement: it reduces both to $P x / \lVert P x \rVert$, cancelling
+$\lVert r \rVert$ here and $\lVert \bar a \rVert$ there. Note this is \emph{not}
+what it does in Appendix~\ref{app:readout}: there it removes activation magnitude,
+which these cosines never carried, so here it removes only the length of the
+50-cosine vector itself --- how strongly the sentence loads on the subspace overall.
+Under it the margin over the union baseline narrows to $+0.043$, $+0.054$ and
+$+0.064$, and only dominance keeps an interval clear of zero. That loading
+contributes in these folds --- dropping it costs $0.060$, $0.040$ and $0.021$ ---
+so \S\ref{sec:sem} supports the subspace under a readout the behavioral sections do
+not use.
 
 Two caveats on the intervals themselves. Five folds give four degrees of freedom,
 so they are wide and coarse; and cross-validation folds share training data, so the
@@ -94,8 +101,8 @@ with arousal, against $-0.015$ and $+0.012$ for the other 42. \texttt{grateful} 
 The transport is less comfortable. EmoBank sentences have median length $70$
 characters; the trials the probe is used on have median $1{,}272$, and \emph{no}
 EmoBank sentence falls inside the trials' 5th--95th percentile length band. On the
-direction-only readout the mean probe direction is nearly identical across the two
-settings ($\cos = 0.984$), so the subspace geometry transports; the operating point
-does not. The trial \texttt{desperate} coordinate sits $1.68$ EmoBank SD from the
-validation mean, with $15.8\%$ of trials inside EmoBank's central $90\%$. Semantic
-validity is established at an operating point the behavioral analysis rarely visits.
+unit-normalized readout the two settings' \emph{mean} probe directions are nearly
+identical ($\cos = 0.984$), which is a check on one summary vector rather than on
+the full 50-dimensional geometry; the operating point does not transport. The trial \texttt{desperate} coordinate sits $1.68$ EmoBank SD from the
+validation mean, with $15.8\%$ of trials inside EmoBank's central $90\%$. The evidence for semantic
+validity is collected at an operating point the behavioral analysis rarely visits.

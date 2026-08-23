@@ -302,7 +302,14 @@ in_tex("better described as one shared axis")   # softened: PC1 is not proof of 
 in_tex("composition does not hold up")
 in_tex("preregistration describes this quantity as a")
 in_tex("meets every one of its\nthresholds too")
-in_tex("semantic validity, association, selection, and intervention")
+# 2026-08-23: this used to pin "semantic validity, association, selection,
+# and intervention" -- the abstract's own list, which wrongly named the ONE
+# control Table 1 marks Supported among those that break. A gate assertion
+# can lock an error in as easily as it can catch one.
+checks += 1
+if "semantic validity, association, selection, and intervention" in TEX_FLAT:
+    fails.append("the abstract again lists semantic validity among the "
+                 "controls that break; Table 1 marks it Supported")
 in_tex("meets every one of its thresholds too")
 
 # ---- §4.7 prereg, on the MERGED n=120 set (the pre-merge n=40 run is kept for
@@ -514,11 +521,36 @@ chk("cos between mean directions", 0.984, _do["cos_between_mean_directions"], to
 chk("desperate standardized gap", 1.68, _do["desperate"]["standardized_gap_in_emobank_sd"], tol=5e-3)
 chk("desperate frac in EmoBank band", 0.158, _do["desperate"]["trial_frac_inside_emobank_p5_p95"], tol=1e-3)
 
+# probe-length coupling on EmoBank -- the quantity that licenses the claim
+_lc = EV["discriminant_length_coupling"]
+chk("max |r| probe vs length", 0.16, _lc["max_abs_r"], tol=5e-3)
+chk("median |r| probe vs length", 0.06, _lc["median_abs_r"], tol=5e-3)
+chk("probe-norm r with length", -0.02, _lc["probe_norm_r_with_length"], tol=5e-3)
+
+# family-wise boundary is computed, not asserted (was hardcoded "12-14")
+_fw = DR["label_robustness"]
+chk("family-wise boundary lo", 7.9, _fw["familywise_boundary_lo"], tol=0.05)
+chk("family-wise boundary hi", 8.5, _fw["familywise_boundary_hi"], tol=0.05)
+checks += 1
+if not (_fw["chi2_worst_two_flips"] > _fw["familywise_boundary_hi"]):
+    fails.append("paper says two label flips leave `bored` clear of the "
+                 "family-wise boundary")
+checks += 1
+if "12 to 14" in TEX_FLAT:
+    fails.append("the uncomputed 'T 12 to 14' boundary is back in the manuscript")
+
 in_tex("positive in all\nfive document groups")
+in_tex("not a calibrated test")
+in_tex("$120$ trials $\\times$ $50$ directions")
+in_tex("the reported $R^2$ is\nout-of-fold")
+in_tex("association,\nselection, intervention, and instrument resolution")
 in_tex("the usual paired-fold variance estimate is optimistic")
-in_tex("an \\emph{under}-statement")
+in_tex("Shuffled folds therefore\n\\emph{under}-state the margin")
 in_tex("the two settings are not the same\nquantity")
-in_tex("Semantic\nvalidity is established at an operating point the behavioral analysis rarely visits.")
+checks += 1
+if "subspace geometry transports" in TEX_FLAT:
+    fails.append("the overclaimed 'geometry transports' is back")
+in_tex("The evidence for semantic\nvalidity is collected at an operating point the behavioral analysis rarely visits.")
 
 # ---- appendix A: variant description must match config.py, not be invented
 import ast as _ast

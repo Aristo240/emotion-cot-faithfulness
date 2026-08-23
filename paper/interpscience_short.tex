@@ -56,7 +56,7 @@ functional: steering a ``desperate'' direction increases reward hacking. We test
 each claim that interpretation rests on in Llama~3.1~70B. \textbf{Our own
 registered criterion is met, and \texttt{len(response)} meets every one of its
 thresholds too.} Four further standard controls each break a different
-step: semantic validity, association, selection, and intervention. The remedy that
+step: association, selection, intervention, and instrument resolution. The remedy that
 would repair the first is unavailable in designs like ours.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ but
 correlates with length at $\rho = 0.61$; residualized it falls to $0.592$ and adds
@@ -197,7 +197,7 @@ generations. Bootstraps are stratified on prompt to match the design, so every
 interval below is conditional on these four prompts and says nothing about
 variation across others. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} and its companions regenerate every number
-here, and a second script gates this manuscript against them with 455 assertions.
+here, and a second script gates this manuscript against them with 467 assertions.
 
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability, not
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
@@ -221,12 +221,12 @@ $V_{\text{int}}$: it divides by the activation norm as well as the direction's, 
 this section validates $\cos\theta$ where the behavioral sections use
 $\lVert \bar a \rVert \cos\theta$ (Appendix~\ref{app:extract}). A ridge readout from
 the 50 cosines to the valence, arousal and dominance ratings is fitted inside each
-fold, grouped by document so no document spans a split. It reaches
-$\mathbf{0.366}$ for valence, $0.156$ for arousal and $0.144$ for dominance,
-against $0.262$, $0.062$ and $0.059$ for uncapped unigram TF-IDF \emph{plus}
-sentence length and probe-vector scale. That margin, $+0.103$, $+0.094$ and
-$+0.085$ paired across folds, has intervals excluding zero and is positive in all
-five document groups (Appendix~\ref{app:extract}). It supports construct validity
+document-grouped fold, so the reported $R^2$ is out-of-fold, not zero-shot. It reaches $\mathbf{0.366}$ for valence, $0.156$ for
+arousal and $0.144$ for dominance, against $0.262$, $0.062$ and $0.059$ for
+uncapped unigram TF-IDF \emph{plus} sentence length and probe-vector scale. That
+margin, $+0.103$, $+0.094$ and $+0.085$ paired across folds, is positive in all
+five document groups; the fold intervals are coarse and not a calibrated test
+(Appendix~\ref{app:extract}). It supports construct validity
 for an affect-related axis, not the label on any individual vector.
 
 \subsection{The registered association is not separable from response
@@ -383,8 +383,9 @@ that we picked the wrong site, and our sweep appeared to supply it. Raw AUC for 
 at layer 39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$
 at the steered layer. Applying \S\ref{sec:len}'s control removes any detectable
 advantage, though layer 39 keeps the largest point estimate. \textbf{No evaluated layer gives the registered direction
-length-independent signal detectable at $n = 80$}, so we have no observational
-reason to move the intervention. Steering at a post-hoc site chosen on a confounded
+length-independent signal \emph{above} chance at $n = 80$} --- layers 13 and 26
+clear chance from below, no better a site (Appendix~\ref{app:layers}) --- so we
+have no observational reason to move the intervention. Steering at a post-hoc site chosen on a confounded
 statistic is the failure mode \citet{wu2026steerable} describe, and we steered only
 at the registered layer (Appendix~\ref{app:layers}).
 

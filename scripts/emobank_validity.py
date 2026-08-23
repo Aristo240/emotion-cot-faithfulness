@@ -143,6 +143,19 @@ R["content"] = {
 }
 
 # --------------------------------------- DISCRIMINANT: does it reduce to nuisance?
+# The probe-length coupling itself. A weak length baseline does NOT show the probe
+# is length-free (reviewer point, 2026-08-23): that inference needs the coupling
+# measured directly, which is what these are.
+_rho_len = {e: float(np.corrcoef(Xp[:, i], n_chars)[0, 1]) for i, e in enumerate(emos)}
+R["discriminant_length_coupling"] = {
+    "per_direction_r_with_length": _rho_len,
+    "max_abs_r": float(max(abs(v) for v in _rho_len.values())),
+    "argmax": max(_rho_len, key=lambda k: abs(_rho_len[k])),
+    "median_abs_r": float(np.median([abs(v) for v in _rho_len.values()])),
+    "probe_norm_r_with_length": float(np.corrcoef(norm[:, 0], n_chars)[0, 1]),
+    "trials_rho_desperate_length_for_comparison": 0.606,
+}
+
 R["discriminant"] = {
     "trivial_alone": {sc: {d: float(S[sc]["trivial"][d].mean()) for d in DIMS} for sc in S},
     "probe_vs_trivial": {sc: paired(S[sc]["probe"], S[sc]["trivial"]) for sc in S},
