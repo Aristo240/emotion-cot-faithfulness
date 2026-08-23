@@ -78,17 +78,13 @@ random); the 1.12 SD cross-reference; "within 0.02"; "no endpoint moves by 0.006
 
 ## 3. Open — genuinely undecided
 
-1. **The rebuttal-forcing question, unanswered.** §5 tells the field to carry a
-   simple output baseline. §4.1 — the one **Supported** row — carries only TF-IDF.
-   Does the +0.074 / +0.083 / +0.087 margin survive a *length-and-magnitude-only*
-   readout on EmoBank under the same folds and estimator? Appendix D re-ran §4.3
-   under the magnitude-removed readout but never §4.1. If the margin doesn't
-   survive, Table 1 has zero supported rows and the paper changes character. This
-   is a new analysis, not an edit. It is the single most exploitable gap.
+1. ~~**The rebuttal-forcing question.**~~ **ANSWERED 2026-08-23, commit `8f91e32`.**
+   The margin survives, and survives *better* than published. See §7.
+
 2. **Merge to `main`?** Branch is pushed; merge is a one-liner when you want it.
 3. **Artifact:** anonymized zip vs Anonymous GitHub. Check the OpenReview form has a
-   supplementary field. If you use the zip, consider dropping `HANDOFF.md` and
-   `CONTINUATION_NOTES.md` — reviewers don't need working notes.
+   supplementary field. The zip now excludes `HANDOFF.md` and `CONTINUATION_NOTES.md`
+   automatically; drop those two lines from `EXCLUDE` in the script to ship them.
 4. **Reciprocal reviewer signup** at submission. The CFP requires one author.
 5. **Optional:** an early-response-window readout (mean over response tokens 1–20)
    would kill the length mechanism and *does* have within-prompt variance. Needs a
@@ -138,3 +134,71 @@ The parent repo `/home/gamir/naamarozen/gfs` has modified files under
 `results/final_run_v1/` and `taskB_logs/`. Those belong to the 70B false-premise
 sweep and are managed by a running autosave process (4 processes live at handoff).
 Left alone deliberately.
+
+
+---
+
+## 7. Added 2026-08-23 — two commits, both verified
+
+### `8b81cd0` The anonymization script leaked the author's email
+
+`make_anonymous_zip.sh` shipped **itself**, and its own sed rules spell the address
+out escaped (`rozenn@post\.bgu\.ac\.il`). The scrub pattern matches the *unescaped*
+form, so it never matched its own source: the address went into the payload twice.
+§2's claim that the payload was "verified" clean was wrong — one manual grep that
+happened not to cover the escaped form.
+
+Fixed with an EXCLUDE list (the scrubber first) **and** a build-time verification
+pass that exits nonzero on any surviving identifier. Negative-tested both ways.
+Payload still 23 MB. **Do not re-add the scrubber to the payload.**
+
+### `8f91e32` The §4.1 validity audit — closes §3 item 1
+
+Run `python3 scripts/emobank_validity.py` (~75 min, analysis-only, no GPU) →
+`results/emobank_validity.json`. Design and rejected alternatives in
+`scripts/_emobank_validity_design_notes.md`.
+
+**Answer to the rebuttal-forcing question: the margin survives.** Against uncapped
+TF-IDF *plus* sentence length and probe-vector scale, document-grouped:
+**+0.103 / +0.094 / +0.085**, every interval clear of zero, positive in all five
+document groups. Table 1's Supported row stands.
+
+**Two things the paper had wrong, both now fixed in the .tex:**
+
+1. **The folds leaked.** 10,062 sentences, **136 documents**, median 30 each,
+   largest 11.8%. Shuffled folds put one document on both sides of a split, which
+   inflates the *lexical baseline* far more than the probe. Grouping by document
+   drops TF-IDF 0.303 → 0.215 on valence; the probe moves only 0.377 → 0.366. The
+   published +0.074 was an **under**-statement, not an over-statement.
+
+2. **§4.1 and §§4.2–4.6 do not measure the same quantity.**
+   `run_emobank_validation.py:136` divides by the activation norm;
+   `phase2_steering.py:212`, the writer for the trial files, does not. EmoBank
+   probes are **cosines**; `V_int` is `‖ā‖cosθ`. Confirmed, not inferred: **1,719
+   of 6,000** trial values exceed |1|. Note `src/experiments.py:82` *does*
+   normalize and looks like the trial path — **it is not the writer for these
+   files.** Check the writer, not the plausible-looking function.
+   Under the direction-only readout (the only commensurable form) the margin
+   narrows to +0.043/+0.054/+0.064 and **only dominance** stays clear of zero.
+   Table 1 carries a ¶ footnote saying so.
+
+**Also new:** convergent — "low-arousal negative" holds in *human* coordinates
+(survivors average r = −0.092 V, −0.106 A vs −0.015/+0.012 for the other 42;
+`grateful` and `nostalgic` are the hedged exceptions). Ecological — EmoBank median
+70 chars vs the trials' 1,272, and **no** EmoBank sentence is inside the trials'
+p5–p95 band; geometry transports (cos = 0.984) but the operating point does not
+(`desperate` 1.68 SD out, 15.8% inside EmoBank's central 90%).
+
+**Do not re-raise:**
+- *"Compare raw EmoBank probes to raw trial probes."* Already tried; it gives a
+  spurious "15 SD shift" because a bounded cosine is being compared to an
+  unbounded projection. Only the unit-normalized readout is commensurable.
+- *"Is the pipeline comparable to the published numbers?"* Yes — it reproduces all
+  nine published EmoBank values to **six decimals**. Gate run before trusting any
+  new number.
+- *The survivor list.* Read it from
+  `conditional_null.json → direction_only.overlap_with_scalar`. Typing it from
+  memory produced a list wrong on 4 of 8.
+
+**Gate is now 455 assertions** (was 400). Body still ends on page 5; the PDF is 12
+pages because the appendix grew, and the limit excludes references and appendices.
