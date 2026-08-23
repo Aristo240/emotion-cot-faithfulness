@@ -63,9 +63,11 @@ $0.059$. Against that union baseline the probe holds $+0.103$ ($95\%$ CI
 $[+0.063, +0.144]$), $+0.094$ $[+0.041, +0.146]$ and $+0.085$ $[+0.075, +0.096]$,
 positive in all five document groups. Capping the baseline at 2000 features would
 drop it and flatter the probe, so we quote the uncapped row throughout. Length and
-probe-norm \emph{alone} reach only $0.059$, $0.002$ and $0.012$, so on this corpus
-the probe is not a length proxy \textemdash{} the failure it does show in
-\S\ref{sec:len} is a property of the trials, not of the instrument.
+probe-norm \emph{alone} reach only $0.059$, $0.002$ and $0.012$, so the 50 directions
+are not inherently a length proxy. That does not soften \S\ref{sec:len}: there the
+entanglement comes from the readout window, which includes the generated response
+(\S3), whereas EmoBank is read at a single token with no generation at all. The two
+settings do not disagree about the instrument; they use different windows.
 
 \emph{The readout is not the one the rest of the paper uses.} EmoBank probes divide
 by the activation norm as well as the direction's; the trial-level $V_{\text{int}}$
