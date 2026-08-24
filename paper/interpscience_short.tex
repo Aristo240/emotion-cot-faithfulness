@@ -56,25 +56,27 @@ functional: steering a ``desperate'' direction increases reward hacking. We test
 each claim that interpretation rests on in Llama~3.1~70B. \textbf{Our own
 registered criterion is met, and \texttt{len(response)} meets every one of its
 thresholds too.} Four further standard controls each break a different
-step: association, selection, intervention, and instrument resolution. The remedy that
+step: association,
+selection, intervention, and instrument resolution. The remedy that
 would repair the first is unavailable in designs like ours.
 (i)~\emph{Response length.} The desperate projection reaches AUC $0.832$ but
 correlates with length at $\rho = 0.61$; residualized it falls to $0.592$ and adds
 nothing detectable to a length-only model ($T = 3.3$, resampling $p = 0.060$;
 $p = 0.44$ corrected over all 50 directions).
 (ii)~\emph{Multiplicity.} A corrected sweep of all 50 directions leaves 18
-significant, but they are one shared component ($78.8\%$ of variance in PC1) and not
-the one we registered; where we can test it, we cannot tell the emotion set apart
-from 50 random ones.
+significant, but they are one shared component ($78.8\%$ of variance in PC1), not
+the one we registered, and indistinguishable from 50 random ones where we can
+test it.
 (iii)~\emph{Specificity.} Steering the registered direction at $+0.3$ produces no
 detected increase, $1/39$ against $14/120$ unsteered on a wide interval, though it
-does shift the targeted projection by $0.48$ SD on a clean re-encoding.
-(iv)~\emph{Instrument resolution.} $55\%$ of the chain-of-thought text baseline's
+does shift the targeted projection by $0.48$ SD.
+(iv)~\emph{Instrument resolution.} $55\%$ of the text baseline's
 ROC pairs are ties, so the pooled $0.19$ AUC gap cannot separate a real
 dissociation from an instrument too coarse to register one.
 (v)~\emph{Identifiability of the fix.} The pre-generation readout that would settle
 (i) cannot be evaluated in an elicitation design that samples many rollouts from few
-prompts. Every number comes from a released script.
+prompts. Code and the scripts regenerating every number are included as
+supplementary material.
 \end{abstract}
 
 \section{Introduction}
@@ -129,7 +131,7 @@ and \texttt{len(response)} meets it too (\S\ref{sec:prereg}).}
 \label{tab:summary}
 \end{table}
 
-\section{Related work and novelty statement}
+\section{Related work}
 
 \paragraph{Emotion representations, and what they do not establish.}
 Emotion concepts are recoverable from LLM hidden states, transfer across datasets,
@@ -153,7 +155,7 @@ minimal-pair checks, so ours is a second such case rather than a first.
 including Llama-3 and report successful steering, so our null is not the only
 open-model result and the difference is unexplained.
 
-\paragraph{Novelty statement.}
+\paragraph{What this paper adds.}
 The methods here are established: the work above already covers emotion
 representations, steering, diagnostic-not-causal signals, reward-hacking
 detection, and each control we apply. What we add is empirical. We audit one

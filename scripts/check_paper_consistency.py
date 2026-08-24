@@ -574,7 +574,7 @@ in_tex("conceptual, not direct, replication")   # replication scope stated
 in_tex("the position \\citet{sofroniew2026} found")   # token-position deviation stated
 in_tex("the mean residual-stream norm at layer 53")        # steering magnitude stated
 in_tex("baseline at 2000 features would drop it")            # baseline handicap disclosed
-in_tex("Novelty statement")                     # novelty disclaimer present
+in_tex("The methods here are established")      # novelty disclaimer present
 # P1-class drift: the summary table must name the null the results section uses.
 in_tex("max-$T$ over 50, length-preserving null")
 # ---- §3 judge abstention, not contradiction (added 2026-08-20 in response to review)
