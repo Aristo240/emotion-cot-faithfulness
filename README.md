@@ -27,9 +27,9 @@ nuisance variable. *No effect detected* means an underpowered null. Neither mean
 
 | Claim | Control | Verdict |
 |---|---|---|
-| Emotion subspace carries affect | EmoBank vs. TF-IDF | **Supported (valence)** — R² 0.377 vs 0.303 for an uncapped unigram TF-IDF, n = 10,062 |
-| `desperate` tracks reward hacking | Response length | **Not identifiable** — χ²(1) = 3.31, p = 0.069; max-T p = 0.44 |
-| *Some* direction tracks it | max-T over 50, length-preserving null | **Exploratory** — 18 survivors, 11 under every nuisance model, `bored` χ² = 38.7; **not shown to beat a random subspace** |
+| Emotion subspace carries affect | EmoBank vs. TF-IDF + length + probe norm, folds grouped by document | **Supported** — document-grouped R² 0.366 vs 0.262 for the union baseline on valence, n = 10,062 over 136 documents. Under the readout the behavioral rows use, only dominance stays clear of zero |
+| `desperate` tracks reward hacking | Response length | **Not identifiable** — T = 3.31, conditional-null p = 0.060; max-T p = 0.44 |
+| *Some* direction tracks it | max-T over 50, length-preserving null | **Exploratory** — 18 survivors, 11 under every nuisance model, `bored` T = 38.7; **not shown to beat a random subspace** |
 | Probe-text gap shows unfaithfulness | ROC tie structure | **Not identifiable** — 55.2% of pairs are ties |
 | Steering causes hacking | Matched-norm random null | **No effect detected** — 1/39 at +0.3 vs 14/120, underpowered |
 | Layer 39 is a better site | Length, per layer | **Not supported** |
@@ -47,7 +47,7 @@ hypothesized, clear its own preregistered bar, and still provide no causal handl
 | "V_internal CV AUC 0.997, LOTO 0.992" | Pooled AUC inflated by task-identity separability; residualizing on task id gives 0.674 | `results/phase3/llama70b/rigor_report.md` |
 | "Steering changes behavior, p = 0.005" | Uncorrected over 40+ tests. Judged fine-grained trend: **z = −1.42, p = 0.157** | `paper_numbers.json` → `causal.trend_desperate` |
 | "Desperate steering *decreases* shortcuts — novel finding" | Indistinguishable from a random direction, **Fisher p = 0.683** | → `causal.fisher_emotion_vs_random` |
-| "H5 confirmed (AUC 0.955 / 0.901)" | Preregistered rule returns **INSUFFICIENT-DATA** | `results/phase3/llama70b/h5_holdout_report.json` |
+| "H5 confirmed (AUC 0.955 / 0.901)" | Preregistered rule returns **INSUFFICIENT-DATA** on the pre-merge n=40 subset — *superseded, see the last row of this table* | `results/phase3/llama70b/h5_holdout_report.json` |
 | *(interim Aug draft)* "Faithfulness gap Δ = 0.189" | Mostly tie artifact. On the same non-modal trials the gap is 0.054 (0.836 vs 0.890), not 0.190 | → `vtext`, `robustness_controls.vtext_like_for_like` |
 | *(interim Aug draft)* "HIDDEN quadrant: 14.6% vs 0.8%" | Partitions on a variable constant for 74% of trials | → `vtext.modal_share` |
 | *(interim Aug draft)* "Tier 2 holds: AUC 0.832" | Length artifact. Residualized: **0.592 [0.412, 0.756]** | → `association`, `directions.desperate` |
@@ -55,13 +55,23 @@ hypothesized, clear its own preregistered bar, and still provide no causal handl
 
 ## What holds
 
-### 1. Semantic validity (valence)
+### 1. Semantic validity
 
-Frozen probes projected onto EmoBank (10,062 human-rated sentences), no refitting:
-valence CV R² = **0.377**, arousal 0.180, dominance 0.154, against an
-uncapped unigram TF-IDF baseline of 0.303 / 0.097 / 0.067 under identical folds.
-(Capping that baseline at 2000 features drops it to 0.219 and flatters the probe;
-we quote the uncapped row.) Coherent sign structure
+Frozen probes projected onto EmoBank (10,062 human-rated sentences over 136
+documents), no refitting. **Folds are grouped by document.** Shuffled folds put
+one document on both sides of a split, which inflates a lexical baseline far
+more than the probe: on valence, grouping drops TF-IDF from 0.303 to 0.215
+while the probe moves only from 0.377 to 0.366. An earlier draft of this file
+quoted the shuffled-fold row; the grouped row below supersedes it, and the
+margin it gives is *larger*, not smaller.
+
+Document-grouped valence CV R² = **0.366**, arousal 0.156, dominance 0.144,
+against **0.262 / 0.062 / 0.059** for uncapped unigram TF-IDF *plus* sentence
+length and probe-vector scale. Margin +0.103 / +0.094 / +0.085, positive in all
+five document groups. (Capping the baseline at 2000 features weakens it and so
+flatters the probe; we quote the uncapped row.) Under the unit-normalized
+readout — the only one commensurable with the behavioral sections — the margin
+narrows to +0.043 / +0.054 / +0.064 and only dominance stays clear of zero. Coherent sign structure
 (`ecstatic` +0.38, `furious` −0.34). Supports a valence axis; does **not** establish
 that any vector represents the state its label names.
 
@@ -69,18 +79,20 @@ that any vector represents the state its label names.
 
 `desperate` reaches raw AUC 0.832 on 120 unsteered trials, but ρ(probe, response
 length) = **0.606** (p = 2.2e−13) and it ranks only **8th of 50** by raw AUC
-(`bored` 0.985). Adding it to a length-only logistic model gives χ²(1) = 3.31,
-**p = 0.069** — it adds nothing.
+(`bored` 0.985). Adding it to a length-only logistic model gives T = 3.31 at a per-direction
+conditional-null **p = 0.060** — it adds nothing. (The statistic is *not* a
+χ²(1): it is evaluated at ridge-penalized estimates, so all p-values come from
+resampling. An earlier draft quoted `chi2.sf(3.31, 1) = 0.069` here.)
 
-Inference is the nested likelihood-ratio χ² for adding a direction to a
-length-only model, family-wise corrected by max-T over all 50 directions. Two
+Inference is the nested log-likelihood improvement T for adding a direction to
+a length-only model, family-wise corrected by max-T over all 50 directions. Two
 nulls, because the choice matters: length alone predicts the outcome at AUC 0.888,
 so a *free* label permutation destroys the very dependence the statistic conditions
 on. The **conditional** null draws y\* ~ Bernoulli(p̂) from a fitted
 `y ~ length` model, reproducing that dependence exactly. It is stricter (its p
 exceeds the free-permutation p for 39/50 directions) and the result survives.
 
-| Direction | χ²(1) | β | cond. max-T p | free max-T p | resid. AUC |
+| Direction | T | β | cond. max-T p | free max-T p | resid. AUC |
 |---|---|---|---|---|---|
 | `bored` | **38.7** | +2.48 | **0.0005** | 0.0005 | 0.858 |
 | `lonely` | 29.6 | +1.91 | 0.0005 | 0.0005 | 0.760 |
