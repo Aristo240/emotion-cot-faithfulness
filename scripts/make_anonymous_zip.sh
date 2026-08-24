@@ -22,7 +22,10 @@ cd "$SRC"
 # submission's own history; drop these two lines to ship them.
 EXCLUDE="scripts/make_anonymous_zip.sh
 HANDOFF.md
-CONTINUATION_NOTES.md"
+CONTINUATION_NOTES.md
+annotation/worksheet.txt
+annotation/labels.csv
+annotation/key.json"
 
 git ls-files | grep -vxF "$EXCLUDE" | while read -r f; do
   mkdir -p "$OUT/supplementary/$(dirname "$f")"
