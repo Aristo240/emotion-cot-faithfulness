@@ -53,13 +53,17 @@ runs/
 # HuggingFace
 hf_cache/
 
-# Reference papers (do not upload to GitHub) — exception list for our own docs
-docs/
+# Reference papers (do not upload to GitHub) — exception list for our own docs.
+# Must be docs/* not docs/ : git will not descend into an excluded directory,
+# so a !docs/<file> line under a bare `docs/` rule is inert. The older entries
+# below only appeared to work because those files were already tracked.
+docs/*
 !docs/run_plan_2026-05-11.md
 !docs/PLAN.md
 !docs/methods.md
 !docs/preregistration.md
 !docs/judge_prompts.md
+!docs/writing_style.md
 *.tar.gz
 .lambda_instance_id
 

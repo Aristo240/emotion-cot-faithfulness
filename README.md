@@ -255,6 +255,13 @@ against arXiv / ACL Anthology / PMLR before inclusion). Targets
 [Interpretability as a Science](https://interpscience.github.io/), NeurIPS 2026
 Sydney — 5pg short, non-archival, deadline 2026-08-28 AoE.
 
+Prose in `paper/*.tex` follows the house rules in `docs/writing_style.md`, which
+were measured against 121 papers whose arXiv comment field states acceptance at
+a NeurIPS workshop. No result numbers in the abstract, noun-phrase section
+headings, and no semicolon, colon or interrupting dash in body prose. The
+no-numbers rule is enforced by `check_paper_consistency.py`. Those rules apply
+to the paper only, not to this README.
+
 ## Methodology
 
 ```

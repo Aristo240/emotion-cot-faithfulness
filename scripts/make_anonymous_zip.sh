@@ -23,6 +23,7 @@ cd "$SRC"
 EXCLUDE="scripts/make_anonymous_zip.sh
 HANDOFF.md
 CONTINUATION_NOTES.md
+docs/writing_style.md
 annotation/worksheet.txt
 annotation/labels.csv
 annotation/key.json"

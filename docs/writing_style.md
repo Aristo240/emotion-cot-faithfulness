@@ -1,0 +1,126 @@
+# House style for the workshop paper, derived from accepted papers
+
+Written 2026-08-25. Working notes. Excluded from the supplementary zip.
+
+Every rule below was measured, not assumed. If you want to change one, re-run
+the measurement first. The scripts that produced these numbers were throwaway;
+what matters is the corpus and the method, both recorded here so any claim can
+be rebuilt.
+
+## The corpus
+
+121 arXiv papers whose own `comment` field states acceptance or presentation at
+a NeurIPS workshop. The comment field is the acceptance evidence and is
+checkable per paper. Of these, 23 were downloaded as PDF for body analysis and
+14 as LaTeX source for heading analysis.
+
+OpenReview is the better source, because a paper's venue id there *is* its
+acceptance record, and `decision_heading_map` on a workshop group gives the
+exact accepted-paper labels. It could not be used: every `/notes` query returns
+`403 ChallengeRequiredError`, including on a known-good ICLR control. The
+`groups` endpoint still works. If the challenge is ever lifted, prefer it.
+
+Corpus, by arXiv id:
+
+2311.03658, 2311.06928, 2311.17030, 2407.00557, 2408.00113, 2409.13710,
+2409.15019, 2409.17113, 2410.09637, 2410.11767, 2410.12555, 2410.17245,
+2411.02631, 2411.04569, 2412.00967, 2412.07947, 2509.03738, 2509.19943,
+2509.23717, 2510.03282, 2510.08931, 2510.23802, 2511.00059, 2511.06048,
+2511.06739, 2511.08854, 2511.19264, 2512.24842, 2601.18939, 2605.08740,
+plus 91 more matched by the same queries and stored only in the analysis run.
+
+## Rules, with the measurement behind each
+
+### 1. No result numbers in the abstract
+
+53% of the 121 abstracts carry no result number at all. Only 2% carry ten or
+more. The retired version of our abstract carried 17, which put it at the
+corpus extreme.
+
+The current abstract carries none. The model name is the only digits in it.
+**This is now enforced by the gate**, in the slot that used to check the
+enumerated `(i)-(v)` items. Verified to fire, not merely to pass.
+
+Note the honest limit: the rule is a majority practice, not a universal one.
+About half of accepted abstracts do quote numbers. It is a defensible style
+choice, and it is the one this paper has committed to.
+
+### 2. No semicolon, colon or interrupting dash in body prose
+
+Corpus abstracts: 103/121 have no semicolon, 113/121 no dash, 72/121 no
+mid-sentence colon.
+
+Corpus bodies, per 1000 words: semicolons median 1.28 (minimum 0.00), colons
+median 4.03 (minimum 0.23), dashes median 1.35 (minimum 0.00).
+
+Our main body is now at 0.00 for all three. That is *stricter than the whole
+corpus* on colons, where even the most austere paper sits at 0.23. Deliberate.
+
+What still keeps its punctuation, correctly: numeric ranges (`37--39`), name
+pairs (`Cochran--Armitage`), compound relations (`outcome--length`), table
+cells, and captions.
+
+### 3. Section headings are noun phrases, never claims
+
+Headings containing a finite verb: **7 of 334** in the 14 LaTeX sources (2%),
+and 1 of 144 in PDF-extracted headings (1%).
+
+Four of our `\subsection`/`\section` headings were claim-sentences. All eleven
+are now noun phrases.
+
+**The exception, which matters.** Run-in `\paragraph` headings are different:
+**7 of 75** in the corpus sources contain a finite verb (9%). Real examples:
+"SAE features can accurately reconstruct game boards.", "The Pythia gap is an
+SAE-utilisation artefact." The device is accepted at that level.
+
+Ours run at 36% (4 of 11), above the corpus but not outside it. **Left alone
+deliberately.** Do not "fix" these to match rule 3 without re-measuring; the
+2% figure is for numbered headings only and does not apply here.
+
+### 4. Abstract shape
+
+Corpus: median 151 words in 6 sentences (range 84-273 words, 3-11 sentences).
+Ours: 199 words in 9 sentences. Above median, inside range.
+
+Two structural moves, from the six closest-matched papers, all six of which do
+both:
+
+- **Open on the field, not on a citation.** Ours used to open with
+  `\citet{sofroniew2026}`. It now opens on the inferential pattern.
+- **Close on an implication, not on a data-availability note.** Ours used to
+  close with "Code and the scripts ... are included as supplementary material."
+
+### 5. Spell out acronyms at first use
+
+Corpus practice, among papers that use the acronym at all: LLM spelled out in
+**12 of 12**, PCA in 1 of 1, AUC in 2 of 4, ROC in 0 of 1, SD in 0 of 1.
+TF-IDF appears in no corpus paper.
+
+Expanded here: LLM, AUC, TF-IDF. PCA was used once, so the acronym was dropped
+entirely in favour of "principal component denoising". SD left as is.
+
+## One inherited claim that did not survive checking
+
+The 2026-08-24 handoff stated hedge density was "3.09/1k vs 0.00-0.35" for
+peers, and used that to argue our hedging is anomalous but genre-appropriate.
+
+Measured against this corpus on a standard hedge list (may, might, could,
+appears to, seems to, suggests, likely, potentially, roughly, and similar):
+corpus median **3.42 per 1000 words**, range 0.29 to 10.02. Ours: **0.31**,
+second-lowest of the whole set.
+
+Hedge counts are list-dependent and the earlier list is unknown, so treat the
+exact figures with care. The direction is not in doubt: a peer range topping
+out at 0.35 is not credible for any reasonable list. The practical advice from
+that handoff entry, do not strip the hedges, still stands, but for the opposite
+reason. We hedge *less* than nearly every accepted paper measured, so there is
+no surplus to cut.
+
+## What was NOT changed, and why
+
+- **`\paragraph` heading style.** See rule 3. Within corpus practice.
+- **Section inventory.** Ours is Introduction, Related work, Setup, Results,
+  Discussion and limitations. Corpus top-level counts run 3 to 16, median 6.
+  Introduction appears in 22 of 23. Nothing to fix.
+- **README and the other docs.** They are internal, not the submission. The
+  punctuation rules above apply to `paper/*.tex` only.
