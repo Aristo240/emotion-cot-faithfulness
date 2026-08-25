@@ -51,16 +51,16 @@
 \maketitle
 
 \begin{abstract}
-Setting a criterion in advance does not protect a probe from a nuisance variable.
+A nuisance variable can satisfy a criterion set in advance.
 We registered one for whether an emotion direction in Llama~3.1~70B tracks reward
 hacking, and the number of characters in the model's response meets every one of
-its thresholds too. That is a demonstration rather than an estimate, so it does not
-depend on how many events we observed. Two further checks work the same way. A
-comparison used to argue that a probe sees what the response text does not can
-consist mostly of ties, in which case the gap it reports cannot carry the claim.
+its thresholds too. That is a demonstration rather than an estimate, so it holds
+however many events were observed. Two further checks work the same way. A
+comparison used to argue that a probe sees more than the response text can consist
+mostly of ties, which caps how much its reported gap can mean.
 And the reading that would settle whether a probe merely tracks length, taken
-before the response is written, cannot be evaluated at all in a design that samples
-many rollouts from few prompts, because it takes one value per prompt. We apply all
+before the response is written, takes one value per prompt, so evaluating it calls
+for a design that varies the prompt rather than the rollout. We apply all
 three to one reported case \citep{sofroniew2026}, alongside a correction for testing
 many directions at once and a steering test, and report what each leaves standing.
 Probe evaluations should carry a simple output baseline beside the usual
@@ -75,8 +75,10 @@ behavioral association, to a causal claim. Each step is a separate empirical
 claim, and evidence for one does not establish the next
 \citep{joshi2026causality}.
 
-This paper contributes three checks that a probe-to-behavior claim can be held to,
-and one worked case in which each of them bites. Two of the three settle without
+We show that a criterion set in advance can be met by a quantity carrying no
+claim to measure anything, and we give two further checks that a
+probe-to-behavior claim can be held to, with one worked case in which each of the
+three bites. Two of the three settle without
 reference to how many events were observed. A criterion met by a character count is
 a demonstration, and the share of a comparison made up of ties is a property of the
 data rather than an estimate from it. The third is a statement about what a design
@@ -196,8 +198,8 @@ coding task, \texttt{fast\_sum}, in four impossible-by-construction variants whe
 an honest attempt must fail, and a near-eventless sycophancy task is excluded
 throughout. For each of four prompts we sampled 30 independent
 generations. Bootstraps are stratified on prompt to match the design, so every
-interval below is conditional on these four prompts and says nothing about
-variation across others. Responses are labeled by an LLM judge over three passes.
+interval below is conditional on these four prompts and describes these four
+prompts only. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} and its companions regenerate every number
 here, and a second script gates this manuscript against them with 467 assertions.
 
@@ -262,8 +264,8 @@ correcting selection by max-$T$ over the largest of the 50 statistics, so
 significance is not an artifact of choosing a direction after seeing the data.
 
 Two design choices, a null that preserves the outcome--length relationship and
-ridge-penalized estimates, are set out in Appendix~\ref{app:maxt}. Neither drives
-the result.
+ridge-penalized estimates, are set out in Appendix~\ref{app:maxt}. Both leave
+the result unchanged.
 
 \begin{table}[t]
 \centering\footnotesize
@@ -358,7 +360,7 @@ Appendix~\ref{app:steering}.} \label{tab:steer} \end{table}
 
 Strength is relative. At $\pm0.3$ the added vector has norm $0.3\times$ the mean
 residual-stream norm at layer 53, the convention \citet{sofroniew2026} use, so
-this is not a null at a negligible perturbation.
+the perturbation is a substantial one.
 The claim is directional, so the arms must be read by sign. Pooling $+0.3$ with
 $-0.3$ would let an effect cancel, and the pooled emotion arm also contains
 \texttt{calm}, so that contrast is a specificity test and nothing more. Taken
@@ -400,7 +402,7 @@ two-thirds of the suite to show outcome variance, which its implementation
 resolves to $3$ for four variants. On the merged $n = 120$ set $3$ of $4$ produce
 events, so the rule is evaluable, giving LOTO mean AUC $\mathbf{0.754}$ against a $0.70$
 bar and label-shuffle $p = 10^{-4}$ against $.01$. \textbf{The registered rule is
-met.} The rule is also met by a quantity nobody would call an emotion probe,
+met.} We find that it is also met by a quantity nobody would call an emotion probe,
 which is the result this section reports, because
 \texttt{len(response)} \emph{also} passes all three, which means a plain
 character count meets every one of its thresholds too, namely LOTO $\mathbf{0.880}$,
@@ -422,10 +424,10 @@ Three things here transfer to any probe-to-behavior claim, and none of them turn
 on our sample size. \emph{Registration does not rescue a criterion a nuisance can
 satisfy}, and ours was met by a character count, so probe evaluations should carry
 a simple output baseline beside the usual random-direction control. A gap between
-two ranking measures cannot be read before the tie share of the comparison is
-known. And a probe read before the response is written cannot be evaluated in a
-suite that samples many rollouts from few prompts, which is a constraint on how
-such suites should be built rather than a property of any probe.
+two ranking measures should be read only once the tie share of the comparison is
+known. And a probe read before the response is written takes one value per
+prompt, so evaluating it calls for a suite that varies the prompt rather than the
+rollout. That is a constraint on suite design rather than a property of any probe.
 
 The application is narrower than the checks. One model, one task family in four
 variants, 14 events, so the inference is about these rollouts, not reward hacking
