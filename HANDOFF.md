@@ -97,6 +97,39 @@ That was drafted and removed. §4.2 allows length to mediate a genuine effect, s
 it contradicts the paper. The supportable claim is that a criterion a character
 count clears cannot license a claim about affect.
 
+## 3c. Rhetorical restructure (2026-08-25)
+
+Restructured against three NeurIPS 2025 MechInterp workshop papers read in full
+(arXiv 2510.00845, 2509.03888, 2507.06445). A fourth requested comparator,
+"Control and Predictivity in Neural Interpretability", could not be found on
+arXiv, on the workshop site or by search, so it was not used.
+
+Their shared intro shape: state the practice and what it is taken to establish,
+then the anomaly *with its logical consequence*, then the paper's move, then three
+enumerated contributions, then the prescription. Results are named by question,
+not by analysis order. None of the three puts a table on page 1.
+
+Changes: Results reordered to put the headline first, Table 1 moved off page 1 to
+the head of Results, Related work cut to three threads, Setup states the readout
+window as a method fact with its consequence deferred, Discussion split into what
+generalizes / what holds only here / limitations.
+
+**Results order is now deliberate and should not be re-sorted:**
+1. character count satisfies the criterion (headline first)
+2. **the subspace carries affect information** — placed second on purpose, to
+   block the reading that the probes are noise. It carries an explicit sentence
+   saying it is *not* evidence for the \texttt{desperate} direction and *not* for
+   the unnormalized behavioral readout. Do not let its adjacency to (1) imply
+   "we validated the probe, then length confounded it".
+3. not separable from response length
+4. selection correction
+5. tie resolution
+6. steering
+
+Fidelity audit after the rewrite: no numeric value appeared or vanished, the
+citation set is identical, Table 1's verdict column is byte-identical, and all 21
+scientific qualifiers checked for still stand.
+
 ## 4. Do not re-raise — settled with evidence
 
 Everything in the 08-22 and 08-24 handoffs' "settled" lists still stands
