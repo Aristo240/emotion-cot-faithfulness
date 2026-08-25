@@ -53,8 +53,12 @@ Headline changes:
   abstracts carry no result number.
 - **All 11 section headings are now noun phrases.** Four were claim-sentences.
   Corpus rate for verb-containing numbered headings is 2% (7 of 334 in source).
-- **No semicolon, colon or interrupting dash left in body prose.** Ranges, name
-  pairs, one table cell and one caption keep theirs.
+- **No semicolon, colon or interrupting dash left in body prose or in any of
+  the six appendices.** Ranges, name pairs, one table cell and one caption keep
+  theirs. Note `appendix_directions.tex` is generated and byte-gated: edit
+  `scripts/make_appendix_table.py`, do not hand-edit the output.
+- **A cover-to-cover read after all of the above caught four more things**, three
+  of which the automated audit had missed. See §5.
 - **Acronyms expanded**: LLM, AUC, TF-IDF. PCA dropped in favour of words.
 
 **Two owner decisions, both taken 2026-08-25:**
@@ -92,7 +96,30 @@ Everything in the 08-22 and 08-24 handoffs' "settled" lists still stands
 
 ---
 
-## 5. Two inherited claims that did NOT survive checking
+## 5. What the cover-to-cover read caught, and one audit that lied
+
+Read the compiled PDF end to end after the style pass. Four fixes, and the
+reason three of them were needed is worth more than the fixes:
+
+- **The punctuation audit had a silent false-negative.** It stripped LaTeX
+  comments with `line.split("%")[0]`, which also truncates at every escaped
+  `\%`. The paper is full of `$95\%$`, so roughly a third of the prose was
+  never examined and the audit reported "clean" while a semicolon and two
+  colons sat in the body. Corrected method and the other two traps are in
+  `docs/writing_style.md`. **Print the surviving word count of any such script;
+  if it is far below the rendered body, its zero means nothing.**
+- **"registered in advance" in the abstract contradicted §3**, which defines
+  "registered" as planned-not-pre-data because the plan was written after an
+  exploratory AUC of 0.900. Introduced by the rewrite, caught by reading. The
+  gate's timing check only matches "preregistered"/"preregistration", so it
+  could not see it. Now reads "registered", the paper's own defined term.
+- **Three doubled connectives** left by the punctuation pass, where replacing a
+  colon or semicolon with a conjunction produced "so ... so", "so ... because"
+  and "and ... and". Splitting a sentence is usually better than conjoining it.
+- The appendices were then audited with the corrected method and cleaned too,
+  32 violations in five files.
+
+## 6. Two inherited claims that did NOT survive checking
 
 Both came from the 08-24 handoff's "settled with evidence" list. Both were
 wrong. This is why that list is not self-certifying.
@@ -118,7 +145,7 @@ wrong. This is why that list is not self-certifying.
 
 ---
 
-## 6. The process lesson, updated
+## 7. The process lesson, updated
 
 The 08-22 lesson (prefer one cold read over another self-review) and the 08-24
 lesson (the gate protects the `.tex` and nothing else) both still hold. Today
@@ -128,6 +155,12 @@ adds two:
 items check was green for two days while testing nothing. If you add a gate
 assertion, break the thing it guards once and watch it fail before you trust it.
 
+**An audit you wrote is evidence only after you have seen it fail.** The
+punctuation audit reported the body clean while three violations sat in it,
+because its comment-stripping quietly ate a third of the text. The same session
+had just repointed a gate check for exactly this failure mode and still shipped
+it in a throwaway script. Print the word count. Break the thing on purpose.
+
 **A "settled with evidence" list decays.** Two of its entries were wrong when
 re-measured, and one of them ("not fixable, do not try again") was actively
 steering future work away from a real improvement. Date the entries, record how
@@ -135,7 +168,7 @@ each was measured, and re-measure before citing one as a reason not to act.
 
 ---
 
-## 7. Open
+## 8. Open
 
 1. **Merge to `main`?** Still unmerged. `main` is at the 08-21 handoff.
 2. Parent repo `/home/gamir/naamarozen/gfs` has unrelated modified files under
@@ -144,7 +177,7 @@ each was measured, and re-measure before citing one as a reason not to act.
 
 ---
 
-## 8. How to verify anything
+## 9. How to verify anything
 
     python3 scripts/paper_numbers.py            # every number -> results/paper_numbers.json
     python3 scripts/h5_holdout_merged.py        # the registered rule on merged n=120

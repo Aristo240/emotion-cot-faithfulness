@@ -56,7 +56,7 @@ activations, to evidence that it tracks a behavior, to the claim that it causes
 the behavior. Each step is a separate claim. We test one such report, in which
 steering an emotion direction is said to make a model hack its reward more often
 \citep{sofroniew2026}, and ask what survives in Llama~3.1~70B when every step is
-checked against a control. The criterion we registered in advance is met, but the
+checked against a control. The criterion we registered is met, but the
 number of characters in the response also meets it, so passing it shows little.
 Four further controls each break a different step, and one break cannot be
 repaired in a design like ours. The registered direction cannot be separated from
@@ -64,8 +64,8 @@ response length. The directions that survive a correction for testing many at
 once are not the one we registered, and we cannot tell them apart from random
 ones. Steering the registered direction gives no detected increase in reward
 hacking, in a test with little power to find one. Probe evaluations should report
-a simple output baseline beside the usual random-direction control, because a
-criterion registered in advance does not help when a character count can meet it.
+a simple output baseline beside the usual random-direction control, because
+registering a criterion does not help when a character count can meet it.
 \end{abstract}
 
 \section{Introduction}
@@ -197,7 +197,7 @@ here, and a second script gates this manuscript against them with 467 assertions
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
 trials Qwen~2.5~72B and Claude agree \textbf{120/120} with no abstentions. On a 650-trial suite of five other shortcut mechanisms the primary
 judge abstains (\textsc{unclear}) on $80.6\%$ of trials, though where both commit
-they never contradict (\textbf{0/126}, $95\%$ upper bound $2.4\%$): what fails to
+they never contradict (\textbf{0/126}, $95\%$ upper bound $2.4\%$). What fails to
 transfer is willingness to label. That abstention is not independent of the outcome,
 $99\%$ on trials Claude calls \textsc{shortcut} against $73\%$ elsewhere (Fisher
 $p = 4\times10^{-19}$). We exclude the suite entirely, including a negative
@@ -286,7 +286,7 @@ Eighteen of 50 directions are significant at $\alpha = .05$, and that count is t
 fragile part. It runs from 16 to 18 across ridge penalties, 14 under a
 cubic-plus-knots length basis, and 11 under fixed effects for the four task variants, whose event rates are
 uneven at $9/30$ against $0/30$. The 11 clearing all three are the low-arousal
-negative core plus \texttt{compassionate} and \texttt{proud};
+negative core plus \texttt{compassionate} and \texttt{proud}, and
 \texttt{desperate} is null in all of them ($p \ge 0.43$).
 
 \paragraph{We cannot show the emotion family beats an arbitrary one.}
@@ -346,10 +346,10 @@ over trials, and the right column is a Fisher test against the unsteered
 baseline. The random arm covers only two of the four task variants, so see
 Appendix~\ref{app:steering}.} \label{tab:steer} \end{table}
 
-Strength is relative, so at $\pm0.3$ the added vector has norm $0.3\times$ the mean
+Strength is relative. At $\pm0.3$ the added vector has norm $0.3\times$ the mean
 residual-stream norm at layer 53, the convention \citet{sofroniew2026} use, so
 this is not a null at a negligible perturbation.
-The claim is directional, so the arms must be read by sign, because pooling $+0.3$ with
+The claim is directional, so the arms must be read by sign. Pooling $+0.3$ with
 $-0.3$ would let an effect cancel, and the pooled emotion arm also contains
 \texttt{calm}, so that contrast is a specificity test and nothing more. Taken
 directionally we detect no increase from $+0.3$ \emph{desperate}, $2.6\%$ against
@@ -368,7 +368,7 @@ $0.48$ SD at $+0.3$ ($p = 0.025$), against $1.12$ SD between hacking and non-hac
 trials. It does not show the named state was induced.
 
 \paragraph{What this null excludes.} One event in 39 trials, on an odds-ratio interval of
-$[0.04, 2.17]$: an undetected effect, not a demonstrated absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
+$[0.04, 2.17]$, is an undetected effect, not a demonstrated absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
 $11.7\%$ base rate, though an increase of that absolute size would have shown.
 
 \paragraph{No layer rescues it either.} A null at one layer invites the objection
@@ -413,7 +413,7 @@ response, so \S\ref{sec:len} cannot separate artifact from mediation, and max-$T
 controls selection among directions but not what the survivors index. The causal
 null rests on 39 trials with one event, and we never steered the survivors. Two lessons generalize. Probe evaluations should carry a simple output baseline
 beside the usual random-direction control, and \emph{registration does not rescue a
-criterion a nuisance can satisfy}, and ours was met by a character count.
+criterion a nuisance can satisfy}. Ours was met by a character count.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

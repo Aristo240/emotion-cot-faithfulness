@@ -12,11 +12,11 @@ likelihoods are evaluated at ridge-penalized estimates, we do not use the usual
 likelihood-ratio $\chi^2$ reference distribution, and we do not label $T$ a
 $\chi^2(1)$ anywhere. All $p$-values are instead obtained from the resampling
 distribution of $T$. We report two, both from the same conditional
-null: a \emph{per-direction} resampling $p$, the fraction of null draws in which
+null. The first is a \emph{per-direction} resampling $p$, the fraction of null draws in which
 that direction's own $T$ equals or exceeds the observed value, and a
 \emph{family-wise max-$T$} $p$, which additionally corrects over the 50 tested
 directions. Everything that
-depends on the sample is recomputed inside every draw: the length-only fit, all 50
+depends on the sample is recomputed inside every draw, namely the length-only fit, all 50
 alternatives, the ridge penalty and intercept treatment, the nuisance covariates and
 the convergence handling. Nothing is held fixed across replicates.
 
@@ -25,7 +25,7 @@ predicts the outcome at AUC $0.888$, permuting labels freely would test a null t
 statistic does not condition on, so the conditional null preserves the
 outcome--length relationship instead. Because 14 events allow quasi-separation, the
 estimates are ridge-penalized, with no complete separation observed. Neither
-choice drives the result: both nulls give the same 18 directions, and sweeping
+choice drives the result, since both nulls give the same 18 directions, and sweeping
 $\lambda$ moves the count only between 16 and 18 with \texttt{desperate} null
 throughout ($p \ge 0.38$).
 

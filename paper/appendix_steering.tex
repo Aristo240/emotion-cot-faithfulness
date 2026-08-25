@@ -14,7 +14,7 @@ that contrast is itself length-entangled (\S\ref{sec:len}).
 $\pm0.3$ arms, which carry the directional claim. The trend test also uses a
 fine-grained sweep at $\pm0.05$, $\pm0.10$ and $\pm0.15$ (480 trials) not tabulated
 here. Reward-hacking counts on the coarse grid are, for \emph{desperate}, $3/40$, $4/40$, $4/40$, $2/39$, $1/39$ and $1/37$ at
-$-0.5$, $-0.3$, $-0.2$, $+0.2$, $+0.3$ and $+0.5$; and for \emph{calm}, $1/40$,
+$-0.5$, $-0.3$, $-0.2$, $+0.2$, $+0.3$ and $+0.5$, and for \emph{calm}, $1/40$,
 $4/40$, $2/40$, $7/40$, $3/39$ and $5/40$. Neither arm is monotone in strength.
 
 \paragraph{The arms are not balanced across task variants.} Base rates differ
@@ -22,7 +22,7 @@ sharply across the four \texttt{fast\_sum} variants, at $4/30$, $0/30$, $9/30$ a
 $1/30$ unsteered. The \emph{desperate} arm at $+0.3$ covers all four. The random arm at $+0.3$ covers only
 variants 1 and 2, whose combined unsteered rate is $4/60$ against $14/120$ overall. The pooled contrast therefore confounds the direction
 being steered with the mix of tasks it was steered on, and it does so in
-\emph{desperate}'s favour: \emph{desperate} was steered on the higher-rate tasks, so
+\emph{desperate}'s favour, because \emph{desperate} was steered on the higher-rate tasks, so
 an inert intervention would still have produced a larger number there. It did not.
 
 Restricting both arms to the two shared variants gives $0/20$ for \emph{desperate}
@@ -55,7 +55,7 @@ and this is a property of the design rather than a result.
 
 \paragraph{Steering did not change how much text was produced.} Response length is
 the nuisance variable of \S\ref{sec:len}, so a steering null would be hard to read
-if the intervention had also shortened the outputs. It did not: mean response length
+if the intervention had also shortened the outputs. It did not. The mean response length
 is $1402$ characters unsteered, $1324$ in the emotion arm at $|s| \ge 0.3$ and $1456$
 in the random arm. The behavioral null is not an artifact of shorter generations.
 
@@ -65,7 +65,7 @@ coordinate the steering manipulates, so that comparison could in principle be
 flattered by the manipulation. Splitting the pool shows it is not.
 $V_{\text{int}}$ reaches AUC $0.832$ on steered trials against $0.900$ on unsteered,
 and $V_{\text{text}}$ reaches $0.646$ against $0.660$. The ordering holds in both
-and the gap is large in both, though not equal: $0.186$ on steered trials against
+and the gap is large in both, though not equal, at $0.186$ on steered trials against
 $0.240$ on unsteered, the latter on 40 trials with 7 events. The tie-structure
 argument does not turn on the pool's composition, but that slice is too small to
 compare the gaps.
@@ -73,10 +73,10 @@ compare the gaps.
 \paragraph{How many labels would have to be wrong.} Neither judge is checked
 against humans (\S3) and there are 14 events, so the labels are the least
 validated input to \S\ref{sec:dirs}. Taking the strongest surviving direction,
-\texttt{bored}, and flipping judge labels adversarially: its statistic falls from
+\texttt{bored}, and flipping judge labels adversarially, its statistic falls from
 $T = 38.7$ to $24.5$ under the single worst flip and to $16.2$ under the worst two.
 Family-wise significance under the conditional null is bracketed by $T = 7.9$ and
-$8.5$ --- the highest-$T$ direction that fails $\alpha = .05$ and the lowest that
-clears it --- so two wrong labels leave the direction at $16.2$, still clear of the
-boundary rather than near it. This sensitivity analysis does not validate the labels; it asks
+$8.5$, the highest-$T$ direction that fails $\alpha = .05$ and the lowest that
+clears it, so two wrong labels leave the direction at $16.2$, still clear of the
+boundary rather than near it. This sensitivity analysis does not validate the labels, and it asks
 how many adversarial label changes would be required to overturn the result.
