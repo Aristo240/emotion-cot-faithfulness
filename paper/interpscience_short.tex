@@ -59,9 +59,9 @@ one for whether an emotion direction in Llama~3.1~70B tracks reward hacking, and
 the number of characters in the model's response meets every threshold it sets.
 Both pass the same planned rule, so passing it cannot establish that what the probe
 measures is affect. The subspace does carry affect information on external
-human-rated text, under a readout the behavioral analysis does not use, so this
-limits the criterion rather than emptying the vectors. Examining why separates
-three evaluation problems. An output nuisance can account for a probe-behavior
+human-rated text, under a readout the behavioral analysis does not use, so what
+fails is the criterion rather than the representation. Examining why it fails
+separates three evaluation problems. An output nuisance can account for a probe-behavior
 association, a comparison between two ranking scores is bounded by how many of its
 pairs are tied, and a representation read before generation takes one value per
 prompt. Correcting for selection and steering the registered direction then narrow
@@ -71,13 +71,14 @@ comparison.
 \end{abstract}
 
 \section{Introduction}
+\label{sec:intro}
 
 Interpretability claims move from a direction in the activations, to evidence
 that it tracks a behavior, to the claim that it drives that behavior. Each step is
 a separate empirical claim, and evidence for one does not establish the next
-\citep{joshi2026causality}. The usual guard is to fix an evaluation criterion
-before the analysis, and that guard is only as strong as the criterion's ability to
-separate the intended construct from everything else that could clear it.
+\citep{joshi2026causality}. The usual guard is a criterion fixed before the analysis, which is only as strong
+as its ability to separate the intended construct from everything else that could
+clear it.
 
 In the case we audit it does not separate them. We registered a criterion for
 whether an emotion direction in Llama~3.1~70B tracks reward hacking. The registered
@@ -85,29 +86,26 @@ direction meets every threshold, and so does \texttt{len(response)}, the number 
 characters the model produced. Both clear the same planned rule, so clearing it
 cannot establish that what the probe measures is affect.
 
-\citet{sofroniew2026} provide the case. A ``desperate'' direction in Claude
-Sonnet 4.5 substantially increases reward hacking, sometimes with no visible trace
-in output text. We ask what survives in Llama~3.1~70B. This is a conceptual, not
+\citet{sofroniew2026} provide the case. They report that a ``desperate''
+direction in Claude Sonnet 4.5 substantially increases reward hacking, sometimes
+with no visible trace in output text. We ask what survives in Llama~3.1~70B. This is a conceptual, not
 direct, replication, because the model, the extraction procedure and the steering
 norm all differ, so a null here cannot separate model-specific functionality from
 implementation differences. Our analysis plan was written after an exploratory
 result, so ``registered'' throughout marks planned rather than pre-data analysis
 (\S\ref{sec:setup}).
 
-Three findings hold whatever the event count, because each is a demonstration or
-a counted property rather than an estimate. \textbf{A planned criterion need not
-establish the construct attached to it}, since a character count meets every
-threshold of ours (\S\ref{sec:prereg}) while the subspace itself does carry affect
-information (\S\ref{sec:sem}). \textbf{A ranking comparison is bounded by its tie
-structure}, since most positive-negative pairs are tied on the text score
-(\S\ref{sec:vtext}). \textbf{A pre-action probe needs prompt variation}, since
-read before generation it takes one value per prompt however many rollouts are
-drawn (\S\ref{sec:disc}). Correcting for selection over all 50 directions
+Three findings hold whatever the event count, being a demonstration, a counted
+property and a feature of the design rather than estimates. \textbf{A planned criterion need not establish the construct attached to it}, since a
+character count meets every threshold of ours (\S\ref{sec:prereg}) while the
+subspace does carry affect information (\S\ref{sec:sem}). \textbf{A ranking comparison is bounded by its tie structure}, since most
+positive-negative pairs are tied on the text score (\S\ref{sec:vtext}).
+\textbf{A pre-action probe needs prompt variation}, since it takes one value per
+prompt however many rollouts are drawn (\S\ref{sec:disc}). Correcting for selection over all 50 directions
 (\S\ref{sec:dirs}) and steering the registered direction (\S\ref{sec:causal})
 then narrow what survives in this case. The four controls we add test four
 different links, namely association, selection, intervention, and instrument
-resolution, and Table~\ref{tab:summary} lists all eight claims with the control
-applied to each.
+resolution, and Table~\ref{tab:summary} lists all eight.
 
 \section{Related work}
 
@@ -116,38 +114,34 @@ from the hidden states of large language models (LLMs), transfer across datasets
 are steerable across model families, and have near-identical geometry across models
 whose behavior diverges \citep{maheswaran2026unified, banayeeanzade2026psyset,
 jeong2026geometry}. Decodability does not show that the model uses the
-representation \citep{hewitt2019control, elazar2021amnesic}. \citet{yuan2026hidden}
-report hidden-state error signals that resist four interventions, the closest prior
-case of a signal that is diagnostic but not causal, and
-\citet{wilhelm2026monitoring} detect reward hacking from residual-stream
+representation \citep{hewitt2019control, elazar2021amnesic}. \citet{yuan2026hidden} report hidden-state error signals that resist four
+interventions, the closest prior case of a signal that is diagnostic but not
+causal. \citet{wilhelm2026monitoring} detect reward hacking from residual-stream
 activations during generation.
 
-\paragraph{What counts as adequate evidence.} Standards for validating
-interpretations and interventions exist \citep{palumbo2025axiomatic, mueller2025mib,
-stoehr2024scaling}. \citet{wu2026steerable} show across 17 models that steering
-conclusions can turn on normalization, layer and operating point, which is why we
-decline a post-hoc layer choice (\S\ref{sec:causal}). Steering does sometimes
+\paragraph{What counts as adequate evidence.} Standards for validating interpretations and interventions exist
+\citep{palumbo2025axiomatic, mueller2025mib, stoehr2024scaling}.
+\citet{wu2026steerable} show across 17 models that steering conclusions can turn
+on normalization, layer and operating point, so we decline a post-hoc layer choice
+(\S\ref{sec:causal}). Steering does sometimes
 establish real control \citep{rimsky2024caa, arditi2024refusal}, so a null is
-informative rather than expected. What these standards leave open is how several of
-them behave when applied to the same claim at once, which is the question this
-paper puts to one case.
+informative rather than expected. What these standards leave open is how several of them behave when applied to one
+claim at once.
 
 \paragraph{The claim we re-examine.} Closest to us, \citet{fomin2026internal} find
 Gemma emotion-concept vectors semantically meaningful yet failing specificity and
 minimal-pair checks, so ours is a second such case rather than a first.
 \citet{gozukara2026emovecllm} replicate the target's extraction on open weights
 including Llama-3 and report successful steering, so our null is not the only
-open-model result and the difference is unexplained. Their readout is taken before
-generation and ours is not, which is the distinction \S\ref{sec:len} turns on, but
-we have not tested whether it accounts for the difference.
+open-model result and the difference is unexplained. Their readout is taken before generation and ours is not, the distinction
+\S\ref{sec:len} turns on, but we have not tested whether it accounts for the
+difference.
 
 \paragraph{Contribution.} Applying several standard controls end to end to a
 single functional claim returns different answers at different evidential layers,
-and one of those layers is satisfied by a character count. That is what this paper
-adds. The methods here are established, and each control is standard on its own. We also hold our own surviving
-association to the random-direction standard we ask of others (\S\ref{sec:dirs}).
-Our probes come from an independent emotion corpus and are frozen before any
-behavioral analysis.
+and one of those layers is satisfied by a character count. The methods here are
+established, and each control is standard on its own. We hold our own surviving association to the random-direction standard we ask of
+others (\S\ref{sec:dirs}).
 
 \section{Setup}
 \label{sec:setup}
@@ -156,11 +150,10 @@ behavioral analysis.
 stream with principal component denoising (Appendix~\ref{app:extract}), at the pre-specified site
 of layer 53 of 80.
 $V_{\text{int}}$ projects a trial's mean activation onto a frozen unit-norm emotion
-direction. The vectors are never refit on behavioral data. Our preregistration
-describes this quantity as a \emph{cosine similarity} and it is not. The code
-normalizes by the emotion vector's norm but not by the activation's, so the value is
-$\lVert \bar a \rVert \cos\theta$. \S\ref{sec:dirs} and Appendix~\ref{app:readout} test what difference this
-makes.
+direction. The vectors are never refit on behavioral data. Our preregistration describes this quantity as a \emph{cosine similarity} and it is
+not. The code normalizes by the emotion vector's norm but not by the activation's,
+so the value is $\lVert \bar a \rVert \cos\theta$, and \S\ref{sec:dirs} with
+Appendix~\ref{app:readout} test what that changes.
 
 \paragraph{The readout window.} We average activations from token 50 to
 end-of-sequence, so the readout window \emph{includes the generated response}. The
@@ -182,22 +175,268 @@ prompts only. Responses are labeled by an LLM judge over three passes.
 \texttt{scripts/paper\_numbers.py} and its companions regenerate every number
 here, and a second script gates this manuscript against them with 467 assertions.
 
+\paragraph{Judges.} Responses are labeled by an LLM judge, and neither judge is
+checked against human labels, so agreement bounds reliability rather than
+accuracy. A second suite of five other shortcut mechanisms is excluded because
+judge abstention there is not independent of the outcome
+(Appendix~\ref{app:judges}).
+
+\section{Results}
+
+% [!ht] not [t]: on page 1 a [t] float lands ABOVE \maketitle, so the summary
+% table printed before the paper title.
+
+\subsection{A character count satisfies the registered criterion}
+\label{sec:prereg}
+
+The registration makes the leave-one-task-out (LOTO) mean load-bearing and requires
+two-thirds of the suite to show outcome variance, which its implementation
+resolves to $3$ for four variants. On the merged $n = 120$ set $3$ of $4$ produce
+events, so the rule is evaluable, giving LOTO mean AUC $\mathbf{0.754}$ against a $0.70$
+bar and label-shuffle $p = 10^{-4}$ against $.01$. \textbf{The registered rule is
+met.} So is the same rule applied to a quantity nobody would call an emotion probe.
+\texttt{len(response)} \emph{also} passes all three, so a plain
+character count meets every one of its thresholds too, namely LOTO $\mathbf{0.880}$,
+label-shuffle $p = 10^{-4}$, pooled AUC $0.888$, against the probe's $0.754$ and
+$0.832$.
+We do not claim the count beats the probe, since \S\ref{sec:len} shows that gap is
+not resolvable here. A criterion a character count clears cannot license a claim
+about affect. Under the stricter reading, where the suite is all $9$ registered
+variants (these four plus the five excluded mechanisms) and the bar is $\ge 6$, it is not evaluable at all, since the five
+variants that would satisfy it are the ones \S3 excludes. Neither reading supports a
+functional claim, the per-variant AUCs rest on $4$, $9$ and $1$ events, and
+generalization across \emph{mechanisms} is untested.
+
+\subsection{The emotion subspace carries affect information}
+\label{sec:sem}
+
+A criterion a character count also meets invites the reading that these vectors
+carry nothing about affect. Measured outside the behavioral setting, they carry
+something.
+
+We project the frozen probes onto EmoBank \citep{buechel2017emobank}, 10,062
+human-rated sentences drawn from $136$ documents. This readout is \emph{not}
+$V_{\text{int}}$, because it divides by the activation norm as well as the direction's, so
+this section validates $\cos\theta$ where the behavioral sections use
+$\lVert \bar a \rVert \cos\theta$ (Appendix~\ref{app:extract}). A ridge readout from
+the 50 cosines to the valence, arousal and dominance ratings is fitted inside each
+document-grouped fold, so the reported $R^2$ is out-of-fold, not zero-shot. It reaches $\mathbf{0.366}$ for valence, $0.156$ for
+arousal and $0.144$ for dominance, against $0.262$, $0.062$ and $0.059$ for
+uncapped unigram word-frequency (TF-IDF) features \emph{plus} sentence length and probe-vector scale. That
+margin, $+0.103$, $+0.094$ and $+0.085$ paired across folds, is positive in all
+five document groups, although the fold intervals are coarse and not a calibrated test
+(Appendix~\ref{app:extract}). It supports construct validity
+for an affect-related axis, not the label on any individual vector. This is
+evidence about the subspace under the cosine readout. It is not evidence for the
+registered \texttt{desperate} direction, and not evidence for
+$\lVert \bar a \rVert \cos\theta$, the readout every behavioral section below uses.
+
+\subsection{The registered direction is not separable from response length}
+\label{sec:len}
+
+On unsteered trials ($n = 120$, 14 events) the registered predictor performs
+well, and so does character count. $V_{\text{int}}$[desperate] reaches AUC
+$\mathbf{0.832}$ (bootstrap 95\% CI $[0.742, 0.911]$) and \texttt{len(response)}, in
+characters, reaches $\mathbf{0.888}$ $[0.781, 0.968]$.
+
+Length does not \emph{beat} the probe (paired bootstrap, length minus probe,
+$+0.055$ $[-0.088, +0.184]$), but what we cannot show is that the probe adds to it.
+$\rho(V_{\text{int}}[\text{desperate}], \text{length}) = 0.606$
+($p = 2.2\times10^{-13}$), adding the probe to a length-only logistic model gives $T = 3.31$, twice the
+log-likelihood improvement, at $p = 0.060$ under the conditional null,
+and residualizing leaves AUC $\mathbf{0.592}$
+$[0.419, 0.766]$, an interval wide enough to admit a real effect. The direction
+ranks only 8th of 50 by raw AUC. Because the readout averages over the generated response, length changes which
+activations enter it, a direct route for length-associated features to reach the
+probe with no emotional content at all. Length could instead
+mediate a genuine effect, in which case residualizing over-adjusts, and this design
+cannot separate the two. In this design the registered association is not identifiable
+independently of response length.
+
+\subsection{Correcting for selection changes which association survives}
+\label{sec:dirs}
+
+If the registered direction does not survive, does any direction carry information
+length does not?
+
+We repeat the analysis for all 50 directions with the nested likelihood-ratio test,
+correcting selection by max-$T$ over the largest of the 50 statistics, so
+significance is not an artifact of choosing after seeing the data.
+
+Two design choices, a null that preserves the outcome--length relationship and
+ridge-penalized estimates, are set out in Appendix~\ref{app:maxt}. Both leave
+the result unchanged.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\begin{tabular}{@{}lrrccc@{}}
+\toprule
+Direction & $T$ & $\beta$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC \\
+\midrule
+\texttt{bored}         & \textbf{38.7} & $+2.48$ & \textbf{0.0001} & $+0.33$ & 0.858 \\
+\texttt{lonely}        & 29.6 & $+1.91$ & 0.0001 & $+0.48$ & 0.760 \\
+
+\texttt{compassionate} & 19.7 & $-1.50$ & 0.0003 & $-0.25$ & 0.265 \\
+\midrule
+\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4404} & $+0.61$ & 0.592 \\
+\bottomrule
+\end{tabular}
+\caption{Unsteered trials ($n = 120$, 14 events). Three of the 18 survivors are shown plus the registered direction ($^*$),
+and all 50 are in Appendix~\ref{app:dirs}
+with their survival under each nuisance model. $p$ is family-wise under the
+conditional null ($B = 10{,}000$, floor $0.0001$). $\rho$(len) is the Spearman
+correlation with response length: \texttt{desperate} ranks 3rd of 50 by $|\rho|$
+and 1st by signed $\rho$, the two above it being negatively correlated.
+Residualized AUC is descriptive only.}
+\label{tab:dirs}
+\end{table}
+
+Eighteen of 50 directions are significant at $\alpha = .05$, and that count is the
+fragile part. It runs from 16 to 18 across ridge penalties, 14 under a
+cubic-plus-knots length basis, and 11 under fixed effects for the four task variants, whose event rates are
+uneven at $9/30$ against $0/30$. The 11 clearing all three are the low-arousal
+negative core plus \texttt{compassionate} and \texttt{proud}, and
+\texttt{desperate} is null in all of them ($p \ge 0.43$).
+
+\paragraph{We cannot show the emotion family beats an arbitrary one.}
+The random-direction standard of \S\ref{sec:causal} applies here too. Raw
+activations were kept only for the 80-trial re-extraction subset, with 7 events,
+where the emotion directions yield 4 survivors. Fifteen sets of 50 random unit
+directions from that layer yield $3.7$ on average and 8 of 15 match or exceed 4, so max-$T$ controls selection within the family without showing the family is
+special. That null is underpowered and the $n=120$ arm has no raw activations, so
+this is a failure to distinguish, not a demonstration of sameness.
+\paragraph{The survivors are one shared component whose composition does not hold
+up.} Their trial-level projections are heavily intercorrelated, with mean $|r| = 0.76$,
+$78.8\%$ of variance in the first principal component and participation ratio $1.58$,
+so this is better described as one shared axis than as 18 independent effects. Normalizing each trial's 50-vector to unit length removes activation magnitude and
+leaves an association sharing only 8 of the 18 survivors
+(Appendix~\ref{app:readout}). These numbers do not separate whether the component
+is affective or the magnitude factor of \S3, and the random-subspace result is
+consistent with the latter.
+
+The correction handles selection among directions, not the fact that the sweep
+followed the registered direction's failure. The narrow claim is that some
+component of this readout carries information length does not.
+
+\subsection{The probe-versus-text comparison cannot resolve the claimed gap}
+\label{sec:vtext}
+
+A gap between two ranking scores can be read only if the comparison has the
+resolution to register one.
+
+We had intended to compare $V_{\text{int}}$ against a judge-rated chain-of-thought
+tone composite, $V_{\text{text}}$, which on the pooled set ($n = 992$, 87 events)
+holds one modal value for $74.0\%$ of trials, so
+$\mathbf{55.2\%}$ of positive--negative ROC pairs are ties contributing $0.5$
+each. It reaches AUC $0.647$ overall against $V_{\text{int}}$'s $0.837$, but
+$\mathbf{0.836}$ against $0.890$ on the 258 trials (22 events) off its mode, a
+subset selected on the predictor's own values. The pool is $96\%$ steered and $V_{\text{int}}$ is the manipulated coordinate, yet
+steered and pooled agree within $0.02$, the 40 unsteered trials differing more and
+too few to compare (Appendix~\ref{app:steering}). The pooled gap cannot
+separate a real hidden-versus-text dissociation from an instrument too coarse to
+register one, so we withdraw any faithfulness-gap claim. 
+
+\subsection{Steering does not detect the predicted increase}
+\label{sec:causal}
+
+The registered claim is causal, so association is not enough.
+
+At $\pm0.3$ the added vector has norm $0.3\times$ the mean residual-stream norm at
+layer 53, the convention \citet{sofroniew2026} use, so the perturbation is
+substantial.
+The claim is directional, so the arms are read by sign. Pooling $+0.3$ with $-0.3$
+would let an effect cancel, and the pooled emotion arm also contains \texttt{calm},
+so that contrast is a specificity test only. Taken
+directionally we detect no increase from $+0.3$ \emph{desperate}, $2.6\%$ against
+$11.7\%$ unsteered (Fisher $p = 0.12$), the point estimate running opposite to the
+registered prediction. The random arm is not variant-balanced with it, base rates
+ranging $0/30$ to $9/30$, so we do not treat that comparison as a clean
+specificity test (Appendix~\ref{app:steering}). A Cochran--Armitage trend test
+over \emph{signed} strength from $-0.5$ to $+0.5$ is flat ($z = -1.42$,
+$p = 0.157$), and a ``feel desperate'' system prompt also does nothing
+(Fisher $p = 0.42$).
+
+\paragraph{The intervention moved the targeted coordinate.} A behavioral null is
+ambiguous unless the manipulation worked. Measured on a clean re-encoding after the
+hooks are removed, steering \emph{desperate} shifts the desperate projection by
+$0.48$ SD at $+0.3$ ($p = 0.025$), against $1.12$ SD between hacking and non-hacking
+trials. It does not show the named state was induced.
+
+\paragraph{What this null excludes.} One event in 39 trials, on an odds-ratio interval of
+$[0.04, 2.17]$, is an undetected effect, not a demonstrated absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
+$11.7\%$ base rate, though an increase of that absolute size would have shown.
+
+\paragraph{No layer rescues it either.} A null at one layer invites the objection that we picked the wrong site. Raw AUC for $V_{\text{int}}$[desperate] peaks
+at layer 39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$
+at the steered layer. Applying \S\ref{sec:len}'s control removes any detectable
+advantage, though layer 39 keeps the largest point estimate. \textbf{No evaluated layer gives the registered direction
+length-independent signal \emph{above} chance at $n = 80$}. Layers 13 and 26
+clear chance from below and are no better a site (Appendix~\ref{app:layers}), so we
+have no observational reason to move the intervention. Steering at a post-hoc site chosen on a confounded
+statistic is the failure mode \citet{wu2026steerable} describe, and we steered only
+at the registered layer (Appendix~\ref{app:layers}).
+
+\section{Discussion and limitations}
+\label{sec:disc}
+
+\paragraph{What generalizes.} The three findings of \S\ref{sec:intro} do not depend on our event count. Probe
+evaluations should carry a simple output baseline beside the random-direction
+control. A representation read before generation is a function of the
+prompt alone, so across four prompts it takes four values,
+constant within prompt. Any suite sampling many rollouts from few prompts inherits
+this and cannot test a pre-action probe at all, so evaluating one calls for a suite
+that varies the prompt. That is why the readout \citet{sofroniew2026} found most predictive is \emph{not
+identifiable in this design}, the tie degeneracy of \S\ref{sec:vtext} reappearing
+where it would otherwise settle \S\ref{sec:len}.
+
+\paragraph{What holds only for this case.} \emph{Registration does not rescue a criterion a nuisance can satisfy}, and ours
+was met by a character count. Correcting for selection leaves a shared component
+not shown to beat an arbitrary one, and steering detected no increase. None of
+this makes emotion representations inert in general, and \S\ref{sec:sem} stands.
+
+\paragraph{Limitations.} One model, one task family in four variants, 14 events, so
+the inference is about these rollouts, not reward hacking in general. The readout
+window includes the response, so \S\ref{sec:len} cannot separate artifact from
+mediation, and max-$T$ controls selection among directions but not what the
+survivors index. The causal null rests on 39 trials with one event, and we never
+steered the survivors.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+
+\section{Judge agreement and abstention}
+\label{app:judges}
 \paragraph{Cross-judge agreement and abstention.} Agreement bounds reliability, not
 accuracy, and neither judge is checked against human labels. On the 120 unsteered
 trials Qwen~2.5~72B and Claude agree \textbf{120/120} with no abstentions. On a
 650-trial suite of five other shortcut mechanisms the primary judge abstains
 (\textsc{unclear}) on $80.6\%$ of trials, though where both commit they never
 contradict (\textbf{0/126}, $95\%$ upper bound $2.4\%$). What fails to transfer is
-willingness to label. That abstention is not independent of the outcome, $99\%$ on
-trials Claude calls \textsc{shortcut} against $73\%$ elsewhere (Fisher
-$p = 4\times10^{-19}$), so we exclude the suite entirely, including a negative
-generalization result it appears to support
-\citep{shi2025position, zheng2023judging}.
+willingness to label. Abstention is not independent of the outcome, $99\%$ on trials Claude calls
+\textsc{shortcut} against $73\%$ elsewhere (Fisher $p = 4\times10^{-19}$), so we
+exclude that suite \citep{shi2025position, zheng2023judging}.
 
-\section{Results}
+\section{Steering arms}
+\begin{table}[!ht] \centering\scriptsize \begin{tabular}{@{}lccl@{}} \toprule
+Condition & hacks / $n$ & rate & vs.\ unsteered \\
+\midrule
+Unsteered baseline & 14 / 120 & 11.7\% & --- \\
+\emph{desperate} @ $+0.3$ & 1 / 39 & 2.6\% & OR 0.20, $p = 0.12$ \\
+\emph{desperate} @ $-0.3$ & 4 / 40 & 10.0\% & OR 0.84, $p = 1.00$ \\
+\emph{calm} @ $\pm0.3$ & 7 / 79 & 8.9\% & \\
+5 random directions @ $+0.3$ & 9 / 100 & 9.0\% & \\
+5 random directions @ $-0.3$ & 4 / 100 & 4.0\% & \\
+\midrule
+\multicolumn{4}{@{}l@{}}{\emph{Pooled emotion vs.\ pooled random: $12/158$
+against $13/200$, Fisher $p = 0.683$}} \\ \bottomrule \end{tabular}
+\caption{Steering arms by signed strength. Rates are reward-hacking events
+over trials, and the right column is a Fisher test against the unsteered
+baseline. The random arm covers only two of the four task variants, so see
+Appendix~\ref{app:steering}.} \label{tab:steer} \end{table}
 
-% [!ht] not [t]: on page 1 a [t] float lands ABOVE \maketitle, so the summary
-% table printed before the paper title.
+\section{The eight claims and their controls}
 \begin{table}[!ht]
 \centering\scriptsize\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}llll@{}}
@@ -231,270 +470,6 @@ and \texttt{len(response)} meets it too (\S\ref{sec:prereg}).}
 \label{tab:summary}
 \end{table}
 
-
-\subsection{A character count satisfies the registered criterion}
-\label{sec:prereg}
-
-We start with the criterion this study set for itself.
-
-The registration makes the leave-one-task-out (LOTO) mean load-bearing and requires
-two-thirds of the suite to show outcome variance, which its implementation
-resolves to $3$ for four variants. On the merged $n = 120$ set $3$ of $4$ produce
-events, so the rule is evaluable, giving LOTO mean AUC $\mathbf{0.754}$ against a $0.70$
-bar and label-shuffle $p = 10^{-4}$ against $.01$. \textbf{The registered rule is
-met.} We find that it is also met by a quantity nobody would call an emotion probe,
-which is the result this section reports, because
-\texttt{len(response)} \emph{also} passes all three, which means a plain
-character count meets every one of its thresholds too, namely LOTO $\mathbf{0.880}$,
-label-shuffle $p = 10^{-4}$, pooled AUC $0.888$, against the probe's $0.754$ and
-$0.832$.
-We do not claim the count beats the probe, since \S\ref{sec:len} shows that gap is
-not resolvable here. A criterion a character count clears cannot license a claim
-about affect. Under the stricter reading, where the suite is all $9$ registered
-variants (these four plus the five excluded mechanisms) and the bar is $\ge 6$, it is not evaluable at all, since the five
-variants that would satisfy it are the ones \S3 excludes. Neither reading supports a
-functional claim, the per-variant AUCs rest on $4$, $9$ and $1$ events, and
-generalization across \emph{mechanisms} is untested.
-
-
-
-\subsection{The emotion subspace carries affect information}
-\label{sec:sem}
-
-A criterion a character count also meets invites the reading that these vectors
-carry nothing. Measured outside the behavioral setting, they do.
-
-We project the frozen probes onto EmoBank \citep{buechel2017emobank}, 10,062
-human-rated sentences drawn from $136$ documents. This readout is \emph{not}
-$V_{\text{int}}$, because it divides by the activation norm as well as the direction's, so
-this section validates $\cos\theta$ where the behavioral sections use
-$\lVert \bar a \rVert \cos\theta$ (Appendix~\ref{app:extract}). A ridge readout from
-the 50 cosines to the valence, arousal and dominance ratings is fitted inside each
-document-grouped fold, so the reported $R^2$ is out-of-fold, not zero-shot. It reaches $\mathbf{0.366}$ for valence, $0.156$ for
-arousal and $0.144$ for dominance, against $0.262$, $0.062$ and $0.059$ for
-uncapped unigram word-frequency (TF-IDF) features \emph{plus} sentence length and probe-vector scale. That
-margin, $+0.103$, $+0.094$ and $+0.085$ paired across folds, is positive in all
-five document groups, although the fold intervals are coarse and not a calibrated test
-(Appendix~\ref{app:extract}). It supports construct validity
-for an affect-related axis, not the label on any individual vector. This is
-evidence about the subspace under the cosine readout. It is not evidence for the
-registered \texttt{desperate} direction, and not evidence for
-$\lVert \bar a \rVert \cos\theta$, the readout every behavioral section below uses.
-
-
-\subsection{The registered direction is not separable from response length}
-\label{sec:len}
-
-The criterion is uninformative here because the registered association itself
-cannot be told apart from how much text the model produced.
-
-On unsteered trials ($n = 120$, 14 events) the registered predictor performs
-well, and so does character count. $V_{\text{int}}$[desperate] reaches AUC
-$\mathbf{0.832}$ (bootstrap 95\% CI $[0.742, 0.911]$) and \texttt{len(response)}, in
-characters, reaches $\mathbf{0.888}$ $[0.781, 0.968]$.
-
-Length does not \emph{beat} the probe (paired bootstrap, length minus probe,
-$+0.055$ $[-0.088, +0.184]$), but what we cannot show is that the probe adds to it.
-$\rho(V_{\text{int}}[\text{desperate}], \text{length}) = 0.606$
-($p = 2.2\times10^{-13}$), adding the probe to a length-only logistic model gives $T = 3.31$, twice the
-log-likelihood improvement, at $p = 0.060$ under the conditional null,
-and residualizing leaves AUC $\mathbf{0.592}$
-$[0.419, 0.766]$, an interval wide enough to admit a real effect. The direction
-ranks only 8th of 50 by raw AUC. Because the readout averages over the generated
-response, length changes which activations enter the average and with what
-weight, a direct route for length-associated features to reach the probe that
-would produce this pattern with no emotional content at all. Length could instead
-mediate a genuine effect, in which case residualizing over-adjusts, and this design
-cannot separate the two. The registered association is not identifiable
-independently of response length.
-
-
-\subsection{Correcting for selection changes which association survives}
-\label{sec:dirs}
-
-If the registered direction does not survive, the next question is whether any
-direction carries information length does not.
-
-We repeat the analysis for all 50 directions with the nested likelihood-ratio test,
-correcting selection by max-$T$ over the largest of the 50 statistics, so
-significance is not an artifact of choosing a direction after seeing the data.
-
-Two design choices, a null that preserves the outcome--length relationship and
-ridge-penalized estimates, are set out in Appendix~\ref{app:maxt}. Both leave
-the result unchanged.
-
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabular}{@{}lrrccc@{}}
-\toprule
-Direction & $T$ & $\beta$ & max-$T$ $p$ & $\rho$(len) & resid.\ AUC \\
-\midrule
-\texttt{bored}         & \textbf{38.7} & $+2.48$ & \textbf{0.0001} & $+0.33$ & 0.858 \\
-\texttt{lonely}        & 29.6 & $+1.91$ & 0.0001 & $+0.48$ & 0.760 \\
-
-
-\texttt{compassionate} & 19.7 & $-1.50$ & 0.0003 & $-0.25$ & 0.265 \\
-\midrule
-\texttt{desperate}$^*$ & 3.3 & $+0.69$ & \textbf{0.4404} & $+0.61$ & 0.592 \\
-\bottomrule
-\end{tabular}
-\caption{Unsteered trials ($n = 120$, 14 events). Three of the 18 survivors are shown plus the registered direction ($^*$),
-and all 50 are in Appendix~\ref{app:dirs}
-with their survival under each nuisance model. $p$ is family-wise under the
-conditional null ($B = 10{,}000$, floor $0.0001$). $\rho$(len) is the Spearman
-correlation with response length: \texttt{desperate} ranks 3rd of 50 by $|\rho|$
-and 1st by signed $\rho$, the two above it being negatively correlated.
-Residualized AUC is descriptive only.}
-\label{tab:dirs}
-\end{table}
-
-Eighteen of 50 directions are significant at $\alpha = .05$, and that count is the
-fragile part. It runs from 16 to 18 across ridge penalties, 14 under a
-cubic-plus-knots length basis, and 11 under fixed effects for the four task variants, whose event rates are
-uneven at $9/30$ against $0/30$. The 11 clearing all three are the low-arousal
-negative core plus \texttt{compassionate} and \texttt{proud}, and
-\texttt{desperate} is null in all of them ($p \ge 0.43$).
-
-\paragraph{We cannot show the emotion family beats an arbitrary one.}
-\S\ref{sec:causal} asks a steering effect to beat a matched random direction, and
-the same standard applies here. Raw activations were retained only for the 80-trial re-extraction subset,
-with 7 events, where the emotion directions yield 4 survivors. Fifteen sets of 50 random
-unit directions from that layer yield $3.7$ on average and 8 of 15 match or exceed
-4, so max-$T$ controls selection within the family without showing the family is
-special. That null is itself underpowered and the $n=120$ arm has no raw
-activations, so this is a failure to distinguish, not a demonstration of sameness.
-\paragraph{The survivors are one shared component whose composition does not hold
-up.} Their trial-level projections are heavily intercorrelated, with mean $|r| = 0.76$,
-$78.8\%$ of variance in the first principal component and participation ratio $1.58$,
-so this is better described as one shared axis than as 18 independent effects. Normalizing
-each trial's 50-vector to unit length removes activation magnitude and leaves an
-association, but shares only 8 of the 18 survivors (Appendix~\ref{app:readout}).
-These numbers do not separate whether the component is affective or the magnitude
-factor of \S3, and the random-subspace result is consistent with the latter.
-
-The correction handles selection among directions, not the fact that the sweep
-followed the registered direction's failure. The narrow claim is that some component
-of this readout carries information length does not.
-
-
-\subsection{The probe-versus-text comparison cannot resolve the claimed gap}
-\label{sec:vtext}
-
-A gap between two ranking scores can be read only if the comparison has the
-resolution to register one. When most positive-negative pairs are tied, the gap
-cannot separate hidden information from an instrument too coarse to show it.
-
-We had intended to compare $V_{\text{int}}$ against a judge-rated chain-of-thought
-tone composite, $V_{\text{text}}$, which on the pooled set ($n = 992$, 87 events)
-holds one modal value for $74.0\%$ of trials, so
-$\mathbf{55.2\%}$ of positive--negative ROC pairs are ties contributing $0.5$
-each. It reaches AUC $0.647$ overall against $V_{\text{int}}$'s $0.837$, but
-$\mathbf{0.836}$ against $0.890$ on the 258 trials (22 events) off its mode, a
-subset selected on the predictor's own values. The pool is $96\%$ steered and $V_{\text{int}}$ is the
-manipulated coordinate. The steered subset and the wider pool agree within $0.02$, and
-the 40 unsteered trials differ more but are too few to compare
-(Appendix~\ref{app:steering}). The pooled gap cannot
-separate a real hidden-versus-text dissociation from an instrument too coarse to
-register one, so we withdraw any faithfulness-gap claim. The tie share is
-cheap to compute and settles in advance whether a comparison of this kind can
-carry one.
-
-
-\subsection{Steering does not detect the predicted increase}
-\label{sec:causal}
-
-The registered claim is causal, so association is not enough.
-
-\begin{table}[!ht] \centering\scriptsize \begin{tabular}{@{}lccl@{}} \toprule
-Condition & hacks / $n$ & rate & vs.\ unsteered \\
-\midrule
-Unsteered baseline & 14 / 120 & 11.7\% & --- \\
-\emph{desperate} @ $+0.3$ & 1 / 39 & 2.6\% & OR 0.20, $p = 0.12$ \\
-\emph{desperate} @ $-0.3$ & 4 / 40 & 10.0\% & OR 0.84, $p = 1.00$ \\
-\emph{calm} @ $\pm0.3$ & 7 / 79 & 8.9\% & \\
-5 random directions @ $+0.3$ & 9 / 100 & 9.0\% & \\
-5 random directions @ $-0.3$ & 4 / 100 & 4.0\% & \\
-\midrule
-\multicolumn{4}{@{}l@{}}{\emph{Pooled emotion vs.\ pooled random: $12/158$
-against $13/200$, Fisher $p = 0.683$}} \\ \bottomrule \end{tabular}
-\caption{Steering arms by signed strength. Rates are reward-hacking events
-over trials, and the right column is a Fisher test against the unsteered
-baseline. The random arm covers only two of the four task variants, so see
-Appendix~\ref{app:steering}.} \label{tab:steer} \end{table}
-
-Strength is relative. At $\pm0.3$ the added vector has norm $0.3\times$ the mean
-residual-stream norm at layer 53, the convention \citet{sofroniew2026} use, so
-the perturbation is a substantial one.
-The claim is directional, so the arms must be read by sign. Pooling $+0.3$ with
-$-0.3$ would let an effect cancel, and the pooled emotion arm also contains
-\texttt{calm}, so that contrast is a specificity test and nothing more. Taken
-directionally we detect no increase from $+0.3$ \emph{desperate}, $2.6\%$ against
-$11.7\%$ unsteered (Fisher $p = 0.12$), the point estimate running opposite to the
-registered prediction. The random arm is not variant-balanced with it, base rates
-ranging $0/30$ to $9/30$, so we do not treat that comparison as a clean
-specificity test (Appendix~\ref{app:steering}). A Cochran--Armitage trend test
-over \emph{signed} strength from $-0.5$ to $+0.5$ is flat ($z = -1.42$,
-$p = 0.157$), and a ``feel desperate'' system prompt also does nothing
-(Fisher $p = 0.42$).
-
-\paragraph{The intervention moved the targeted coordinate.} A behavioral null is
-ambiguous unless the manipulation worked. Measured on a clean re-encoding after the
-hooks are removed, steering \emph{desperate} shifts the desperate projection by
-$0.48$ SD at $+0.3$ ($p = 0.025$), against $1.12$ SD between hacking and non-hacking
-trials. It does not show the named state was induced.
-
-\paragraph{What this null excludes.} One event in 39 trials, on an odds-ratio interval of
-$[0.04, 2.17]$, is an undetected effect, not a demonstrated absence. The ${\sim}14\times$ \citet{sofroniew2026} report is not portable to our
-$11.7\%$ base rate, though an increase of that absolute size would have shown.
-
-\paragraph{No layer rescues it either.} A null at one layer invites the objection
-that we picked the wrong site, and our sweep appeared to supply it. Raw AUC for $V_{\text{int}}$[desperate] peaks
-at layer 39, at $0.918$ on an 80-trial subset with 7 events, against $0.677$
-at the steered layer. Applying \S\ref{sec:len}'s control removes any detectable
-advantage, though layer 39 keeps the largest point estimate. \textbf{No evaluated layer gives the registered direction
-length-independent signal \emph{above} chance at $n = 80$}. Layers 13 and 26
-clear chance from below and are no better a site (Appendix~\ref{app:layers}), so we
-have no observational reason to move the intervention. Steering at a post-hoc site chosen on a confounded
-statistic is the failure mode \citet{wu2026steerable} describe, and we steered only
-at the registered layer (Appendix~\ref{app:layers}).
-
-
-\section{Discussion and limitations}
-\label{sec:disc}
-
-\paragraph{What generalizes.} Three points do not depend on our event count. A
-criterion fixed before the analysis does not establish the construct attached to a
-probe if a nuisance variable also satisfies it, so probe evaluations should carry a
-simple output baseline beside the usual random-direction control. A gap between two
-ranking scores should be read only once the tie share is known, because a coarse
-instrument produces a gap of its own. And a representation read before generation is
-a function of the prompt alone, so across four prompts it takes four values,
-constant within prompt. Any suite sampling many rollouts from few prompts inherits
-this and cannot test a pre-action probe at all, so evaluating one calls for a suite
-that varies the prompt. That is why the readout \citet{sofroniew2026} found most
-predictive is \emph{not identifiable in this design}, the tie degeneracy of
-\S\ref{sec:vtext} reappearing in the one experiment that would otherwise settle
-\S\ref{sec:len}.
-
-\paragraph{What holds only for this case.} The registered direction is not
-identifiable independently of response length here, and \emph{registration does not
-rescue a criterion a nuisance can satisfy}. Ours was met by a character count.
-Correcting for selection leaves a shared component rather than the registered
-direction, and that component has not been shown to beat an arbitrary one. Steering
-detected no increase. None of this establishes that emotion representations are
-inert in general, and \S\ref{sec:sem} stands.
-
-\paragraph{Limitations.} One model, one task family in four variants, 14 events, so
-the inference is about these rollouts, not reward hacking in general. The readout
-window includes the response, so \S\ref{sec:len} cannot separate artifact from
-mediation, and max-$T$ controls selection among directions but not what the
-survivors index. The causal null rests on 39 trials with one event, and we never
-steered the survivors.
-
-\bibliographystyle{plainnat}
-\bibliography{refs}
-
-\appendix
 \input{appendix_extraction}
 \input{appendix_directions}
 \input{appendix_maxt}
