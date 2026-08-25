@@ -827,12 +827,21 @@ if len(_pre) > _doc:
     fails.append(f"{len(_pre) - _doc} timing claim(s) still say 'preregistered'; "
                  f"section 3 defines the term as 'registered'")
 
-# the abstract's control count must match the numbered items it lists
+# 2026-08-25: this slot used to check that the abstract's enumerated (i)-(v)
+# items matched the count it promised. The abstract no longer enumerates, so
+# that test could never fire again -- it passed by never running, while still
+# counting toward the total printed below. Repointed at the property the
+# rewrite established instead: the abstract carries NO result numbers. Across
+# 121 papers whose arXiv comment states acceptance at a NeurIPS workshop, 53%
+# of abstracts carry none and only 2% carry ten or more; the retired version
+# of this abstract carried 17. The model name is the only digits allowed.
 checks += 1
-_n_items = len(re.findall(r"\((?:i{1,3}|iv|v)\)~\\emph", _MAIN))
-if "Four further standard controls" in TEX_FLAT and _n_items != 5:
-    fails.append(f"abstract promises four controls plus the opening result, "
-                 f"but lists {_n_items} numbered items")
+_abs = _MAIN.split(r"\begin{abstract}")[1].split(r"\end{abstract}")[0]
+_abs = re.sub(r"\\cite[tp]?\{[^}]*\}", " ", _abs).replace("~", " ")
+_abs_nums = [t for t in re.findall(r"[^\s]*\d[^\s]*", _abs) if t not in ("3.1", "70B")]
+if _abs_nums:
+    fails.append(f"abstract carries result numbers, which the rewrite removed: "
+                 f"{_abs_nums}")
 
 _m = re.search(r"with (\d+) assertions", TEX)
 if not _m:
