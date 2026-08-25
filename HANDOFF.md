@@ -77,7 +77,7 @@ A reviewer read found the paper reading as a list of its own weaknesses, with th
 one genuinely underpowered result in front. Reframed. **No number, no verdict and
 no Table 1 row changed.** What changed is which claim carries the paper.
 
-Title is now *A Character Count Meets the Registered Criterion for an Emotion Probe*. It must say **registered**, not preregistered, because §3 defines the term
+Title is now *Response Length Passes the Same Test as an Emotion Probe for Reward Hacking*. It must say **registered**, not preregistered, because §3 defines the term
 as planned-not-pre-data and the gate checks it.
 
 The argument for the reframe, in one line: the three strongest results do not

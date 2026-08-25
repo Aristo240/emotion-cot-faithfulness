@@ -194,8 +194,17 @@ Across all 121 corpus papers:
   rule anyway.
 - length: median 10 words, range 5 to 17. Ours is 11.
 
-Current title: **A Character Count Meets the Registered Criterion for an Emotion
-Probe.** It must say "registered", not "preregistered" (see § Framing).
+Current title: **Response Length Passes the Same Test as an Emotion Probe for
+Reward Hacking.**
+
+Two earlier drafts were rejected and both reasons are worth keeping:
+
+- *"A Character Count Passes the Criterion We Registered..."* used **first
+  person**, which 0 of 121 corpus titles do.
+- *"...the Registered Criterion..."* used **"registered"**, a term §3 has to
+  define before it means anything. A title should not contain a word the reader
+  must read the paper to understand. If the word is ever needed, it must be
+  "registered" and never "preregistered" (see § Framing).
 
 ## Where the paper sits now
 
