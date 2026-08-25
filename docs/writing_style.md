@@ -144,3 +144,37 @@ no surplus to cut.
   Introduction appears in 22 of 23. Nothing to fix.
 - **README and the other docs.** They are internal, not the submission. The
   punctuation rules above apply to `paper/*.tex` only.
+
+## Framing (added 2026-08-25)
+
+The paper was reframed after a cover-to-cover read found it reading as a list of
+its own weaknesses. Nothing in the science moved. No number, no verdict and no
+Table 1 row changed. What changed is which claim carries the paper.
+
+The reason the reframe is legitimate rather than spin: **the three strongest
+results do not depend on sample size**, and the old framing buried them under the
+one result that does.
+
+1. **A character count meets every threshold of the registered criterion.** This
+   is a demonstration, and one case is the whole argument. Power is irrelevant.
+2. **The tie share of the text comparison** is a counted property of the data,
+   not an estimate from it. Power is irrelevant.
+3. **A pre-generation probe takes one value per prompt**, so it cannot be
+   evaluated in a suite of many rollouts over few prompts. This is deductive.
+
+The genuinely underpowered result, the steering arm with one event in 39 trials,
+is the *least* load-bearing thing in the paper. The old narrative, "we tried to
+replicate and it did not work", put it in front.
+
+So: a measurement paper with a worked case, not a failed replication. The title
+now names the finding.
+
+Two constraints found while doing it, both worth keeping:
+
+- **The title must say "registered", not "preregistered".** §3 defines the term
+  as planned-not-pre-data, because the analysis plan was written after an
+  exploratory AUC of 0.900, and the gate checks the distinction.
+- **Do not write that the character count "carries no information about affect".**
+  §4.2 explicitly allows length to *mediate* a genuine effect, so that phrasing
+  contradicts the paper. The supportable claim is narrower, that a criterion a
+  character count clears cannot license a claim about affect.

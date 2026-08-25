@@ -71,6 +71,33 @@ Headline changes:
 
 ---
 
+## 3b. The reframe (2026-08-25, owner decision)
+
+A reviewer read found the paper reading as a list of its own weaknesses, with the
+one genuinely underpowered result in front. Reframed. **No number, no verdict and
+no Table 1 row changed.** What changed is which claim carries the paper.
+
+Title is now *A Character Count Passes the Criterion We Registered for an Emotion
+Probe*. It must say **registered**, not preregistered, because §3 defines the term
+as planned-not-pre-data and the gate checks it.
+
+The argument for the reframe, in one line: the three strongest results do not
+depend on sample size, and the old framing buried them.
+
+1. A character count meets every threshold of the registered criterion. A
+   demonstration, so one case is the whole argument.
+2. The tie share of the text comparison is a counted property of the data.
+3. A pre-generation probe takes one value per prompt, so it cannot be evaluated
+   in a suite of many rollouts over few prompts. Deductive.
+
+The steering arm, one event in 39 trials, is the least load-bearing thing in the
+paper and is now presented as such. Full reasoning in `docs/writing_style.md`.
+
+**Do not write that the character count "carries no information about affect."**
+That was drafted and removed. §4.2 allows length to mediate a genuine effect, so
+it contradicts the paper. The supportable claim is that a criterion a character
+count clears cannot license a claim about affect.
+
 ## 4. Do not re-raise — settled with evidence
 
 Everything in the 08-22 and 08-24 handoffs' "settled" lists still stands

@@ -45,27 +45,27 @@
 \usepackage{caption}
 \captionsetup{font=small,labelfont=bf}
 
-\title{A Validity Audit of Emotion Probes in Llama 3.1 70B}
+\title{A Character Count Passes the Criterion We Registered for an Emotion Probe}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Interpretability work often moves from a direction found in a model's
-activations, to evidence that it tracks a behavior, to the claim that it causes
-the behavior. Each step is a separate claim. We test one such report, in which
-steering an emotion direction is said to make a model hack its reward more often
-\citep{sofroniew2026}, and ask what survives in Llama~3.1~70B when every step is
-checked against a control. The criterion we registered is met, but the
-number of characters in the response also meets it, so passing it shows little.
-Four further controls each break a different step, and one break cannot be
-repaired in a design like ours. The registered direction cannot be separated from
-response length. The directions that survive a correction for testing many at
-once are not the one we registered, and we cannot tell them apart from random
-ones. Steering the registered direction gives no detected increase in reward
-hacking, in a test with little power to find one. Probe evaluations should report
-a simple output baseline beside the usual random-direction control, because
-registering a criterion does not help when a character count can meet it.
+Setting a criterion in advance does not protect a probe from a nuisance variable.
+We registered one for whether an emotion direction in Llama~3.1~70B tracks reward
+hacking, and the number of characters in the model's response meets every one of
+its thresholds too. That is a demonstration rather than an estimate, so it does not
+depend on how many events we observed. Two further checks work the same way. A
+comparison used to argue that a probe sees what the response text does not can
+consist mostly of ties, in which case the gap it reports cannot carry the claim.
+And the reading that would settle whether a probe merely tracks length, taken
+before the response is written, cannot be evaluated at all in a design that samples
+many rollouts from few prompts, because it takes one value per prompt. We apply all
+three to one reported case \citep{sofroniew2026}, alongside a correction for testing
+many directions at once and a steering test, and report what each leaves standing.
+Probe evaluations should carry a simple output baseline beside the usual
+random-direction control, and should report the tie structure of any claim resting
+on one ranking measure beating another.
 \end{abstract}
 
 \section{Introduction}
@@ -74,6 +74,14 @@ A common inferential shortcut moves from an interpretable direction, to a
 behavioral association, to a causal claim. Each step is a separate empirical
 claim, and evidence for one does not establish the next
 \citep{joshi2026causality}.
+
+This paper contributes three checks that a probe-to-behavior claim can be held to,
+and one worked case in which each of them bites. Two of the three settle without
+reference to how many events were observed. A criterion met by a character count is
+a demonstration, and the share of a comparison made up of ties is a property of the
+data rather than an estimate from it. The third is a statement about what a design
+can measure at all. We report the case in full, including the arms that are merely
+underpowered, so that the checks can be judged against a real application.
 
 \citet{sofroniew2026} provide a useful case to test. Emotion concepts in Claude
 Sonnet 4.5 causally drive alignment-relevant behavior, with a ``desperate''
@@ -324,7 +332,9 @@ manipulated coordinate. The steered subset and the wider pool agree within $0.02
 the 40 unsteered trials differ more but are too few to compare
 (Appendix~\ref{app:steering}). The pooled gap cannot
 separate a real hidden-versus-text dissociation from an instrument too coarse to
-register one, so we withdraw any faithfulness-gap claim.
+register one, so we withdraw any faithfulness-gap claim. The tie share is
+cheap to compute and settles in advance whether a comparison of this kind can
+carry one.
 
 \subsection{Steering the registered direction}
 \label{sec:causal}
@@ -390,7 +400,8 @@ two-thirds of the suite to show outcome variance, which its implementation
 resolves to $3$ for four variants. On the merged $n = 120$ set $3$ of $4$ produce
 events, so the rule is evaluable, giving LOTO mean AUC $\mathbf{0.754}$ against a $0.70$
 bar and label-shuffle $p = 10^{-4}$ against $.01$. \textbf{The registered rule is
-met.} That is the finding rather than a vindication, because
+met.} The rule is also met by a quantity nobody would call an emotion probe,
+which is the result this section reports, because
 \texttt{len(response)} \emph{also} passes all three, which means a plain
 character count meets every one of its thresholds too, namely LOTO $\mathbf{0.880}$,
 label-shuffle $p = 10^{-4}$, pooled AUC $0.888$, against the probe's $0.754$ and
@@ -407,13 +418,21 @@ generalization across \emph{mechanisms} is untested.
 \section{Discussion and limitations}
 \label{sec:disc}
 
-One model, one task family in four variants, 14 events, so the inference is about
-these rollouts, not reward hacking in general. The readout window includes the
-response, so \S\ref{sec:len} cannot separate artifact from mediation, and max-$T$
-controls selection among directions but not what the survivors index. The causal
-null rests on 39 trials with one event, and we never steered the survivors. Two lessons generalize. Probe evaluations should carry a simple output baseline
-beside the usual random-direction control, and \emph{registration does not rescue a
-criterion a nuisance can satisfy}. Ours was met by a character count.
+Three things here transfer to any probe-to-behavior claim, and none of them turns
+on our sample size. \emph{Registration does not rescue a criterion a nuisance can
+satisfy}, and ours was met by a character count, so probe evaluations should carry
+a simple output baseline beside the usual random-direction control. A gap between
+two ranking measures cannot be read before the tie share of the comparison is
+known. And a probe read before the response is written cannot be evaluated in a
+suite that samples many rollouts from few prompts, which is a constraint on how
+such suites should be built rather than a property of any probe.
+
+The application is narrower than the checks. One model, one task family in four
+variants, 14 events, so the inference is about these rollouts, not reward hacking
+in general. The readout window includes the response, so \S\ref{sec:len} cannot
+separate artifact from mediation, and max-$T$ controls selection among directions
+but not what the survivors index. The causal null rests on 39 trials with one
+event, and we never steered the survivors.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

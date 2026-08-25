@@ -1,4 +1,6 @@
-# A Validity Audit of Emotion Probes in Llama 3.1 70B
+# A Character Count Passes the Criterion We Registered for an Emotion Probe
+
+*(repo formerly titled "A Validity Audit of Emotion Probes in Llama 3.1 70B"; renamed 2026-08-25 with the paper, see `docs/writing_style.md` § Framing)*
 
 > **Status: 2026-08-22.** This README supersedes the 2026-04-11 and 2026-08-19
 > versions. Several early headline numbers (`CV AUC 0.997`, `LOTO 0.992`,
