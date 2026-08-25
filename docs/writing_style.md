@@ -178,3 +178,45 @@ Two constraints found while doing it, both worth keeping:
   §4.2 explicitly allows length to *mediate* a genuine effect, so that phrasing
   contradicts the paper. The supportable claim is narrower, that a criterion a
   character count clears cannot license a claim about affect.
+
+## Titles (measured 2026-08-25, after a first-person title slipped through)
+
+Across all 121 corpus papers:
+
+- **first-person word (we/our/us/I) in the title: 0 of 121.** Unanimous. A draft
+  title read "A Character Count Passes the Criterion *We Registered* for an
+  Emotion Probe" and had to be fixed. Never put first person in the title.
+- finite verb in the title: 9 of 121 (7%). Attested, and the shape that works is
+  impersonal declarative: "Linear Probe Penalties Reduce LLM Sycophancy",
+  "Rank-1 LoRAs Encode Interpretable Reasoning Signals", "LLMs Show Surface-Form
+  Brittleness Under Paraphrase Stress Tests". Ours matches this shape.
+- colon in the title: 40 of 121 (33%). Normal, and exempt from the punctuation
+  rule anyway.
+- length: median 10 words, range 5 to 17. Ours is 11.
+
+Current title: **A Character Count Meets the Registered Criterion for an Emotion
+Probe.** It must say "registered", not "preregistered" (see § Framing).
+
+## Where the paper sits now
+
+Measured against the corpus, everything is inside the observed range except one
+deliberate choice.
+
+| dimension | ours | corpus min .. median .. max |
+|---|---|---|
+| title length (words) | 11 | 5 .. 10 .. 17 |
+| title, first person | none | 0 of 121 use it |
+| abstract words | 199 | 84 .. 151 .. 273 |
+| abstract sentences | 8 | 3 .. 6 .. 11 |
+| abstract mean sentence length | 24.9 | 13.5 .. 24 .. 47.2 |
+| abstract result numbers | 0 | 64 of 121 have none |
+| abstract semicolons / colons | 0 / 0 | 103 and 72 of 121 have none |
+| body semicolons per 1k | 0.00 | 0.00 .. 1.28 .. 12.91 |
+| **body colons per 1k** | **0.00** | **0.23 .. 4.04 .. 12.06 (we are below the minimum)** |
+| body hedge words per 1k | 0.29 | 0.29 .. 3.42 .. 10.02 (we equal the minimum) |
+| claim-sentence section headings | 0% | 2% |
+| claim-sentence paragraph headings | 36% | 9% (attested device, left alone) |
+
+Two are worth knowing about rather than fixing. Body colons at 0.00 is stricter
+than every paper measured, by house rule. Hedging at 0.29 ties the least-hedged
+paper in the corpus, which suits a paper that should not read apologetically.

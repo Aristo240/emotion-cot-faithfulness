@@ -1,4 +1,4 @@
-# A Character Count Passes the Criterion We Registered for an Emotion Probe
+# A Character Count Meets the Registered Criterion for an Emotion Probe
 
 *(repo formerly titled "A Validity Audit of Emotion Probes in Llama 3.1 70B"; renamed 2026-08-25 with the paper, see `docs/writing_style.md` § Framing)*
 
